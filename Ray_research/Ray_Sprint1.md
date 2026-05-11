@@ -4,7 +4,7 @@
 
 ### Problem Space
 
-Software teams — especially small, student, or remote Agile teams — struggle with a set of recurring coordination challenges:
+Software teams — especially small, intern, or remote Agile teams — struggle with a set of recurring coordination challenges:
 
 - **Async visibility gaps**: Teammates don't know what others are working on between meetings, leading to duplicated effort or missed dependencies.
 - **Blocker blindness**: Blockers often go unmentioned until a standup, costing hours or days of blocked progress.
@@ -13,7 +13,7 @@ Software teams — especially small, student, or remote Agile teams — struggle
 - **GitHub activity disconnects**: Code changes happen constantly, but team members often aren't aware of pushes, PRs, or merge conflicts until they collide with them.
 - **AI agent participation**: As AI agents begin contributing to codebases (e.g., via GitHub Copilot Workspace, Claude Code), teams have no standard way to "check in" or track what the agents are doing — raising the question: do AI contributors need standups too?
 
-Traditional standup tools weren't designed for small student teams or AI-assisted workflows. There's a gap worth filling.
+Traditional standup tools weren't designed for small intern teams or AI-assisted workflows. There's a gap worth filling.
 
 ---
 
@@ -28,7 +28,7 @@ Traditional standup tools weren't designed for small student teams or AI-assiste
 **Gaps/Weaknesses:**
 - No GitHub integration for code-level activity awareness
 - No AI summarization or insights
-- Paid product — not accessible for student teams
+- Paid product — not accessible for intern teams
 - No consideration of AI agents as team participants
 
 ### Geekbot
@@ -48,26 +48,26 @@ Traditional standup tools weren't designed for small student teams or AI-assiste
 Based on the above, SE SitRep can stand out by:
 1. Integrating GitHub activity (commits, PRs, open issues) into daily standup context
 2. AI-generated summaries of team status
-3. Lightweight, free, and usable by small student Agile teams
+3. Lightweight, free, and usable by small intern Agile teams
 4. Addressing AI agent participation in standup workflows
 
 ---
 
 ## User Personas
 
-### Persona 1 — Maya, Software Engineering Student (Team Member)
-- **Context**: Junior CS student on a 7-person capstone team, mostly working remotely
+### Persona 1 — Maya, Software Engineering Intern (Team Member)
+- **Context**: Junior CS intern on a 7-person capstone team, mostly working remotely
 - **Pain points**: Forgets to post standups, doesn't always know if her PR is blocking someone, struggles to remember what she did yesterday
 - **Goals**: Quick, low-friction daily check-in; see if anyone is stuck because of her; feel connected to teammates without constant Slack noise
 - **Tech comfort**: High; uses GitHub daily
 
 ### Persona 2 — Jordan, Team Lead
-- **Context**: Senior student acting as Scrum Master/lead; coordinates with TA and manages sprint planning
+- **Context**: Senior intern acting as Scrum Master/lead; coordinates with TA and manages sprint planning
 - **Pain points**: Chasing teammates for updates, not knowing the "real" team status before TA meetings, can't easily see who's blocked
 - **Goals**: Single dashboard view of team health; AI summary before TA meetings; blocker detection; sprint progress visibility
 - **Tech comfort**: Very high; sets up CI/CD, manages GitHub
 
-### Persona 3 — Raymond, Engineering Manager
+### Persona 3 — Raymond, Product Owner
 - **Context**: Evaluates team progress weekly; wants evidence of process, not just product
 - **Pain points**: Teams that don't communicate consistently; opaque development histories
 - **Goals**: Quickly assess team communication health; confirm standups are happening; see sprint trajectory
