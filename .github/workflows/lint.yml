@@ -1,0 +1,30 @@
+name: Lint
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install linters
+        run: npm install eslint eslint-config-standard eslint-plugin-jsdoc
+
+      - name: Run ESLint
+        run: npx eslint "src/**/*.js" --no-error-on-unmatched-pattern
+
+      # TODO: add HTML and CSS linter configurations
+      
+      #- name: Install CSS/HTML linters
+      #  run: npm install stylelint stylelint-config-standard htmlhint
+
+      #- name: Run Stylelint
+      #  run: npx stylelint "**/*.css"
+
+      #- name: Run HTMLHint
+      #  run: npx htmlhint "**/*.html"
