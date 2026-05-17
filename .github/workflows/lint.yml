@@ -17,14 +17,12 @@ jobs:
 
       - name: Run ESLint
         run: npx eslint "src/**/*.js" --no-error-on-unmatched-pattern
-
-      # TODO: add HTML and CSS linter configurations
       
-      #- name: Install CSS/HTML linters
-      #  run: npm install stylelint stylelint-config-standard htmlhint
+      - name: Install CSS/HTML linters
+        run: npm install stylelint stylelint-config-standard htmlhint
 
-      #- name: Run Stylelint
-      #  run: npx stylelint "**/*.css"
+      - name: Run Stylelint
+        run: npx stylelint "**/*.css" --allow-empty-input
 
-      #- name: Run HTMLHint
-      #  run: npx htmlhint "**/*.html"
+      - name: Run HTMLHint
+        run: npx htmlhint "**/*.html"
