@@ -66,7 +66,7 @@ Big emphasis on personalization, automation, and a more hands-off approach
 Good SitReps are frictionless for both set-up and use, though this can come at the tradeoff of customization and personalizability. Traditionally, standardized surveys/polls are used to check on team members, but too much of this rigid automation can feel "forced" on the users' end. AI personalization is an option, but the risk of misinterpretation or oversight still exists.
 
 ## Prioritize these features
-- Support across all SE teams: Flexible for both asynchronous and synchronous teams, with an emphasis on asynchronous. Keeps teams of all types up to date, with no one left behind. Features that support different roles for engineers, leads, managers, etc.
+- Support across all SE teams: Flexible for both asynchronous and synchronous teams, with an emphasis on asynchronous. Keeps teams of all types up to date, with no one left behind. Features that support different roles for engineers, leads, managers, etc. (Think user stories!) 
 - Blocker recognition: Identifying team blockers early on saves a lot of headache for scheduling issues that may come later. Using AI to measure team sentiment with personalized questions is a good way to do this, but AI automation can make errors/oversights (tradeoff)
 - Flexible integration: Integration with as many platforms as possible (Slack and Teams being the main two). Being able to be its own standalone app helps a lot with team flexibility, should they migrate platforms. 
 
