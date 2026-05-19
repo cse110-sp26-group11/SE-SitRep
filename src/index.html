@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tatOS</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ─── Top Bar ─────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <svg class="topbar__logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+      <span class="topbar__name">SE SitRep</span>
+    </div>
+
+    <div class="topbar__actions">
+      <button class="topbar__icon-btn" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </button>
+      <div class="topbar__avatar" aria-label="User menu">R</div>
+      <button class="topbar__icon-btn" aria-label="More options">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Layout ───────────────────────────────────────────────── -->
+  <div class="layout">
+
+    <!-- ─── Sidebar ─────────────────────────────────────────────── -->
+    <nav class="sidebar">
+
+      <div class="sidebar__section">
+        <span class="sidebar__label">main</span>
+        <ul class="sidebar__nav">
+          <li>
+            <a href="#" class="sidebar__link sidebar__link--active" data-view="team-feed">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="9"></rect><rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              Team feed
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar__link" data-view="my-standup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              My standup
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar__section">
+        <span class="sidebar__label">insights</span>
+        <ul class="sidebar__nav">
+          <li>
+            <a href="#" class="sidebar__link" data-view="ai-summary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              AI summary
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar__link" data-view="sprint-health">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              Sprint health
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </nav>
+
+    <!-- ─── Main Content ─────────────────────────────────────────── -->
+    <main class="content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header__title-group">
+          <h1 class="page-header__title">Team feed</h1>
+          <p class="page-header__meta">Sprint 2 · Day 4 · May 10, 2026</p>
+        </div>
+        <button class="btn btn--primary">
+          <span>+</span> Add standup
+        </button>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stats">
+
+        <div class="stat-card">
+          <div class="stat-card__value">
+            5<span class="stat-card__denom">/7</span>
+          </div>
+          <div class="stat-card__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Checked in today
+          </div>
+        </div>
+
+        <div class="stat-card stat-card--warning">
+          <div class="stat-card__value">2</div>
+          <div class="stat-card__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Active blockers
+          </div>
+        </div>
+
+        <div class="stat-card stat-card--success">
+          <div class="stat-card__value">14</div>
+          <div class="stat-card__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            Commits today
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Feed Filters -->
+      <div class="filter-bar">
+        <button class="filter-btn filter-btn--active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="blocked">Blocked</button>
+        <button class="filter-btn" data-filter="no-update">No update</button>
+      </div>
+
+      <!-- Feed List -->
+      <div class="feed" id="feed-list">
+
+        <!-- Feed Item: available -->
+        <article class="feed-item" data-status="available">
+          <div class="feed-item__avatar feed-item__avatar--mr">MR</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Maya Rodriguez</span>
+              <span class="badge badge--available">available</span>
+              <span class="feed-item__time">2h ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — Working on commit summary widget and sprint dashboard UI</p>
+            <p class="feed-item__entry feed-item__entry--yesterday"><strong>YESTERDAY</strong> — Finished GitHub OAuth flow, reviewed PR #12</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: lead -->
+        <article class="feed-item" data-status="lead">
+          <div class="feed-item__avatar feed-item__avatar--ak">AK</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Arav Kumar</span>
+              <span class="badge badge--lead">lead</span>
+              <span class="feed-item__time">1h ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — Sprint planning prep, coordinating TA meeting notes</p>
+            <p class="feed-item__entry feed-item__entry--yesterday"><strong>YESTERDAY</strong> — Set up CI/CD pipeline on GitHub Actions</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: blocked -->
+        <article class="feed-item" data-status="blocked">
+          <div class="feed-item__avatar feed-item__avatar--jl">JL</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Jamie Lee</span>
+              <span class="badge badge--blocked">blocked</span>
+              <span class="feed-item__time">3h ago</span>
+            </div>
+            <p class="feed-item__entry feed-item__entry--blocker"><strong>BLOCKER</strong> — Waiting on Cloudflare KV access, can't proceed with persistence layer</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: no badge -->
+        <article class="feed-item" data-status="available">
+          <div class="feed-item__avatar feed-item__avatar--ry">RY</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Ray Yang</span>
+              <span class="feed-item__time">30m ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — Sprint 1 research doc, wireframes for all 4 screens</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: no badge -->
+        <article class="feed-item" data-status="available">
+          <div class="feed-item__avatar feed-item__avatar--sh">SH</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Sam He</span>
+              <span class="feed-item__time">4h ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — User personas and user story refinement</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: no badge -->
+        <article class="feed-item" data-status="available">
+          <div class="feed-item__avatar feed-item__avatar--sh">SH</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Sam He</span>
+              <span class="feed-item__time">4h ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — User personas and user story refinement</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: no badge -->
+        <article class="feed-item" data-status="available">
+          <div class="feed-item__avatar feed-item__avatar--sh">SH</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Sam He</span>
+              <span class="feed-item__time">4h ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — User personas and user story refinement</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: no badge -->
+        <article class="feed-item" data-status="available">
+          <div class="feed-item__avatar feed-item__avatar--sh">SH</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Sam He</span>
+              <span class="feed-item__time">4h ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — User personas and user story refinement</p>
+          </div>
+        </article>
+
+        <!-- Feed Item: no badge -->
+        <article class="feed-item" data-status="available">
+          <div class="feed-item__avatar feed-item__avatar--sh">SH</div>
+          <div class="feed-item__body">
+            <div class="feed-item__header">
+              <span class="feed-item__name">Sam He</span>
+              <span class="feed-item__time">4h ago</span>
+            </div>
+            <p class="feed-item__entry"><strong>TODAY</strong> — User personas and user story refinement</p>
+          </div>
+        </article>
+
+      </div><!-- /feed -->
+
+    </main>
+  </div><!-- /layout -->
+
+  <!-- JS goes here later -->
+  <script src="main.js" defer></script>
+</body>
+</html>
