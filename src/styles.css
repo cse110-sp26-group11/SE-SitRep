@@ -1,11 +1,10 @@
-/* ─────────────────────────────────────────────────────────
-   SE SitRep — Stylesheet
-   Wireframe-accurate replica of the team feed dashboard.
-   ───────────────────────────────────────────────────────── */
+/* ---
+    Style CSS
+   --- */
 
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
-  /* Colors */
+  /* Background, Boarder, and Misc Colors */
   --color-bg:          #f5f5f0;
   --color-surface:     #ffffff;
   --color-border:      #e4e4dc;
@@ -27,23 +26,23 @@
   --color-warning:     #c0392b;
   --color-success:     #1a7a4a;
 
-  /* Avatar palette */
+  /* Person PFP palettes */
   --av-mr: #c7e0f5;
   --av-ak: #fcd8d8;
   --av-jl: #d5f0da;
   --av-ry: #ddd5f5;
   --av-sh: #f0ead5;
 
-  /* Layout */
+  /* Layout Bar Dynamic Sizing */
   --topbar-h:    10vh;
   --sidebar-w:   12vw;
 
-  /* Typography */
+  /* Default Fonts */
   --font-sans: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'DM Mono', 'Fira Code', monospace;
 
-  /* Radii */
-  --radius-sm: 6px;
+  /* Radii for rounded rectangles */
+  --radius-sm: 6px;   
   --radius-md: 10px;
   --radius-lg: 14px;
 
@@ -69,6 +68,9 @@ html, body {
 }
 
 /* ── Top Bar ─────────────────────────────────────────────── */
+
+/* TODO: Dynamic percentages */
+/* Top Bar Rectangle, fixed to top of scrolling "main" section */
 .topbar {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -82,7 +84,9 @@ html, body {
   z-index: 100;
 }
 
-.topbar__brand {
+/* TODO: Dynamic percentages */
+/* The "Brand Logo" area, containing logo (.topbar_logo) and brand name. */
+.topbar_brand {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -91,19 +95,26 @@ html, body {
   letter-spacing: -.3px;
 }
 
-.topbar__logo {
-  width: 20px;
-  height: 20px;
+/* TODO: Dynamic percentages */
+/* Style for the logo img itself*/
+.topbar_logo {
+  max-width: 20px;
+  max-height: 20px;
   color: var(--color-active-text);
 }
 
-.topbar__actions {
+/* TODO: Dynamic percentages */
+/* Clickable buttons on Top Bar */
+.topbar_actions {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.topbar__icon-btn {
+
+/* TODO: Dynamic percentages */
+/*  */
+.topbar_icon-btn {
   width: 34px;
   height: 34px;
   display: flex;
@@ -113,10 +124,12 @@ html, body {
   color: var(--color-text-muted);
   transition: background .15s;
 }
-.topbar__icon-btn:hover { background: var(--color-bg); }
-.topbar__icon-btn svg { width: 18px; height: 18px; }
+.topbar_icon-btn:hover { background: var(--color-bg); }
+.topbar_icon-btn svg { width: 18px; height: 18px; }
 
-.topbar__avatar {
+/* TODO: Dynamic percentages */
+/* Placeholder for User's PFP */
+.topbar_pfp {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -158,9 +171,9 @@ html, body {
   overflow-y: auto; /* optional but recommended if sidebar is long */
 }
 
-.sidebar__section { display: flex; flex-direction: column; gap: 4px; }
+.sidebar_section { display: flex; flex-direction: column; gap: 4px; }
 
-.sidebar__label {
+.sidebar_label {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .06em;
@@ -170,9 +183,9 @@ html, body {
   margin-bottom: 2px;
 }
 
-.sidebar__nav { display: flex; flex-direction: column; gap: 2px; }
+.sidebar_nav { display: flex; flex-direction: column; gap: 2px; }
 
-.sidebar__link {
+.sidebar_link {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -183,14 +196,14 @@ html, body {
   color: var(--color-text-muted);
   transition: background .12s, color .12s;
 }
-.sidebar__link svg { width: 16px; height: 16px; }
-.sidebar__link:hover { background: var(--color-bg); color: var(--color-text); }
-.sidebar__link--active {
+.sidebar_link svg { width: 16px; height: 16px; }
+.sidebar_link:hover { background: var(--color-bg); color: var(--color-text); }
+.sidebar_link--active {
   background: var(--color-active-bg);
   color: var(--color-active-text);
   font-weight: 600;
 }
-.sidebar__link--active svg { color: var(--color-active-text); }
+.sidebar_link--active svg { color: var(--color-active-text); }
 
 /* ── Main Content ────────────────────────────────────────── */
 .content {
@@ -217,13 +230,13 @@ html, body {
   padding: 16px 0;
 }
 
-.page-header__title {
+.page-header_title {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -.4px;
 }
 
-.page-header__meta {
+.page-header_meta {
   margin-top: 3px;
   font-size: 13px;
   color: var(--color-text-muted);
@@ -266,23 +279,23 @@ html, body {
   box-shadow: var(--shadow-card);
 }
 
-.stat-card__value {
+.stat-card_value {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -.8px;
   color: var(--color-text);
 }
 
-.stat-card__denom {
+.stat-card_denom {
   font-size: 18px;
   font-weight: 500;
   color: var(--color-text-muted);
 }
 
-.stat-card--warning .stat-card__value { color: var(--color-warning); }
-.stat-card--success .stat-card__value { color: var(--color-success); }
+.stat-card--warning .stat-card_value { color: var(--color-warning); }
+.stat-card--success .stat-card_value { color: var(--color-success); }
 
-.stat-card__label {
+.stat-card_label {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -290,7 +303,7 @@ html, body {
   color: var(--color-text-muted);
   font-weight: 500;
 }
-.stat-card__label svg { width: 14px; height: 14px; }
+.stat-card_label svg { width: 14px; height: 14px; }
 
 /* ── Filter Bar ──────────────────────────────────────────── */
 .filter-bar {
@@ -335,7 +348,7 @@ html, body {
 .feed-item:hover { background: var(--color-bg); }
 
 /* Avatars */
-.feed-item__avatar {
+.feed-item_avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -347,16 +360,16 @@ html, body {
   flex-shrink: 0;
   margin-top: 2px;
 }
-.feed-item__avatar--mr { background: var(--av-mr); color: #1a5a8a; }
-.feed-item__avatar--ak { background: var(--av-ak); color: #8a1a1a; }
-.feed-item__avatar--jl { background: var(--av-jl); color: #1a5a2a; }
-.feed-item__avatar--ry { background: var(--av-ry); color: #3b2a8a; }
-.feed-item__avatar--sh { background: var(--av-sh); color: #6a5a1a; }
+.feed-item_avatar--mr { background: var(--av-mr); color: #1a5a8a; }
+.feed-item_avatar--ak { background: var(--av-ak); color: #8a1a1a; }
+.feed-item_avatar--jl { background: var(--av-jl); color: #1a5a2a; }
+.feed-item_avatar--ry { background: var(--av-ry); color: #3b2a8a; }
+.feed-item_avatar--sh { background: var(--av-sh); color: #6a5a1a; }
 
 /* Feed item body */
-.feed-item__body { flex: 1; min-width: 0; }
+.feed-item_body { flex: 1; min-width: 0; }
 
-.feed-item__header {
+.feed-item_header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -364,30 +377,30 @@ html, body {
   margin-bottom: 6px;
 }
 
-.feed-item__name {
+.feed-item_name {
   font-weight: 700;
   font-size: 14px;
 }
 
-.feed-item__time {
+.feed-item_time {
   margin-left: auto;
   font-size: 12px;
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-.feed-item__entry {
+.feed-item_entry {
   font-size: 13.5px;
   color: var(--color-text);
   line-height: 1.5;
   margin-top: 2px;
 }
 
-.feed-item__entry--yesterday {
+.feed-item_entry--yesterday {
   color: var(--color-text-muted);
 }
 
-.feed-item__entry--blocker {
+.feed-item_entry--blocker {
   color: var(--color-blocked);
 }
 
