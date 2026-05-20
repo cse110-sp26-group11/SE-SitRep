@@ -1,76 +1,106 @@
 /* ---
-    Style CSS
+    Style CSS  —  Responsive / fluid layout
    --- */
 
-/* ── Tokens ─────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   TOKENS
+   ══════════════════════════════════════════════════════════ */
 :root {
-  /* Background, Boarder, and Misc Colors */
-  --color-bg:          #f5f5f0;
-  --color-surface:     #ffffff;
-  --color-border:      #e4e4dc;
-  --color-text:        #1a1a18;
-  --color-text-muted:  #8a8a82;
-  --color-sidebar-bg:  #ffffff;
-  --color-topbar-bg:   #ffffff;
-  --color-active-bg:   #eff1ff;
-  --color-active-text: #3b4fd8;
-  --color-primary:     #1a1a18;
+  /* Colors */
+  --color-bg:           #f5f5f0;
+  --color-surface:      #ffffff;
+  --color-border:       #e4e4dc;
+  --color-text:         #1a1a18;
+  --color-text-muted:   #8a8a82;
+  --color-sidebar-bg:   #ffffff;
+  --color-topbar-bg:    #ffffff;
+  --color-active-bg:    #eff1ff;
+  --color-active-text:  #3b4fd8;
+  --color-primary:      #1a1a18;
 
   /* Status colors */
-  --color-available:   #1a7a4a;
-  --color-available-bg:#e6f5ee;
-  --color-lead:        #3b4fd8;
-  --color-lead-bg:     #eff1ff;
-  --color-blocked:     #c0392b;
-  --color-blocked-bg:  #fdecea;
-  --color-warning:     #c0392b;
-  --color-success:     #1a7a4a;
+  --color-available:    #1a7a4a;
+  --color-available-bg: #e6f5ee;
+  --color-lead:         #3b4fd8;
+  --color-lead-bg:      #eff1ff;
+  --color-blocked:      #c0392b;
+  --color-blocked-bg:   #fdecea;
+  --color-warning:      #c0392b;
+  --color-success:      #1a7a4a;
 
-  /* Person PFP palettes */
+  /* Avatar palettes */
   --av-mr: #c7e0f5;
   --av-ak: #fcd8d8;
   --av-jl: #d5f0da;
   --av-ry: #ddd5f5;
   --av-sh: #f0ead5;
 
-  /* Layout Bar Dynamic Sizing */
-  --topbar-h:    10vh;
-  --sidebar-w:   12vw;
+  /* ── Fluid layout sizing ──────────────────────────────── */
+  /* Top bar: clamp(min, preferred, max) keeps it sensible on all screens */
+  --topbar-h:  clamp(44px, 7vh, 64px);
 
-  /* Default Fonts */
+  /* Sidebar: vw-based so it breathes on wide screens, min/max clamped */
+  --sidebar-w: clamp(140px, 14vw, 260px);
+
+  /* Base font: scales between 13px (small) and 16px (very large screens) */
+  --base-font: clamp(13px, 1.1vw, 16px);
+
+  /* Fonts */
   --font-sans: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'DM Mono', 'Fira Code', monospace;
 
-  /* Radii for rounded rectangles */
-  --radius-sm: 6px;   
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  /* Radii */
+  --radius-sm: 0.45rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
 
   /* Shadows */
-  --shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-card:   0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   --shadow-topbar: 0 1px 0 var(--color-border);
+
+  /* Dark theme — override only what changes */
+  [data-theme="dark"] {
+    --color-bg:          #1a1a18;
+    --color-surface:     #2a2a28;
+    --color-border:      #3a3a38;
+    --color-text:        #f0f0ec;
+    --color-text-muted:  #8a8a82;
+    --color-active-bg:   #2a2f6a;
+    --color-active-text: #7b8fff;
+  }
+
+  /* High contrast theme */
+  [data-theme="high-contrast"] {
+    --color-bg:          #000000;
+    --color-surface:     #000000;
+    --color-border:      #ffffff;
+    --color-text:        #ffffff;
+    --color-active-text: #ffff00;
+  }
 }
 
-/* ── Reset ───────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   RESET
+   ══════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 ul { list-style: none; }
 a  { text-decoration: none; color: inherit; }
 button { cursor: pointer; border: none; background: none; font: inherit; }
 svg { display: block; flex-shrink: 0; }
 
-html, body {
-  height: 100%;
+html { height: 100%; }
+body {
+  min-height: 100%;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--base-font);
   color: var(--color-text);
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Top Bar ─────────────────────────────────────────────── */
-
-/* TODO: Dynamic percentages */
-/* Top Bar Rectangle, fixed to top of scrolling "main" section */
+/* ══════════════════════════════════════════════════════════
+   TOP BAR
+   ══════════════════════════════════════════════════════════ */
 .topbar {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -80,43 +110,51 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  z-index: 100;
+  padding: 0 clamp(12px, 2vw, 28px);
+  z-index: 200;
 }
 
-/* TODO: Dynamic percentages */
-/* The "Brand Logo" area, containing logo (.topbar_logo) and brand name. */
 .topbar_brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: clamp(6px, 0.7vw, 12px);
   font-weight: 700;
-  font-size: 15px;
+  font-size: clamp(13px, 1.1vw, 17px);
   letter-spacing: -.3px;
 }
 
-/* TODO: Dynamic percentages */
-/* Style for the logo img itself*/
 .topbar_logo {
-  max-width: 20px;
-  max-height: 20px;
+  width:  clamp(16px, 1.5vw, 22px);
+  height: clamp(16px, 1.5vw, 22px);
   color: var(--color-active-text);
 }
 
-/* TODO: Dynamic percentages */
-/* Clickable buttons on Top Bar */
+/* Hamburger — hidden on desktop */
+.topbar_hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width:  clamp(28px, 3vw, 38px);
+  height: clamp(28px, 3vw, 38px);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+.topbar_hamburger:hover { background: var(--color-bg); }
+.topbar_hamburger svg {
+  width:  clamp(16px, 1.6vw, 22px);
+  height: clamp(16px, 1.6vw, 22px);
+}
+
 .topbar_actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: clamp(4px, 0.5vw, 8px);
 }
 
-
-/* TODO: Dynamic percentages */
-/*  */
 .topbar_icon-btn {
-  width: 34px;
-  height: 34px;
+  width:  clamp(28px, 2.8vw, 38px);
+  height: clamp(28px, 2.8vw, 38px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -125,61 +163,75 @@ html, body {
   transition: background .15s;
 }
 .topbar_icon-btn:hover { background: var(--color-bg); }
-.topbar_icon-btn svg { width: 18px; height: 18px; }
+.topbar_icon-btn svg {
+  width:  clamp(14px, 1.4vw, 20px);
+  height: clamp(14px, 1.4vw, 20px);
+}
 
-/* TODO: Dynamic percentages */
-/* Placeholder for User's PFP */
 .topbar_pfp {
-  width: 30px;
-  height: 30px;
+  width:  clamp(24px, 2.4vw, 34px);
+  height: clamp(24px, 2.4vw, 34px);
   border-radius: 50%;
   background: var(--color-active-text);
   color: #fff;
-  font-size: 12px;
+  font-size: clamp(10px, 0.9vw, 14px);
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* ── Layout Shell ────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   LAYOUT SHELL
+   ══════════════════════════════════════════════════════════ */
 .layout {
   display: flex;
   margin-top: var(--topbar-h);
   min-height: calc(100vh - var(--topbar-h));
 }
 
-/* ── Sidebar ─────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════════ */
+
+/* Dim overlay behind mobile drawer */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 150;
+}
+.sidebar-overlay.is-visible { display: block; }
+
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
-
   background: var(--color-sidebar-bg);
   border-right: 1px solid var(--color-border);
-  padding: 20px 12px;
-
+  padding: clamp(14px, 1.5vh, 24px) clamp(8px, 0.8vw, 16px);
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: clamp(18px, 2.5vh, 32px);
 
+  /* Full-height sticky — stays in place as page scrolls */
   position: fixed;
   top: var(--topbar-h);
   left: 0;
-
   height: calc(100vh - var(--topbar-h));
-
-  overflow-y: auto; /* optional but recommended if sidebar is long */
+  overflow-y: auto;
+  z-index: 160;
 }
 
 .sidebar_section { display: flex; flex-direction: column; gap: 4px; }
 
 .sidebar_label {
-  font-size: 11px;
+  font-size: clamp(9px, 0.75vw, 12px);
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: lowercase;
   color: var(--color-text-muted);
-  padding: 0 10px;
+  padding: 0 clamp(6px, 0.6vw, 12px);
   margin-bottom: 2px;
 }
 
@@ -188,15 +240,19 @@ html, body {
 .sidebar_link {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 10px;
+  gap: clamp(6px, 0.6vw, 10px);
+  padding: clamp(5px, 0.6vh, 9px) clamp(6px, 0.6vw, 12px);
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: clamp(12px, 0.95vw, 15px);
   font-weight: 500;
   color: var(--color-text-muted);
   transition: background .12s, color .12s;
+  white-space: nowrap;
 }
-.sidebar_link svg { width: 16px; height: 16px; }
+.sidebar_link svg {
+  width:  clamp(13px, 1.1vw, 18px);
+  height: clamp(13px, 1.1vw, 18px);
+}
 .sidebar_link:hover { background: var(--color-bg); color: var(--color-text); }
 .sidebar_link--active {
   background: var(--color-active-bg);
@@ -205,16 +261,18 @@ html, body {
 }
 .sidebar_link--active svg { color: var(--color-active-text); }
 
-/* ── Main Content ────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   MAIN CONTENT
+   ══════════════════════════════════════════════════════════ */
 .content {
   flex: 1;
-  padding: 32px 36px;
-  max-width: none;
+  min-width: 0;
+  /* Push right of fixed sidebar */
+  margin-left: var(--sidebar-w);
+  padding: clamp(16px, 2.5vh, 40px) clamp(16px, 3vw, 48px);
   display: flex;
   flex-direction: column;
-  gap: 24px;
-
-  margin-left: var(--sidebar-w);
+  gap: clamp(16px, 2vh, 28px);
 }
 
 /* ── Page Header ─────────────────────────────────────────── */
@@ -222,37 +280,40 @@ html, body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  /* Sticks just below the top bar while scrolling */
   position: sticky;
   top: var(--topbar-h);
-  background: var(--color-bg); /* important so content doesn't show through */
+  background: var(--color-bg);
   z-index: 10;
-
-  padding: 16px 0;
+  padding: clamp(10px, 1.2vh, 18px) 0;
 }
 
 .page-header_title {
-  font-size: 22px;
+  font-size: clamp(16px, 1.6vw, 26px);
   font-weight: 700;
   letter-spacing: -.4px;
 }
 
 .page-header_meta {
   margin-top: 3px;
-  font-size: 13px;
+  font-size: clamp(11px, 0.9vw, 14px);
   color: var(--color-text-muted);
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: clamp(4px, 0.4vw, 8px);
+  padding: clamp(6px, 0.6vh, 10px) clamp(10px, 1vw, 18px);
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: clamp(12px, 0.95vw, 15px);
   font-weight: 600;
+  white-space: nowrap;
   transition: background .15s, box-shadow .15s;
 }
-
 .btn--primary {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -261,33 +322,38 @@ html, body {
 }
 .btn--primary:hover { background: var(--color-bg); }
 
-/* ── Stat Cards ──────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   STAT CARDS  —  fluid 3-column grid that shrinks on mobile
+   ══════════════════════════════════════════════════════════ */
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  /* Each card is at least 120px, up to equal share; wraps automatically */
+  grid-template-columns: repeat(auto-fit, minmax(clamp(100px, 18vw, 240px), 1fr));
+  gap: clamp(8px, 1vw, 16px);
 }
 
 .stat-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 18px 20px;
+  padding: clamp(12px, 1.5vh, 22px) clamp(12px, 1.5vw, 24px);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: clamp(4px, 0.6vh, 10px);
   box-shadow: var(--shadow-card);
+  min-width: 0;
 }
 
 .stat-card_value {
-  font-size: 28px;
+  font-size: clamp(20px, 2.5vw, 36px);
   font-weight: 800;
   letter-spacing: -.8px;
   color: var(--color-text);
+  line-height: 1;
 }
 
 .stat-card_denom {
-  font-size: 18px;
+  font-size: clamp(14px, 1.4vw, 22px);
   font-weight: 500;
   color: var(--color-text-muted);
 }
@@ -298,23 +364,30 @@ html, body {
 .stat-card_label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: clamp(4px, 0.4vw, 8px);
+  font-size: clamp(11px, 0.85vw, 14px);
   color: var(--color-text-muted);
   font-weight: 500;
 }
-.stat-card_label svg { width: 14px; height: 14px; }
+.stat-card_label svg {
+  width:  clamp(11px, 1vw, 16px);
+  height: clamp(11px, 1vw, 16px);
+  flex-shrink: 0;
+}
 
-/* ── Filter Bar ──────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   FILTER BAR for standup
+   ══════════════════════════════════════════════════════════ */
 .filter-bar {
   display: flex;
-  gap: 8px;
+  gap: clamp(6px, 0.6vw, 10px);
+  flex-wrap: wrap;
 }
 
 .filter-btn {
-  padding: 6px 16px;
+  padding: clamp(4px, 0.5vh, 8px) clamp(10px, 1vw, 18px);
   border-radius: 99px;
-  font-size: 13px;
+  font-size: clamp(11px, 0.85vw, 14px);
   font-weight: 500;
   border: 1.5px solid var(--color-border);
   background: var(--color-surface);
@@ -328,7 +401,9 @@ html, body {
   border-color: var(--color-text);
 }
 
-/* ── Feed ────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   FEED layout
+   ══════════════════════════════════════════════════════════ */
 .feed {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -339,8 +414,8 @@ html, body {
 
 .feed-item {
   display: flex;
-  gap: 14px;
-  padding: 18px 22px;
+  gap: clamp(10px, 1vw, 16px);
+  padding: clamp(12px, 1.5vh, 22px) clamp(14px, 1.5vw, 26px);
   border-bottom: 1px solid var(--color-border);
   transition: background .12s;
 }
@@ -349,13 +424,13 @@ html, body {
 
 /* Avatars */
 .feed-item_avatar {
-  width: 36px;
-  height: 36px;
+  width:  clamp(28px, 2.8vw, 40px);
+  height: clamp(28px, 2.8vw, 40px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: clamp(9px, 0.8vw, 13px);
   font-weight: 700;
   flex-shrink: 0;
   margin-top: 2px;
@@ -366,74 +441,111 @@ html, body {
 .feed-item_avatar--ry { background: var(--av-ry); color: #3b2a8a; }
 .feed-item_avatar--sh { background: var(--av-sh); color: #6a5a1a; }
 
-/* Feed item body */
 .feed-item_body { flex: 1; min-width: 0; }
 
 .feed-item_header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: clamp(5px, 0.5vw, 10px);
+  margin-bottom: clamp(4px, 0.5vh, 8px);
 }
 
 .feed-item_name {
   font-weight: 700;
-  font-size: 14px;
+  font-size: clamp(12px, 1vw, 15px);
 }
 
 .feed-item_time {
   margin-left: auto;
-  font-size: 12px;
+  font-size: clamp(10px, 0.8vw, 13px);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
 .feed-item_entry {
-  font-size: 13.5px;
+  font-size: clamp(11.5px, 0.9vw, 14px);
   color: var(--color-text);
   line-height: 1.5;
   margin-top: 2px;
 }
+.feed-item_entry--yesterday { color: var(--color-text-muted); }
+.feed-item_entry--blocker   { color: var(--color-blocked); }
 
-.feed-item_entry--yesterday {
-  color: var(--color-text-muted);
-}
-
-.feed-item_entry--blocker {
-  color: var(--color-blocked);
-}
-
-/* ── Badges ──────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   BADGES
+   ══════════════════════════════════════════════════════════ */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 9px;
+  padding: 2px clamp(6px, 0.6vw, 10px);
   border-radius: 99px;
-  font-size: 11.5px;
+  font-size: clamp(10px, 0.75vw, 13px);
   font-weight: 600;
   letter-spacing: .01em;
+  white-space: nowrap;
 }
+.badge--available { background: var(--color-available-bg); color: var(--color-available); }
+.badge--lead      { background: var(--color-lead-bg);      color: var(--color-lead); }
+.badge--blocked   { background: var(--color-blocked-bg);   color: var(--color-blocked); }
 
-.badge--available {
-  background: var(--color-available-bg);
-  color: var(--color-available);
-}
-
-.badge--lead {
-  background: var(--color-lead-bg);
-  color: var(--color-lead);
-}
-
-.badge--blocked {
-  background: var(--color-blocked-bg);
-  color: var(--color-blocked);
-}
-
-/* ── Utility: hide feed items via JS filter ──────────────── */
+/* ══════════════════════════════════════════════════════════
+   JS HOOKS
+   ══════════════════════════════════════════════════════════ */
 .feed-item[hidden] { display: none; }
 
-/* ── Scrollbar polish ────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
+/* ══════════════════════════════════════════════════════════
+   SCROLLBAR
+   ══════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Mobile  (≤ 680px) — sidebar becomes a hamburger drawer ─ */
+@media (max-width: 680px) {
+
+  /* Show hamburger in topbar */
+  .topbar_hamburger { display: flex; }
+
+  /* Sidebar slides in from the left as a drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    /* On mobile, sidebar shouldn't push content — it overlays */
+    width: clamp(180px, 65vw, 280px);
+  }
+  .sidebar.is-open { transform: translateX(0); }
+
+  /* Content fills full width (no sidebar offset) */
+  .content {
+    margin-left: 0;
+    padding: clamp(14px, 4vw, 24px);
+  }
+
+  /* Stat cards: shrink below 3-across naturally via auto-fit;
+     force at least 2-across on mid-mobile, 1-across very small */
+  .stats {
+    grid-template-columns: repeat(auto-fit, minmax(clamp(90px, 35vw, 200px), 1fr));
+  }
+
+  /* Page title slightly smaller */
+  .page-header_title { font-size: clamp(15px, 5vw, 20px); }
+}
+
+/* ── Very small phones (≤ 380px) — single column cards ───── */
+@media (max-width: 380px) {
+  .stats { grid-template-columns: 1fr; }
+
+  .feed-item {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  /* Stack header + button vertically */
+  .page-header { flex-direction: column; }
+}

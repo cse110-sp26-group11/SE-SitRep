@@ -1,276 +1,338 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--
+  data-theme on <html> is the single toggle point for the whole palette.
+  JS reads localStorage on load and sets it here before first paint,
+  preventing a flash of the wrong theme.
+-->
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tatOS</title>
+  <title>SE SitRep — Team Feed</title>
   <link rel="stylesheet" href="styles.css" />
+
+  <!--
+    Inline script runs before body renders so the correct theme class
+    is applied before CSS is painted — eliminates theme flash on reload.
+  -->
+  <script>
+    (function () {
+      const saved = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
 </head>
 <body>
 
-  <!-- ISSUES: REMOVE SHADOW DOMMING IF PRESENT, REPALCE ARIA LABEL NAMES-->>
-  <!-- ─── Top Bar ─────────────────────────────────────────────── -->
-  <header class="topbar">
+  <!-- ── Skip link ─────────────────────────────────────────────────── -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ── Top Bar ───────────────────────────────────────────────────── -->
+  <header class="topbar" role="banner">
 
     <div class="topbar_brand">
-      <svg class="topbar_logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-      </svg>
-      <span class="topbar_name">SE SitRep</span>
+
+      <!-- Hamburger: shown only on mobile via CSS -->
+      <button
+        class="topbar_hamburger"
+        id="sidebar-toggle"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="sidebar"
+      >
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6"  x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <a href="#main-content" class="topbar_brand-link" aria-label="SE SitRep — go to dashboard">
+        <svg class="topbar_logo" aria-hidden="true" focusable="false"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span>SE SitRep</span>
+      </a>
     </div>
 
-    <div class="topbar_actions">
-      <button class="topbar_icon-btn" aria-label="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="topbar_actions" role="toolbar" aria-label="User actions">
+
+      <!--
+        Theme switcher — cycles light → dark → high-contrast → light.
+        aria-label is updated by JS to reflect the *next* theme it will switch to.
+      -->
+      <button
+        class="topbar_icon-btn"
+        id="theme-toggle"
+        aria-label="Switch to dark theme"
+      >
+        <!-- Sun icon (shown in light mode) -->
+        <svg class="icon-light" aria-hidden="true" focusable="false"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1"  x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22"   x2="5.64"  y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1"  y1="12" x2="3"  y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78"  x2="5.64"  y2="18.36"></line>
+          <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"></line>
+        </svg>
+        <!-- Moon icon (shown in dark mode) -->
+        <svg class="icon-dark" aria-hidden="true" focusable="false"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <!-- Contrast icon (shown in high-contrast mode) -->
+        <svg class="icon-contrast" aria-hidden="true" focusable="false"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor"></path>
+        </svg>
+      </button>
+
+      <button class="topbar_icon-btn" aria-label="Notifications" aria-haspopup="true">
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
       </button>
-      <div class="topbar_pfp" aria-label="User menu">R</div>
-      <button class="topbar_icon-btn" aria-label="More options">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle>
+
+      <button class="topbar_pfp" aria-label="User menu for R" aria-haspopup="true">
+        <span aria-hidden="true">R</span>
+      </button>
+
+      <button class="topbar_icon-btn" aria-label="More options" aria-haspopup="true">
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="5"  r="1"></circle>
+          <circle cx="12" cy="12" r="1"></circle>
+          <circle cx="12" cy="19" r="1"></circle>
         </svg>
       </button>
-    </div>
 
+    </div>
   </header>
 
-  <!-- ─── Layout ───────────────────────────────────────────────── -->
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay"
+       role="presentation" aria-hidden="true"></div>
+
+  <!-- ── Layout ────────────────────────────────────────────────────── -->
   <div class="layout">
 
-    <!-- ─── Sidebar ─────────────────────────────────────────────── -->
-    <nav class="sidebar">
+    <!-- ── Sidebar ───────────────────────────────────────────────── -->
+    <nav class="sidebar" id="sidebar" aria-label="Main navigation">
 
-      <div class="sidebar_section">
-        <span class="sidebar_label">main</span>
-        <ul class="sidebar_nav">
-          <li>
-            <a href="#" class="sidebar_link sidebar_link--active" data-view="team-feed">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="9"></rect><rect x="3" y="14" width="7" height="7"></rect>
+      <section class="sidebar_section" aria-labelledby="nav-heading-main">
+        <h2 class="sidebar_label" id="nav-heading-main">Main</h2>
+        <ul class="sidebar_nav" role="list">
+          <li role="listitem">
+            <a href="#" class="sidebar_link sidebar_link--active"
+               data-view="team-feed" aria-current="page">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3"  y="3"  width="7" height="7"></rect>
+                <rect x="14" y="3"  width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3"  y="14" width="7" height="7"></rect>
               </svg>
               Team feed
             </a>
           </li>
-          <li>
+          <li role="listitem">
             <a href="#" class="sidebar_link" data-view="my-standup">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
               </svg>
               My standup
             </a>
           </li>
         </ul>
-      </div>
+      </section>
 
-      <div class="sidebar_section">
-        <span class="sidebar_label">insights</span>
-        <ul class="sidebar_nav">
-          <li>
+      <section class="sidebar_section" aria-labelledby="nav-heading-insights">
+        <h2 class="sidebar_label" id="nav-heading-insights">Insights</h2>
+        <ul class="sidebar_nav" role="list">
+          <li role="listitem">
             <a href="#" class="sidebar_link" data-view="ai-summary">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
               AI summary
             </a>
           </li>
-          <li>
+          <li role="listitem">
             <a href="#" class="sidebar_link" data-view="sprint-health">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="14"></line>
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6"  y1="20" x2="6"  y2="14"></line>
               </svg>
               Sprint health
             </a>
           </li>
         </ul>
-      </div>
+      </section>
 
     </nav>
 
-    <!-- ─── Main Content ─────────────────────────────────────────── -->
-    <main class="content">
+    <!-- ── Main content ──────────────────────────────────────────── -->
+    <main class="content" id="main-content" role="main"
+          aria-label="Team feed dashboard">
 
-      <!-- Page Header -->
-      <div class="page-header">
-        <div class="page-header_title-group">
+      <!-- Page header -->
+      <header class="page-header" aria-label="Page title and actions">
+        <div>
           <h1 class="page-header_title">Team feed</h1>
-          <p class="page-header_meta">Sprint 2 · Day 4 · May 10, 2026</p>
+          <p class="page-header_meta">
+            Sprint 2 · Day 4 ·
+            <time datetime="2026-05-10">May 10, 2026</time>
+          </p>
         </div>
-        <button class="btn btn--primary">
-          <span>+</span> Add standup
+        <button class="btn btn--primary" aria-label="Add a new standup entry">
+          + Add standup
         </button>
-      </div>
+      </header>
 
-      <!-- Stat Cards -->
-      <div class="stats">
+      <!-- Sprint stats -->
+      <section aria-labelledby="stats-heading">
+        <h2 id="stats-heading" class="sr-only">Sprint stats</h2>
+        <div class="stats">
 
-        <div class="stat-card">
-          <div class="stat-card_value">
-            5<span class="stat-card_denom">/7</span>
-          </div>
-          <div class="stat-card_label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Checked in today
-          </div>
+          <article class="stat-card" aria-label="5 out of 7 team members checked in today">
+            <div class="stat-card_value" aria-hidden="true">
+              5<span class="stat-card_denom">/7</span>
+            </div>
+            <div class="stat-card_label" aria-hidden="true">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Checked in today
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--warning" aria-label="2 active blockers">
+            <div class="stat-card_value" aria-hidden="true">2</div>
+            <div class="stat-card_label" aria-hidden="true">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9"  x2="12"    y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Active blockers
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--success" aria-label="14 commits today">
+            <div class="stat-card_value" aria-hidden="true">14</div>
+            <div class="stat-card_label" aria-hidden="true">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+              Commits today
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- Feed section -->
+      <section aria-labelledby="feed-heading">
+        <h2 id="feed-heading" class="sr-only">Team standup entries</h2>
+
+        <!-- Filter bar -->
+        <div class="filter-bar" role="group" aria-labelledby="filter-label">
+          <span id="filter-label" class="sr-only">Filter entries by status</span>
+          <button class="filter-btn filter-btn--active" data-filter="all"       aria-pressed="true" >All</button>
+          <button class="filter-btn"                    data-filter="blocked"   aria-pressed="false">Blocked</button>
+          <button class="filter-btn"                    data-filter="no-update" aria-pressed="false">No update</button>
         </div>
 
-        <div class="stat-card stat-card--warning">
-          <div class="stat-card_value">2</div>
-          <div class="stat-card_label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            Active blockers
-          </div>
+        <!--
+          Feed container — JS renders items here via the <template> below.
+          On first load it shows a status message while the mock fetch runs.
+        -->
+        <div
+          class="feed"
+          id="feed-list"
+          role="feed"
+          aria-label="Standup entries"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <p class="feed-loading" aria-live="polite">Loading standup entries…</p>
         </div>
 
-        <div class="stat-card stat-card--success">
-          <div class="stat-card_value">14</div>
-          <div class="stat-card_label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>
-            </svg>
-            Commits today
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Feed Filters -->
-      <div class="filter-bar">
-        <button class="filter-btn filter-btn--active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="blocked">Blocked</button>
-        <button class="filter-btn" data-filter="no-update">No update</button>
-      </div>
-
-      <!-- Feed List -->
-      <div class="feed" id="feed-list">
-
-        <!-- Feed Item: available -->
-        <article class="feed-item" data-status="available">
-          <div class="feed-item_avatar feed-item_avatar--mr">MR</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Maya Rodriguez</span>
-              <span class="badge badge--available">available</span>
-              <span class="feed-item_time">2h ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — Working on commit summary widget and sprint dashboard UI</p>
-            <p class="feed-item_entry feed-item_entry--yesterday"><strong>YESTERDAY</strong> — Finished GitHub OAuth flow, reviewed PR #12</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: lead -->
-        <article class="feed-item" data-status="lead">
-          <div class="feed-item_avatar feed-item_avatar--ak">AK</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Arav Kumar</span>
-              <span class="badge badge--lead">lead</span>
-              <span class="feed-item_time">1h ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — Sprint planning prep, coordinating TA meeting notes</p>
-            <p class="feed-item_entry feed-item_entry--yesterday"><strong>YESTERDAY</strong> — Set up CI/CD pipeline on GitHub Actions</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: blocked -->
-        <article class="feed-item" data-status="blocked">
-          <div class="feed-item_avatar feed-item_avatar--jl">JL</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Jamie Lee</span>
-              <span class="badge badge--blocked">blocked</span>
-              <span class="feed-item_time">3h ago</span>
-            </div>
-            <p class="feed-item_entry feed-item_entry--blocker"><strong>BLOCKER</strong> — Waiting on Cloudflare KV access, can't proceed with persistence layer</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: no badge -->
-        <article class="feed-item" data-status="available">
-          <div class="feed-item_avatar feed-item_avatar--ry">RY</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Ray Yang</span>
-              <span class="feed-item_time">30m ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — Sprint 1 research doc, wireframes for all 4 screens</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: no badge -->
-        <article class="feed-item" data-status="available">
-          <div class="feed-item_avatar feed-item_avatar--sh">SH</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Sam He</span>
-              <span class="feed-item_time">4h ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — User personas and user story refinement</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: no badge -->
-        <article class="feed-item" data-status="available">
-          <div class="feed-item_avatar feed-item_avatar--sh">SH</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Sam He</span>
-              <span class="feed-item_time">4h ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — User personas and user story refinement</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: no badge -->
-        <article class="feed-item" data-status="available">
-          <div class="feed-item_avatar feed-item_avatar--sh">SH</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Sam He</span>
-              <span class="feed-item_time">4h ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — User personas and user story refinement</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: no badge -->
-        <article class="feed-item" data-status="available">
-          <div class="feed-item_avatar feed-item_avatar--sh">SH</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Sam He</span>
-              <span class="feed-item_time">4h ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — User personas and user story refinement</p>
-          </div>
-        </article>
-
-        <!-- Feed Item: no badge -->
-        <article class="feed-item" data-status="available">
-          <div class="feed-item_avatar feed-item_avatar--sh">SH</div>
-          <div class="feed-item_body">
-            <div class="feed-item_header">
-              <span class="feed-item_name">Sam He</span>
-              <span class="feed-item_time">4h ago</span>
-            </div>
-            <p class="feed-item_entry"><strong>TODAY</strong> — User personas and user story refinement</p>
-          </div>
-        </article>
-
-      </div><!-- /feed -->
+      </section>
 
     </main>
   </div><!-- /layout -->
 
-  <!-- JS goes here later -->
+  <!--
+    ═══════════════════════════════════════════════════════════
+    FEED ITEM TEMPLATE
+    Parsed by the browser but never rendered.
+    JS clones this, fills in data from the mock/API, and
+    appends it to #feed-list. Adding a new person to the DB
+    means one new object in the data array — no HTML changes needed.
+    ═══════════════════════════════════════════════════════════
+  -->
+  <template id="feed-item-template">
+    <article class="feed-item" data-status="">
+      <!--
+        Avatar: initials + color class are set by JS.
+        aria-hidden because the name <h3> already identifies the person.
+      -->
+      <div class="feed-item_avatar" aria-hidden="true"></div>
+
+      <div class="feed-item_body">
+        <div class="feed-item_header">
+          <h3 class="feed-item_name"></h3>
+          <!--
+            Badge: JS adds the right class + aria-label.
+            Removed entirely if status has no badge.
+          -->
+          <span class="badge"></span>
+          <!--
+            Timestamp: datetime attr + aria-label both set by JS.
+          -->
+          <time class="feed-item_time"></time>
+        </div>
+        <!-- Today's update — always present -->
+        <p class="feed-item_entry entry-today"></p>
+        <!-- Yesterday's update — removed by JS if null -->
+        <p class="feed-item_entry feed-item_entry--yesterday entry-yesterday"></p>
+      </div>
+    </article>
+  </template>
+
   <script src="main.js" defer></script>
 </body>
 </html>
