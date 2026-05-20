@@ -1,46 +1,303 @@
 /**
  * SE SitRep — main.js
- * Placeholder for JavaScript implementation.
  *
- * Suggested hooks (already wired up in the HTML):
- *
- *  - Filter bar:  [data-filter] buttons → show/hide .feed-item[data-status]
- *  - Sidebar nav: [data-view] links → swap active panel / page
- *  - "Add standup" button → open modal or navigate to form
+ * Three responsibilities:
+ *  1. Theme switching (light / dark / high-contrast)
+ *  2. Sidebar hamburger drawer
+ *  3. Feed rendering via <template> + mock data
+ *     (swap mockFetch for a real fetch('/api/standups') when your backend is ready)
  */
 
-// ── Filter bar ────────────────────────────────────────────────────────
-const filterBtns = document.querySelectorAll('.filter-btn');
-const feedItems  = document.querySelectorAll('.feed-item');
+/* ══════════════════════════════════════════════════════════
+   1. THEME SWITCHER
+   ══════════════════════════════════════════════════════════ */
 
-filterBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    filterBtns.forEach(b => b.classList.remove('filter-btn--active'));
-    btn.classList.add('filter-btn--active');
+const THEMES = ['light', 'dark', 'high-contrast'];
+const themeBtn = document.getElementById('theme-toggle');
 
-    const filter = btn.dataset.filter;
+// Labels describe the theme you'll switch TO (not the current one)
+const NEXT_LABEL = {
+  light:          'Switch to dark theme',
+  dark:           'Switch to high-contrast theme',
+  'high-contrast':'Switch to light theme',
+};
 
-    feedItems.forEach(item => {
-      if (filter === 'all') {
-        item.hidden = false;
-      } else if (filter === 'blocked') {
-        item.hidden = item.dataset.status !== 'blocked';
-      } else if (filter === 'no-update') {
-        // TODO: wire up when data model is ready
-        item.hidden = false;
-      }
-    });
-  });
+function currentTheme() {
+  return document.documentElement.getAttribute('data-theme') || 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  if (themeBtn) {
+    themeBtn.setAttribute('aria-label', NEXT_LABEL[theme]);
+  }
+}
+
+themeBtn?.addEventListener('click', () => {
+  const next = THEMES[(THEMES.indexOf(currentTheme()) + 1) % THEMES.length];
+  applyTheme(next);
 });
 
-// ── Sidebar active state ──────────────────────────────────────────────
-const sidebarLinks = document.querySelectorAll('.sidebar__link');
+// Sync button label on load (theme itself is set by the inline <script> in <head>)
+if (themeBtn) themeBtn.setAttribute('aria-label', NEXT_LABEL[currentTheme()]);
 
-sidebarLinks.forEach(link => {
+
+/* ══════════════════════════════════════════════════════════
+   2. SIDEBAR / HAMBURGER DRAWER
+   ══════════════════════════════════════════════════════════ */
+
+const toggleBtn = document.getElementById('sidebar-toggle');
+const sidebar   = document.getElementById('sidebar');
+const overlay   = document.getElementById('sidebar-overlay');
+
+function openSidebar() {
+  sidebar.classList.add('is-open');
+  overlay.classList.add('is-visible');
+  overlay.setAttribute('aria-hidden', 'false');
+  toggleBtn.setAttribute('aria-expanded', 'true');
+  toggleBtn.setAttribute('aria-label', 'Close navigation menu');
+}
+
+function closeSidebar() {
+  sidebar.classList.remove('is-open');
+  overlay.classList.remove('is-visible');
+  overlay.setAttribute('aria-hidden', 'true');
+  toggleBtn.setAttribute('aria-expanded', 'false');
+  toggleBtn.setAttribute('aria-label', 'Open navigation menu');
+}
+
+toggleBtn?.addEventListener('click', () => {
+  sidebar.classList.contains('is-open') ? closeSidebar() : openSidebar();
+});
+overlay?.addEventListener('click', closeSidebar);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+    closeSidebar();
+    toggleBtn.focus();
+  }
+});
+
+// Close drawer when a nav link is tapped on mobile
+document.querySelectorAll('.sidebar_link').forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
-    sidebarLinks.forEach(l => l.classList.remove('sidebar__link--active'));
-    link.classList.add('sidebar__link--active');
-    // TODO: swap main content based on link.dataset.view
+    document.querySelectorAll('.sidebar_link').forEach(l => {
+      l.classList.remove('sidebar_link--active');
+      l.removeAttribute('aria-current');
+    });
+    link.classList.add('sidebar_link--active');
+    link.setAttribute('aria-current', 'page');
+    if (window.innerWidth <= 680) closeSidebar();
+    // TODO: swap main content panel using link.dataset.view
   });
 });
+
+
+/* ══════════════════════════════════════════════════════════
+   3. FEED — TEMPLATE RENDERING + MOCK DATA
+   ══════════════════════════════════════════════════════════ */
+
+/**
+ * Mock data — shaped exactly like what your real API will return.
+ * When your backend is ready, delete this and uncomment the real fetch below.
+ *
+ * Fields:
+ *   id         — short unique key; drives avatar CSS class + element IDs
+ *   name       — full display name
+ *   initials   — shown in avatar circle
+ *   status     — 'available' | 'lead' | 'blocked' | null
+ *   badgeLabel — text inside the badge (can differ from status, e.g. "Role: lead")
+ *   badgeType  — CSS modifier: 'available' | 'lead' | 'blocked' | null (no badge)
+ *   timeAgo    — display string, e.g. "2h ago"
+ *   timeAgoLong— spoken string for aria-label, e.g. "2 hours ago"
+ *   datetime   — ISO 8601 duration for <time datetime="…">
+ *   today      — today's standup text (plain string; BLOCKER prefix included if needed)
+ *   yesterday  — yesterday's text, or null if absent
+ *   isBlocker  — true applies the red blocker style to the today entry
+ */
+const MOCK_PEOPLE = [
+  {
+    id: 'mr', name: 'Maya Rodriguez', initials: 'MR',
+    status: 'available', badgeLabel: 'available', badgeType: 'available',
+    timeAgo: '2h ago', timeAgoLong: '2 hours ago', datetime: 'PT2H',
+    today: 'Working on commit summary widget and sprint dashboard UI',
+    yesterday: 'Finished GitHub OAuth flow, reviewed PR #12',
+    isBlocker: false,
+  },
+  {
+    id: 'ak', name: 'Arav Kumar', initials: 'AK',
+    status: 'lead', badgeLabel: 'lead', badgeType: 'lead',
+    timeAgo: '1h ago', timeAgoLong: '1 hour ago', datetime: 'PT1H',
+    today: 'Sprint planning prep, coordinating TA meeting notes',
+    yesterday: 'Set up CI/CD pipeline on GitHub Actions',
+    isBlocker: false,
+  },
+  {
+    id: 'jl', name: 'Jamie Lee', initials: 'JL',
+    status: 'blocked', badgeLabel: 'blocked', badgeType: 'blocked',
+    timeAgo: '3h ago', timeAgoLong: '3 hours ago', datetime: 'PT3H',
+    today: "BLOCKER — Waiting on Cloudflare KV access, can't proceed with persistence layer",
+    yesterday: null,
+    isBlocker: true,
+  },
+  {
+    id: 'ry', name: 'Ray Yang', initials: 'RY',
+    status: 'available', badgeLabel: null, badgeType: null,
+    timeAgo: '30m ago', timeAgoLong: '30 minutes ago', datetime: 'PT30M',
+    today: 'Sprint 1 research doc, wireframes for all 4 screens',
+    yesterday: null,
+    isBlocker: false,
+  },
+  {
+    id: 'sh', name: 'Sam He', initials: 'SH',
+    status: 'available', badgeLabel: null, badgeType: null,
+    timeAgo: '4h ago', timeAgoLong: '4 hours ago', datetime: 'PT4H',
+    today: 'User personas and user story refinement',
+    yesterday: null,
+    isBlocker: false,
+  },
+];
+
+/**
+ * Simulates a network request. Replace the body with a real fetch:
+ *
+ *   async function fetchStandups() {
+ *     const res = await fetch('/api/standups');
+ *     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+ *     return res.json();
+ *   }
+ */
+async function fetchStandups() {
+  // Simulate ~400ms network latency so the loading state is visible
+  await new Promise(r => setTimeout(r, 400));
+  return MOCK_PEOPLE;
+}
+
+/**
+ * Clones the <template>, fills in one person's data, returns the <article>.
+ * This function never touches the HTML — all structure lives in the template.
+ */
+function renderFeedItem(person, index, total) {
+  const template = document.getElementById('feed-item-template');
+  const clone    = template.content.cloneNode(true);
+  const article  = clone.querySelector('article');
+
+  // ARIA position attributes
+  article.dataset.status = person.status || 'available';
+  article.setAttribute('aria-labelledby', `entry-name-${person.id}`);
+  article.setAttribute('aria-posinset',   index + 1);
+  article.setAttribute('aria-setsize',    total);
+
+  // Avatar
+  const avatar = article.querySelector('.feed-item_avatar');
+  avatar.textContent = person.initials;
+  avatar.classList.add(`feed-item_avatar--${person.id}`);
+
+  // Name
+  const nameEl = article.querySelector('.feed-item_name');
+  nameEl.id          = `entry-name-${person.id}`;
+  nameEl.textContent = person.name;
+
+  // Badge — remove the element entirely if this person has no badge
+  const badge = article.querySelector('.badge');
+  if (person.badgeType) {
+    badge.textContent = person.badgeLabel;
+    badge.classList.add(`badge--${person.badgeType}`);
+    badge.setAttribute('aria-label', `Status: ${person.badgeLabel}`);
+  } else {
+    badge.remove();
+  }
+
+  // Timestamp
+  const timeEl = article.querySelector('.feed-item_time');
+  timeEl.textContent              = person.timeAgo;
+  timeEl.setAttribute('datetime', person.datetime);
+  timeEl.setAttribute('aria-label', person.timeAgoLong);
+
+  // Today entry
+  const todayEl = article.querySelector('.entry-today');
+  if (person.isBlocker) {
+    todayEl.classList.add('feed-item_entry--blocker');
+    todayEl.innerHTML = `<strong>BLOCKER</strong> — ${person.today.replace(/^BLOCKER\s*—\s*/i, '')}`;
+  } else {
+    todayEl.innerHTML = `<strong>TODAY</strong> — ${person.today}`;
+  }
+
+  // Yesterday entry — remove if null
+  const yestEl = article.querySelector('.entry-yesterday');
+  if (person.yesterday) {
+    yestEl.innerHTML = `<strong>YESTERDAY</strong> — ${person.yesterday}`;
+  } else {
+    yestEl.remove();
+  }
+
+  return article;
+}
+
+/**
+ * Main load function — fetches data, renders items, wires up filters.
+ */
+async function loadFeed() {
+  const feedList = document.getElementById('feed-list');
+
+  try {
+    const people = await fetchStandups();
+
+    feedList.innerHTML = ''; // clear loading message
+
+    people.forEach((person, i) => {
+      feedList.appendChild(renderFeedItem(person, i, people.length));
+    });
+
+    feedList.setAttribute('aria-busy', 'false');
+    wireUpFilters(); // attach filter logic now that items exist in the DOM
+
+  } catch (err) {
+    feedList.innerHTML = '<p class="feed-error" role="alert">Could not load standup entries. Please refresh.</p>';
+    feedList.setAttribute('aria-busy', 'false');
+    console.error('Feed load failed:', err);
+  }
+}
+
+/**
+ * Filter bar — called after feed items are rendered.
+ */
+function wireUpFilters() {
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const feedList   = document.getElementById('feed-list');
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => {
+        b.classList.remove('filter-btn--active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('filter-btn--active');
+      btn.setAttribute('aria-pressed', 'true');
+
+      feedList.setAttribute('aria-busy', 'true');
+
+      const filter = btn.dataset.filter;
+      const items  = feedList.querySelectorAll('.feed-item');
+
+      items.forEach(item => {
+        if      (filter === 'all')       item.hidden = false;
+        else if (filter === 'blocked')   item.hidden = item.dataset.status !== 'blocked';
+        else if (filter === 'no-update') item.hidden = false; // TODO: wire to real data field
+      });
+
+      // Re-number aria-posinset / aria-setsize after filtering
+      const visible = [...items].filter(i => !i.hidden);
+      visible.forEach((item, idx) => {
+        item.setAttribute('aria-posinset', idx + 1);
+        item.setAttribute('aria-setsize',  visible.length);
+      });
+
+      feedList.setAttribute('aria-busy', 'false');
+    });
+  });
+}
+
+// Kick everything off
+loadFeed();

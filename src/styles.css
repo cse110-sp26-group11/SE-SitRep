@@ -1,12 +1,17 @@
 /* ---
-    Style CSS  —  Responsive / fluid layout
+    styles.css  —  Responsive + themeable
    --- */
 
 /* ══════════════════════════════════════════════════════════
-   TOKENS
+   THEME DEFINITIONS
+   Each theme block only overrides the variables that differ.
+   All other CSS uses var(--...) so themes apply everywhere
+   with zero extra rules.
    ══════════════════════════════════════════════════════════ */
-:root {
-  /* Colors */
+
+/* ── Light (default) ─────────────────────────────────────── */
+:root,
+[data-theme="light"] {
   --color-bg:           #f5f5f0;
   --color-surface:      #ffffff;
   --color-border:       #e4e4dc;
@@ -16,9 +21,7 @@
   --color-topbar-bg:    #ffffff;
   --color-active-bg:    #eff1ff;
   --color-active-text:  #3b4fd8;
-  --color-primary:      #1a1a18;
 
-  /* Status colors */
   --color-available:    #1a7a4a;
   --color-available-bg: #e6f5ee;
   --color-lead:         #3b4fd8;
@@ -28,55 +31,100 @@
   --color-warning:      #c0392b;
   --color-success:      #1a7a4a;
 
-  /* Avatar palettes */
-  --av-mr: #c7e0f5;
-  --av-ak: #fcd8d8;
-  --av-jl: #d5f0da;
-  --av-ry: #ddd5f5;
-  --av-sh: #f0ead5;
+  /* Avatar palette */
+  --av-mr: #c7e0f5;  --av-mr-text: #1a5a8a;
+  --av-ak: #fcd8d8;  --av-ak-text: #8a1a1a;
+  --av-jl: #d5f0da;  --av-jl-text: #1a5a2a;
+  --av-ry: #ddd5f5;  --av-ry-text: #3b2a8a;
+  --av-sh: #f0ead5;  --av-sh-text: #6a5a1a;
 
-  /* ── Fluid layout sizing ──────────────────────────────── */
-  /* Top bar: clamp(min, preferred, max) keeps it sensible on all screens */
+  /* Theme icon visibility */
+  --icon-light-display:    block;
+  --icon-dark-display:     none;
+  --icon-contrast-display: none;
+}
+
+/* ── Dark ─────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-bg:           #1a1a18;
+  --color-surface:      #252523;
+  --color-border:       #3a3a38;
+  --color-text:         #f0f0ec;
+  --color-text-muted:   #7a7a72;
+  --color-sidebar-bg:   #202020;
+  --color-topbar-bg:    #202020;
+  --color-active-bg:    #2a2f6a;
+  --color-active-text:  #8b97ff;
+
+  --color-available:    #4ec98a;
+  --color-available-bg: #0e3320;
+  --color-lead:         #8b97ff;
+  --color-lead-bg:      #1a1f55;
+  --color-blocked:      #f07070;
+  --color-blocked-bg:   #3a1010;
+  --color-warning:      #f07070;
+  --color-success:      #4ec98a;
+
+  --av-mr: #1a3a55;  --av-mr-text: #7ab8e8;
+  --av-ak: #3a1515;  --av-ak-text: #e88a8a;
+  --av-jl: #0e3320;  --av-jl-text: #6acc8a;
+  --av-ry: #1e1540;  --av-ry-text: #a08ae8;
+  --av-sh: #302810;  --av-sh-text: #c8b870;
+
+  --icon-light-display:    none;
+  --icon-dark-display:     block;
+  --icon-contrast-display: none;
+}
+
+/* ── High contrast ────────────────────────────────────────── */
+[data-theme="high-contrast"] {
+  --color-bg:           #000000;
+  --color-surface:      #000000;
+  --color-border:       #ffffff;
+  --color-text:         #ffffff;
+  --color-text-muted:   #cccccc;
+  --color-sidebar-bg:   #000000;
+  --color-topbar-bg:    #000000;
+  --color-active-bg:    #003399;
+  --color-active-text:  #ffff00;
+
+  --color-available:    #00ff88;
+  --color-available-bg: #003300;
+  --color-lead:         #ffff00;
+  --color-lead-bg:      #333300;
+  --color-blocked:      #ff4444;
+  --color-blocked-bg:   #330000;
+  --color-warning:      #ff4444;
+  --color-success:      #00ff88;
+
+  --av-mr: #003366;  --av-mr-text: #ffffff;
+  --av-ak: #330000;  --av-ak-text: #ffffff;
+  --av-jl: #003300;  --av-jl-text: #ffffff;
+  --av-ry: #1a0033;  --av-ry-text: #ffffff;
+  --av-sh: #332200;  --av-sh-text: #ffffff;
+
+  --icon-light-display:    none;
+  --icon-dark-display:     none;
+  --icon-contrast-display: block;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TOKENS  (layout, type, radii — not theme-dependent)
+   ══════════════════════════════════════════════════════════ */
+:root {
   --topbar-h:  clamp(44px, 7vh, 64px);
-
-  /* Sidebar: vw-based so it breathes on wide screens, min/max clamped */
   --sidebar-w: clamp(140px, 14vw, 260px);
-
-  /* Base font: scales between 13px (small) and 16px (very large screens) */
   --base-font: clamp(13px, 1.1vw, 16px);
 
-  /* Fonts */
   --font-sans: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'DM Mono', 'Fira Code', monospace;
 
-  /* Radii */
   --radius-sm: 0.45rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
 
-  /* Shadows */
   --shadow-card:   0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   --shadow-topbar: 0 1px 0 var(--color-border);
-
-  /* Dark theme — override only what changes */
-  [data-theme="dark"] {
-    --color-bg:          #1a1a18;
-    --color-surface:     #2a2a28;
-    --color-border:      #3a3a38;
-    --color-text:        #f0f0ec;
-    --color-text-muted:  #8a8a82;
-    --color-active-bg:   #2a2f6a;
-    --color-active-text: #7b8fff;
-  }
-
-  /* High contrast theme */
-  [data-theme="high-contrast"] {
-    --color-bg:          #000000;
-    --color-surface:     #000000;
-    --color-border:      #ffffff;
-    --color-text:        #ffffff;
-    --color-active-text: #ffff00;
-  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -87,7 +135,6 @@ ul { list-style: none; }
 a  { text-decoration: none; color: inherit; }
 button { cursor: pointer; border: none; background: none; font: inherit; }
 svg { display: block; flex-shrink: 0; }
-
 html { height: 100%; }
 body {
   min-height: 100%;
@@ -96,7 +143,17 @@ body {
   color: var(--color-text);
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
+  /* smooth palette transitions when switching themes */
+  transition: background .2s, color .2s;
 }
+
+/* ══════════════════════════════════════════════════════════
+   THEME ICON VISIBILITY
+   Only the icon matching the current theme is shown.
+   ══════════════════════════════════════════════════════════ */
+.icon-light    { display: var(--icon-light-display); }
+.icon-dark     { display: var(--icon-dark-display); }
+.icon-contrast { display: var(--icon-contrast-display); }
 
 /* ══════════════════════════════════════════════════════════
    TOP BAR
@@ -112,6 +169,7 @@ body {
   justify-content: space-between;
   padding: 0 clamp(12px, 2vw, 28px);
   z-index: 200;
+  transition: background .2s;
 }
 
 .topbar_brand {
@@ -123,13 +181,21 @@ body {
   letter-spacing: -.3px;
 }
 
+.topbar_brand-link {
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
 .topbar_logo {
   width:  clamp(16px, 1.5vw, 22px);
   height: clamp(16px, 1.5vw, 22px);
   color: var(--color-active-text);
 }
 
-/* Hamburger — hidden on desktop */
+/* Hamburger — desktop hidden, mobile visible */
 .topbar_hamburger {
   display: none;
   align-items: center;
@@ -138,7 +204,6 @@ body {
   height: clamp(28px, 3vw, 38px);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
-  flex-shrink: 0;
 }
 .topbar_hamburger:hover { background: var(--color-bg); }
 .topbar_hamburger svg {
@@ -160,9 +225,9 @@ body {
   justify-content: center;
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
-  transition: background .15s;
+  transition: background .15s, color .15s;
 }
-.topbar_icon-btn:hover { background: var(--color-bg); }
+.topbar_icon-btn:hover { background: var(--color-bg); color: var(--color-text); }
 .topbar_icon-btn svg {
   width:  clamp(14px, 1.4vw, 20px);
   height: clamp(14px, 1.4vw, 20px);
@@ -173,12 +238,13 @@ body {
   height: clamp(24px, 2.4vw, 34px);
   border-radius: 50%;
   background: var(--color-active-text);
-  color: #fff;
+  color: var(--color-bg);
   font-size: clamp(10px, 0.9vw, 14px);
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background .2s;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -193,13 +259,11 @@ body {
 /* ══════════════════════════════════════════════════════════
    SIDEBAR
    ══════════════════════════════════════════════════════════ */
-
-/* Dim overlay behind mobile drawer */
 .sidebar-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.35);
+  background: rgba(0,0,0,.4);
   z-index: 150;
 }
 .sidebar-overlay.is-visible { display: block; }
@@ -213,14 +277,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 2.5vh, 32px);
-
-  /* Full-height sticky — stays in place as page scrolls */
   position: fixed;
   top: var(--topbar-h);
   left: 0;
   height: calc(100vh - var(--topbar-h));
   overflow-y: auto;
   z-index: 160;
+  transition: background .2s, border-color .2s, transform .25s ease;
 }
 
 .sidebar_section { display: flex; flex-direction: column; gap: 4px; }
@@ -259,7 +322,6 @@ body {
   color: var(--color-active-text);
   font-weight: 600;
 }
-.sidebar_link--active svg { color: var(--color-active-text); }
 
 /* ══════════════════════════════════════════════════════════
    MAIN CONTENT
@@ -267,7 +329,6 @@ body {
 .content {
   flex: 1;
   min-width: 0;
-  /* Push right of fixed sidebar */
   margin-left: var(--sidebar-w);
   padding: clamp(16px, 2.5vh, 40px) clamp(16px, 3vw, 48px);
   display: flex;
@@ -275,20 +336,19 @@ body {
   gap: clamp(16px, 2vh, 28px);
 }
 
-/* ── Page Header ─────────────────────────────────────────── */
+/* ── Page header ──────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-
-  /* Sticks just below the top bar while scrolling */
   position: sticky;
   top: var(--topbar-h);
   background: var(--color-bg);
   z-index: 10;
   padding: clamp(10px, 1.2vh, 18px) 0;
+  transition: background .2s;
 }
 
 .page-header_title {
@@ -312,7 +372,7 @@ body {
   font-size: clamp(12px, 0.95vw, 15px);
   font-weight: 600;
   white-space: nowrap;
-  transition: background .15s, box-shadow .15s;
+  transition: background .15s;
 }
 .btn--primary {
   background: var(--color-surface);
@@ -323,11 +383,10 @@ body {
 .btn--primary:hover { background: var(--color-bg); }
 
 /* ══════════════════════════════════════════════════════════
-   STAT CARDS  —  fluid 3-column grid that shrinks on mobile
+   STAT CARDS
    ══════════════════════════════════════════════════════════ */
 .stats {
   display: grid;
-  /* Each card is at least 120px, up to equal share; wraps automatically */
   grid-template-columns: repeat(auto-fit, minmax(clamp(100px, 18vw, 240px), 1fr));
   gap: clamp(8px, 1vw, 16px);
 }
@@ -342,13 +401,13 @@ body {
   gap: clamp(4px, 0.6vh, 10px);
   box-shadow: var(--shadow-card);
   min-width: 0;
+  transition: background .2s, border-color .2s;
 }
 
 .stat-card_value {
   font-size: clamp(20px, 2.5vw, 36px);
   font-weight: 800;
   letter-spacing: -.8px;
-  color: var(--color-text);
   line-height: 1;
 }
 
@@ -372,11 +431,10 @@ body {
 .stat-card_label svg {
   width:  clamp(11px, 1vw, 16px);
   height: clamp(11px, 1vw, 16px);
-  flex-shrink: 0;
 }
 
 /* ══════════════════════════════════════════════════════════
-   FILTER BAR for standup
+   FILTER BAR
    ══════════════════════════════════════════════════════════ */
 .filter-bar {
   display: flex;
@@ -397,12 +455,12 @@ body {
 .filter-btn:hover { background: var(--color-bg); color: var(--color-text); }
 .filter-btn--active {
   background: var(--color-text);
-  color: #fff;
+  color: var(--color-bg);
   border-color: var(--color-text);
 }
 
 /* ══════════════════════════════════════════════════════════
-   FEED layout
+   FEED
    ══════════════════════════════════════════════════════════ */
 .feed {
   background: var(--color-surface);
@@ -410,19 +468,30 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  transition: background .2s, border-color .2s;
 }
+
+/* Loading / error state messages inside the feed */
+.feed-loading,
+.feed-error {
+  padding: clamp(20px, 3vh, 40px) clamp(16px, 2vw, 32px);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: clamp(12px, 0.95vw, 15px);
+}
+.feed-error { color: var(--color-blocked); }
 
 .feed-item {
   display: flex;
   gap: clamp(10px, 1vw, 16px);
   padding: clamp(12px, 1.5vh, 22px) clamp(14px, 1.5vw, 26px);
   border-bottom: 1px solid var(--color-border);
-  transition: background .12s;
+  transition: background .12s, border-color .2s;
 }
 .feed-item:last-child { border-bottom: none; }
 .feed-item:hover { background: var(--color-bg); }
 
-/* Avatars */
+/* Avatars — color classes set by JS using CSS vars */
 .feed-item_avatar {
   width:  clamp(28px, 2.8vw, 40px);
   height: clamp(28px, 2.8vw, 40px);
@@ -435,11 +504,12 @@ body {
   flex-shrink: 0;
   margin-top: 2px;
 }
-.feed-item_avatar--mr { background: var(--av-mr); color: #1a5a8a; }
-.feed-item_avatar--ak { background: var(--av-ak); color: #8a1a1a; }
-.feed-item_avatar--jl { background: var(--av-jl); color: #1a5a2a; }
-.feed-item_avatar--ry { background: var(--av-ry); color: #3b2a8a; }
-.feed-item_avatar--sh { background: var(--av-sh); color: #6a5a1a; }
+/* JS assigns these classes based on person.id */
+.feed-item_avatar--mr { background: var(--av-mr); color: var(--av-mr-text); }
+.feed-item_avatar--ak { background: var(--av-ak); color: var(--av-ak-text); }
+.feed-item_avatar--jl { background: var(--av-jl); color: var(--av-jl-text); }
+.feed-item_avatar--ry { background: var(--av-ry); color: var(--av-ry-text); }
+.feed-item_avatar--sh { background: var(--av-sh); color: var(--av-sh-text); }
 
 .feed-item_body { flex: 1; min-width: 0; }
 
@@ -465,7 +535,6 @@ body {
 
 .feed-item_entry {
   font-size: clamp(11.5px, 0.9vw, 14px);
-  color: var(--color-text);
   line-height: 1.5;
   margin-top: 2px;
 }
@@ -482,7 +551,6 @@ body {
   border-radius: 99px;
   font-size: clamp(10px, 0.75vw, 13px);
   font-weight: 600;
-  letter-spacing: .01em;
   white-space: nowrap;
 }
 .badge--available { background: var(--color-available-bg); color: var(--color-available); }
@@ -495,57 +563,73 @@ body {
 .feed-item[hidden] { display: none; }
 
 /* ══════════════════════════════════════════════════════════
+   ACCESSIBILITY UTILITIES
+   ══════════════════════════════════════════════════════════ */
+
+/* Visually hidden — readable by screen readers, invisible on screen */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link — appears on keyboard focus */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.6rem 1.2rem;
+  background: var(--color-active-text);
+  color: var(--color-bg);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: top .15s;
+}
+.skip-link:focus { top: 0.75rem; }
+
+/* ══════════════════════════════════════════════════════════
    SCROLLBAR
    ══════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
 
-
 /* ══════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ══════════════════════════════════════════════════════════ */
 
-/* ── Mobile  (≤ 680px) — sidebar becomes a hamburger drawer ─ */
+/* ── Mobile (≤ 680px) — sidebar becomes a hamburger drawer ── */
 @media (max-width: 680px) {
-
-  /* Show hamburger in topbar */
   .topbar_hamburger { display: flex; }
 
-  /* Sidebar slides in from the left as a drawer */
   .sidebar {
     transform: translateX(-100%);
-    transition: transform .25s ease;
-    /* On mobile, sidebar shouldn't push content — it overlays */
     width: clamp(180px, 65vw, 280px);
   }
   .sidebar.is-open { transform: translateX(0); }
 
-  /* Content fills full width (no sidebar offset) */
   .content {
     margin-left: 0;
     padding: clamp(14px, 4vw, 24px);
   }
 
-  /* Stat cards: shrink below 3-across naturally via auto-fit;
-     force at least 2-across on mid-mobile, 1-across very small */
   .stats {
     grid-template-columns: repeat(auto-fit, minmax(clamp(90px, 35vw, 200px), 1fr));
   }
-
-  /* Page title slightly smaller */
-  .page-header_title { font-size: clamp(15px, 5vw, 20px); }
 }
 
-/* ── Very small phones (≤ 380px) — single column cards ───── */
+/* ── Very small phones (≤ 380px) ─────────────────────────── */
 @media (max-width: 380px) {
-  .stats { grid-template-columns: 1fr; }
-
-  .feed-item {
-    padding: 12px;
-    gap: 8px;
-  }
-
-  /* Stack header + button vertically */
+  .stats       { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; }
+  .feed-item   { padding: 12px; gap: 8px; }
 }
