@@ -1,5 +1,5 @@
 /**
- * SE SitRep — main.js
+ * tatOS — main.js
  *
  * Three responsibilities:
  *  1. Theme switching (light / dark)
@@ -380,65 +380,83 @@ const standupStatus = document.getElementById('standup-status');
 const meetingGrid = document.getElementById('meeting-grid');
 const meetingRoster = document.getElementById('meeting-roster');
 const meetingOverlapList = document.getElementById('meeting-overlap-list');
-const meetingModeButtons = document.querySelectorAll('[data-meeting-mode]');
 
 const MEETING_STORAGE_KEY = 'meetingAvailability';
 const MEETING_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 const MEETING_DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const MEETING_SLOTS = ['9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM'];
+const MEETING_SLOTS = Array.from({ length: 17 }, (_, index) => {
+  const hour = index + 6;
+  const normalizedHour = ((hour + 11) % 12) + 1;
+  const period = hour < 12 ? 'AM' : 'PM';
+  return `${normalizedHour} ${period}`;
+});
+const MEETING_DEFAULT_OFFSET = 3;
+
+function offsetAvailability(availability, offset) {
+  return Object.fromEntries(
+    Object.entries(availability)
+      .map(([key, status]) => {
+        const [dayIndex, slotIndex] = key.split('-').map(Number);
+        return [`${dayIndex}-${slotIndex + offset}`, status];
+      })
+      .filter(([key]) => {
+        const [dayIndex, slotIndex] = key.split('-').map(Number);
+        return dayIndex >= 0 && dayIndex < MEETING_DAYS.length && slotIndex >= 0 && slotIndex < MEETING_SLOTS.length;
+      })
+  );
+}
 
 const TEAM_MEETING_DATA = [
   {
     id: 'mr',
     name: 'Maya Rodriguez',
     initials: 'MR',
-    availability: {
+    availability: offsetAvailability({
       '0-0': 'available', '0-1': 'available', '0-2': 'maybe', '1-2': 'available', '1-3': 'available', '1-4': 'available',
       '2-1': 'available', '2-2': 'available', '2-3': 'maybe', '3-4': 'available', '3-5': 'available', '4-1': 'available',
       '4-2': 'available', '4-3': 'available'
-    }
+    }, MEETING_DEFAULT_OFFSET)
   },
   {
     id: 'ak',
     name: 'Arav Kumar',
     initials: 'AK',
-    availability: {
+    availability: offsetAvailability({
       '0-1': 'available', '0-2': 'available', '0-3': 'available', '1-1': 'maybe', '1-2': 'available', '2-3': 'available',
       '2-4': 'available', '2-5': 'maybe', '3-2': 'available', '3-3': 'available', '3-4': 'available', '4-2': 'available',
       '4-3': 'maybe', '4-4': 'available'
-    }
+    }, MEETING_DEFAULT_OFFSET)
   },
   {
     id: 'jl',
     name: 'Jamie Lee',
     initials: 'JL',
-    availability: {
+    availability: offsetAvailability({
       '0-4': 'maybe', '0-5': 'available', '1-4': 'available', '1-5': 'available', '2-0': 'available', '2-1': 'maybe',
       '2-5': 'available', '3-0': 'available', '3-1': 'available', '3-5': 'maybe', '4-4': 'available', '4-5': 'available'
-    }
+    }, MEETING_DEFAULT_OFFSET)
   },
   {
     id: 'ry',
     name: 'Ray Yang',
     initials: 'RY',
-    availability: {
+    availability: offsetAvailability({
       '0-0': 'available', '0-1': 'maybe', '1-0': 'available', '1-1': 'available', '1-2': 'maybe', '2-2': 'available',
       '2-3': 'available', '2-4': 'available', '3-3': 'maybe', '3-4': 'available', '4-0': 'available', '4-1': 'available',
       '4-2': 'maybe'
-    }
+    }, MEETING_DEFAULT_OFFSET)
   },
   {
     id: 'sh',
     name: 'Sam He',
     initials: 'SH',
-    availability: {
+    availability: offsetAvailability({
       '0-2': 'available', '0-3': 'available', '1-3': 'available', '1-4': 'maybe', '2-2': 'maybe', '2-3': 'available',
       '3-1': 'available', '3-2': 'available', '3-3': 'maybe', '4-1': 'available', '4-2': 'available', '4-3': 'available'
-    }
+    }, MEETING_DEFAULT_OFFSET)
   }
 ];
 
-let currentMeetingMode = 'available';
 let myMeetingAvailability = loadMeetingAvailability();
 
 function readField(formData, fieldName, fallback) {
@@ -453,7 +471,21 @@ function slotKey(dayIndex, slotIndex) {
 function loadMeetingAvailability() {
   try {
     const saved = localStorage.getItem(MEETING_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
+    if (!saved) return {};
+
+    return Object.fromEntries(
+      Object.entries(JSON.parse(saved)).filter(([key, status]) => {
+        const [dayIndex, slotIndex] = key.split('-').map(Number);
+        const isValidKey = Number.isInteger(dayIndex)
+          && Number.isInteger(slotIndex)
+          && dayIndex >= 0
+          && dayIndex < MEETING_DAYS.length
+          && slotIndex >= 0
+          && slotIndex < MEETING_SLOTS.length;
+
+        return isValidKey && ['available', 'maybe', 'busy'].includes(status);
+      })
+    );
   } catch {
     return {};
   }
@@ -497,6 +529,13 @@ function getMyAvailabilitySummary() {
 
   counts.busy = (MEETING_DAYS.length * MEETING_SLOTS.length) - counts.available - counts.maybe;
   return counts;
+}
+
+function getNextMeetingStatus(currentStatus, hasSavedStatus) {
+  if (!hasSavedStatus) return 'available';
+  if (currentStatus === 'available') return 'busy';
+  if (currentStatus === 'busy') return 'maybe';
+  return 'available';
 }
 
 function renderMeetingOverlap() {
@@ -626,23 +665,14 @@ function renderMeetingPlanner() {
   renderMeetingRoster();
 }
 
-meetingModeButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    currentMeetingMode = button.dataset.meetingMode;
-    meetingModeButtons.forEach(modeButton => {
-      const isActive = modeButton === button;
-      modeButton.classList.toggle('meeting-mode--active', isActive);
-      modeButton.setAttribute('aria-pressed', String(isActive));
-    });
-  });
-});
-
 meetingGrid?.addEventListener('click', event => {
   const cell = event.target.closest('.meeting-cell');
   if (!cell) return;
 
   const key = slotKey(Number(cell.dataset.dayIndex), Number(cell.dataset.slotIndex));
-  myMeetingAvailability[key] = currentMeetingMode;
+  const hasSavedStatus = Object.prototype.hasOwnProperty.call(myMeetingAvailability, key);
+  const currentStatus = hasSavedStatus ? myMeetingAvailability[key] : 'busy';
+  myMeetingAvailability[key] = getNextMeetingStatus(currentStatus, hasSavedStatus);
   saveMeetingAvailability();
   renderMeetingPlanner();
 });

@@ -8,7 +8,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SE SitRep — Team Feed</title>
+  <title>tatOS — Team Feed</title>
   <link rel="stylesheet" href="styles.css" />
 
   <!--
@@ -50,13 +50,16 @@
         </svg>
       </button>
 
-      <a href="#main-content" class="topbar_brand-link" aria-label="SE SitRep — go to dashboard">
+      <a href="#main-content" class="topbar_brand-link" aria-label="tatOS — go to dashboard">
         <svg class="topbar_logo" aria-hidden="true" focusable="false"
              viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          <path d="M4 6.5h16"></path>
+          <path d="M8 6.5v11"></path>
+          <path d="M5 11.5h6"></path>
+          <circle cx="16.5" cy="13.5" r="4.5"></circle>
         </svg>
-        <span>SE SitRep</span>
+        <span>tatOS</span>
       </a>
     </div>
 
@@ -202,7 +205,7 @@
 
     <!-- ── Main content ──────────────────────────────────────────── -->
     <main class="content" id="main-content" role="main"
-          aria-label="SE SitRep application views">
+          aria-label="tatOS application views">
 
       <section class="app-view app-view--active" data-view-panel="team-feed" aria-hidden="false">
 
@@ -438,13 +441,7 @@
           <section class="meeting-card meeting-card--planner" aria-labelledby="meeting-planner-heading">
             <div class="meeting-card_header">
               <h2 class="meeting-card_title" id="meeting-planner-heading">Shared availability grid</h2>
-              <p class="meeting-card_meta">Pick a status, then tap time slots to mark when you can join a sync.</p>
-            </div>
-
-            <div class="meeting-toolbar" role="group" aria-label="Availability selection mode">
-              <button class="meeting-mode meeting-mode--active" type="button" data-meeting-mode="available">Available</button>
-              <button class="meeting-mode" type="button" data-meeting-mode="maybe">Maybe</button>
-              <button class="meeting-mode" type="button" data-meeting-mode="busy">Busy</button>
+              <p class="meeting-card_meta">Click a time slot to cycle your status from available to busy to maybe.</p>
             </div>
 
             <div class="meeting-grid-shell">
