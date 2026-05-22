@@ -1,12 +1,10 @@
-// eslint.config.mjs
-import standard from 'eslint-config-standard'
-import jsdoc from 'eslint-plugin-jsdoc'
+import { jsdoc } from 'eslint-plugin-jsdoc'
+import neostandard from 'neostandard'
 
 export default [
-  standard,
-  jsdoc.configs['flat/recommended'],
-  {
-    plugins: { jsdoc },
+    ...neostandard(),
+    jsdoc({
+        config: 'flat/recommended',
     rules: {
       'jsdoc/require-jsdoc': ['error', {
         require: {
@@ -26,7 +24,7 @@ export default [
       'jsdoc/check-param-names': 'error',
       'jsdoc/require-description': 'warn'
     }
-  },
+  }),
   {
     ignores: ['node_modules/']
   }
