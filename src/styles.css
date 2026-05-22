@@ -124,6 +124,9 @@ body {
   font-size: var(--base-font);
   color: var(--color-text);
   background: var(--color-bg);
+  background-image:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-active-bg) 18%, transparent) 0, transparent 34%),
+    radial-gradient(circle at bottom left, color-mix(in srgb, var(--color-available-bg) 32%, transparent) 0, transparent 28%);
   -webkit-font-smoothing: antialiased;
   /* smooth palette transitions when switching themes */
   transition: background .2s, color .2s;
@@ -143,7 +146,8 @@ body {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: var(--topbar-h);
-  background: var(--color-topbar-bg);
+  background: color-mix(in srgb, var(--color-topbar-bg) 92%, transparent);
+  backdrop-filter: blur(14px);
   box-shadow: var(--shadow-topbar);
   display: flex;
   align-items: center;
@@ -353,8 +357,11 @@ body {
   font-size: clamp(12px, 0.95vw, 15px);
   font-weight: 600;
   white-space: nowrap;
-  transition: background .15s;
+  border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  transition: background .15s, border-color .15s, color .15s;
 }
+.btn:hover { background: var(--color-bg); }
 .btn--primary {
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -564,6 +571,316 @@ body {
 
 .placeholder-panel {
   padding: clamp(18px, 2vh, 28px);
+}
+
+.dashboard-layout,
+.summary-grid,
+.health-grid {
+  display: grid;
+  gap: clamp(14px, 1.5vw, 24px);
+}
+
+.dashboard-layout,
+.summary-layout,
+.health-grid {
+  align-items: start;
+}
+
+.dashboard-layout {
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.95fr);
+}
+
+.dashboard-primary,
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.5vw, 22px);
+}
+
+.insight-card,
+.summary-hero,
+.health-hero {
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+}
+
+.insight-card {
+  padding: clamp(16px, 2vh, 24px);
+}
+
+.insight-card_header {
+  margin-bottom: 14px;
+}
+
+.insight-card_title {
+  font-size: clamp(15px, 1.15vw, 19px);
+  font-weight: 700;
+  letter-spacing: -.03em;
+}
+
+.insight-card_meta {
+  margin-top: 6px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  font-size: clamp(11.5px, 0.9vw, 14px);
+}
+
+.repo-pulse-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pulse-card {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 84%, var(--color-bg));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pulse-card--warning { background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surface)); }
+.pulse-card--danger { background: color-mix(in srgb, var(--color-blocked) 12%, var(--color-surface)); }
+.pulse-card--success { background: color-mix(in srgb, var(--color-available) 10%, var(--color-surface)); }
+
+.pulse-card_value {
+  font-size: clamp(20px, 1.8vw, 28px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pulse-card_label {
+  color: var(--color-text-muted);
+  font-size: clamp(11px, 0.85vw, 13px);
+}
+
+.issue-list,
+.workflow-list,
+.priority-list,
+.risk-list,
+.workflow-trend,
+.distribution-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.issue-card,
+.workflow-card,
+.priority-item,
+.risk-item,
+.trend-row {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-bg));
+  padding: 14px;
+}
+
+.issue-card--high,
+.priority-item--warning,
+.risk-item--high,
+.workflow-card--failing,
+.trend-row--failing {
+  border-color: color-mix(in srgb, var(--color-blocked) 45%, var(--color-border));
+}
+
+.issue-card_header,
+.workflow-card_header,
+.risk-item,
+.trend-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.issue-card_id,
+.workflow-card_meta {
+  color: var(--color-text-muted);
+  font-size: clamp(10px, 0.8vw, 12px);
+}
+
+.issue-card_title,
+.workflow-card_title {
+  font-size: clamp(13px, 1vw, 15px);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.issue-meta-row,
+.issue-label-row,
+.workflow-card_stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag,
+.issue-status,
+.workflow-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: clamp(10px, 0.78vw, 12px);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tag--difficulty,
+.issue-status--in-progress,
+.workflow-state--passing {
+  background: var(--color-active-bg);
+  color: var(--color-active-text);
+}
+
+.tag--deadline,
+.issue-status--blocked,
+.workflow-state--failing {
+  background: var(--color-blocked-bg);
+  color: var(--color-blocked);
+}
+
+.tag--owner,
+.issue-status--review {
+  background: var(--color-available-bg);
+  color: var(--color-available);
+}
+
+.tag--ghost,
+.issue-status--todo {
+  background: color-mix(in srgb, var(--color-surface) 70%, var(--color-bg));
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.summary-layout {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.5vw, 24px);
+}
+
+.summary-hero,
+.health-hero {
+  padding: clamp(18px, 2.5vh, 28px);
+}
+
+.summary-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.9fr);
+  gap: clamp(16px, 1.8vw, 24px);
+}
+
+.summary-kicker {
+  color: var(--color-active-text);
+  font-size: clamp(11px, 0.82vw, 13px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.summary-hero_title {
+  margin-top: 8px;
+  font-size: clamp(20px, 2vw, 30px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+
+.summary-hero_body {
+  margin-top: 10px;
+  max-width: 65ch;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.summary-highlight-list,
+.health-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.summary-highlight,
+.health-metric {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 86%, var(--color-bg));
+  border: 1px solid var(--color-border);
+}
+
+.summary-highlight_value,
+.health-metric_value {
+  display: block;
+  font-size: clamp(18px, 1.5vw, 24px);
+  font-weight: 800;
+}
+
+.summary-highlight_label,
+.health-metric_label {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-muted);
+  font-size: clamp(11px, 0.84vw, 13px);
+}
+
+.summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.priority-item p,
+.risk-item p,
+.trend-row p,
+.brief-row span,
+.distribution-row span {
+  color: var(--color-text-muted);
+  font-size: clamp(11px, 0.84vw, 13px);
+}
+
+.meeting-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.brief-row,
+.distribution-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+}
+
+.brief-row:last-child,
+.distribution-row:last-child {
+  border-bottom: none;
+}
+
+.health-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.health-hero {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
+  gap: clamp(16px, 1.8vw, 24px);
+}
+
+.trend-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: clamp(11px, 0.84vw, 13px);
+  font-weight: 700;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1073,12 +1390,21 @@ body {
 
   .standup-layout,
   .standup-grid,
-  .meeting-layout {
+  .meeting-layout,
+  .dashboard-layout,
+  .summary-hero,
+  .summary-grid,
+  .health-grid,
+  .health-hero {
     grid-template-columns: 1fr;
   }
 
   .meeting-grid {
     min-width: 540px;
+  }
+
+  .repo-pulse-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

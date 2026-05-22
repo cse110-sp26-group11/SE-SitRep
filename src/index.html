@@ -271,22 +271,52 @@
         <section aria-labelledby="feed-heading">
           <h2 id="feed-heading" class="sr-only">Team standup entries</h2>
 
-          <div class="filter-bar" role="group" aria-labelledby="filter-label">
-            <span id="filter-label" class="sr-only">Filter entries by status</span>
-            <button class="filter-btn filter-btn--active" data-filter="all" aria-pressed="true">All</button>
-            <button class="filter-btn" data-filter="blocked" aria-pressed="false">Blocked</button>
-            <button class="filter-btn" data-filter="no-update" aria-pressed="false">No update</button>
-          </div>
+          <div class="dashboard-layout">
+            <div class="dashboard-primary">
+              <div class="filter-bar" role="group" aria-labelledby="filter-label">
+                <span id="filter-label" class="sr-only">Filter entries by status</span>
+                <button class="filter-btn filter-btn--active" data-filter="all" aria-pressed="true">All</button>
+                <button class="filter-btn" data-filter="blocked" aria-pressed="false">Blocked</button>
+                <button class="filter-btn" data-filter="no-update" aria-pressed="false">No update</button>
+              </div>
 
-          <div
-            class="feed"
-            id="feed-list"
-            role="feed"
-            aria-label="Standup entries"
-            aria-live="polite"
-            aria-busy="true"
-          >
-            <p class="feed-loading" aria-live="polite">Loading standup entries…</p>
+              <div
+                class="feed"
+                id="feed-list"
+                role="feed"
+                aria-label="Standup entries"
+                aria-live="polite"
+                aria-busy="true"
+              >
+                <p class="feed-loading" aria-live="polite">Loading standup entries…</p>
+              </div>
+            </div>
+
+            <aside class="dashboard-sidebar" aria-label="GitHub and team context">
+              <section class="insight-card" aria-labelledby="repo-pulse-heading">
+                <div class="insight-card_header">
+                  <h2 class="insight-card_title" id="repo-pulse-heading">Repo pulse</h2>
+                  <p class="insight-card_meta">Snapshot of issues, PRs, and test health from mocked GitHub data.</p>
+                </div>
+                <div class="repo-pulse-grid" id="repo-pulse-grid"></div>
+              </section>
+
+              <section class="insight-card" aria-labelledby="issue-focus-heading">
+                <div class="insight-card_header">
+                  <h2 class="insight-card_title" id="issue-focus-heading">Issues in focus</h2>
+                  <p class="insight-card_meta">Difficulty, deadlines, and owners surfaced directly in the dashboard.</p>
+                </div>
+                <div class="issue-list" id="issue-list"></div>
+              </section>
+
+              <section class="insight-card" aria-labelledby="workflow-health-heading">
+                <div class="insight-card_header">
+                  <h2 class="insight-card_title" id="workflow-health-heading">Workflow health</h2>
+                  <p class="insight-card_meta">Recent CI runs and test results for the branches the team cares about.</p>
+                </div>
+                <div class="workflow-list" id="workflow-list"></div>
+              </section>
+            </aside>
           </div>
 
         </section>
@@ -465,10 +495,41 @@
           </div>
         </header>
 
-        <section class="placeholder-panel" aria-labelledby="ai-summary-placeholder-heading">
-          <h2 class="placeholder-panel_title" id="ai-summary-placeholder-heading">Summary screen placeholder</h2>
-          <p class="placeholder-panel_body">Use this screen for generated summaries, blocker highlights, and a copy/export action once standup entries are connected to a real data source.</p>
-        </section>
+        <div class="summary-layout">
+          <section class="summary-hero" aria-labelledby="summary-hero-heading">
+            <div class="summary-hero_copy">
+              <p class="summary-kicker">Lead briefing</p>
+              <h2 class="summary-hero_title" id="summary-hero-heading">Daily team synopsis</h2>
+              <p class="summary-hero_body" id="summary-body"></p>
+            </div>
+            <div class="summary-highlight-list" id="summary-highlights"></div>
+          </section>
+
+          <div class="summary-grid">
+            <section class="insight-card" aria-labelledby="summary-blockers-heading">
+              <div class="insight-card_header">
+                <h2 class="insight-card_title" id="summary-blockers-heading">Blockers to clear</h2>
+                <p class="insight-card_meta">Highest priority problems the lead should address today.</p>
+              </div>
+              <div class="priority-list" id="summary-blockers"></div>
+            </section>
+
+            <section class="insight-card" aria-labelledby="summary-actions-heading">
+              <div class="insight-card_header">
+                <h2 class="insight-card_title" id="summary-actions-heading">Recommended actions</h2>
+                <p class="insight-card_meta">Suggested follow-ups based on check-ins, issues, and CI state.</p>
+              </div>
+              <div class="priority-list" id="summary-actions"></div>
+            </section>
+
+            <section class="insight-card" aria-labelledby="summary-brief-heading">
+              <div class="insight-card_header">
+                <h2 class="insight-card_title" id="summary-brief-heading">TA meeting brief</h2>
+                <p class="insight-card_meta">One-screen talking points you can carry into a sprint review.</p>
+              </div>
+              <div class="meeting-brief" id="meeting-brief"></div>
+            </section>
+          </div>
       </section>
 
       <section class="app-view" data-view-panel="sprint-health" aria-hidden="true">
@@ -479,10 +540,41 @@
           </div>
         </header>
 
-        <section class="placeholder-panel" aria-labelledby="sprint-health-placeholder-heading">
-          <h2 class="placeholder-panel_title" id="sprint-health-placeholder-heading">Sprint health placeholder</h2>
-          <p class="placeholder-panel_body">Use this screen for check-in completion, unresolved blockers, progress bars, and meeting prep once the data model is defined.</p>
-        </section>
+        <div class="health-grid">
+          <section class="health-hero" aria-labelledby="health-hero-heading">
+            <div>
+              <p class="summary-kicker">Sprint status</p>
+              <h2 class="summary-hero_title" id="health-hero-heading">Momentum this week</h2>
+              <p class="summary-hero_body">A single view of check-in coverage, due-soon work, CI reliability, and where the team is slipping.</p>
+            </div>
+
+            <div class="health-metrics" id="health-metrics"></div>
+          </section>
+
+          <section class="insight-card" aria-labelledby="deadline-risk-heading">
+            <div class="insight-card_header">
+              <h2 class="insight-card_title" id="deadline-risk-heading">Deadline risks</h2>
+              <p class="insight-card_meta">Issues that are both important and likely to create sprint churn if ignored.</p>
+            </div>
+            <div class="risk-list" id="deadline-risk-list"></div>
+          </section>
+
+          <section class="insight-card" aria-labelledby="workflow-trend-heading">
+            <div class="insight-card_header">
+              <h2 class="insight-card_title" id="workflow-trend-heading">CI trend</h2>
+              <p class="insight-card_meta">Recent workflow reliability and failing test totals from the latest runs.</p>
+            </div>
+            <div class="workflow-trend" id="workflow-trend"></div>
+          </section>
+
+          <section class="insight-card" aria-labelledby="issue-distribution-heading">
+            <div class="insight-card_header">
+              <h2 class="insight-card_title" id="issue-distribution-heading">Issue distribution</h2>
+              <p class="insight-card_meta">How work is split by difficulty, status, and ownership.</p>
+            </div>
+            <div class="distribution-list" id="issue-distribution"></div>
+          </section>
+        </div>
       </section>
 
     </main>

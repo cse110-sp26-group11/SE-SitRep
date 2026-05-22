@@ -54,6 +54,18 @@ const overlay   = document.getElementById('sidebar-overlay');
 const sidebarLinks = document.querySelectorAll('.sidebar_link');
 const viewPanels = document.querySelectorAll('[data-view-panel]');
 const openViewButtons = document.querySelectorAll('[data-open-view]');
+const repoPulseGrid = document.getElementById('repo-pulse-grid');
+const issueList = document.getElementById('issue-list');
+const workflowList = document.getElementById('workflow-list');
+const summaryBody = document.getElementById('summary-body');
+const summaryHighlights = document.getElementById('summary-highlights');
+const summaryBlockers = document.getElementById('summary-blockers');
+const summaryActions = document.getElementById('summary-actions');
+const meetingBrief = document.getElementById('meeting-brief');
+const healthMetrics = document.getElementById('health-metrics');
+const deadlineRiskList = document.getElementById('deadline-risk-list');
+const workflowTrend = document.getElementById('workflow-trend');
+const issueDistribution = document.getElementById('issue-distribution');
 
 function openSidebar() {
   sidebar.classList.add('is-open');
@@ -182,6 +194,79 @@ const MOCK_PEOPLE = [
     yesterday: null,
     isBlocker: false,
   },
+];
+
+const MOCK_ISSUES = [
+  {
+    id: 42,
+    title: 'Standup page should save draft state on refresh',
+    status: 'In progress',
+    owner: 'Maya Rodriguez',
+    difficulty: 'Medium',
+    deadline: 'May 24',
+    labels: ['frontend', 'ux'],
+    risk: 'medium',
+  },
+  {
+    id: 51,
+    title: 'Workflow failures need a CI health card in sprint health',
+    status: 'Blocked',
+    owner: 'Arav Kumar',
+    difficulty: 'Hard',
+    deadline: 'May 23',
+    labels: ['github-actions', 'ci'],
+    risk: 'high',
+  },
+  {
+    id: 56,
+    title: 'When-to-meet should highlight best team overlap slots',
+    status: 'Review',
+    owner: 'Ray Yang',
+    difficulty: 'Medium',
+    deadline: 'May 25',
+    labels: ['scheduling', 'frontend'],
+    risk: 'low',
+  },
+  {
+    id: 63,
+    title: 'Surface issue deadlines and difficulty tags on dashboard',
+    status: 'Todo',
+    owner: 'Sam He',
+    difficulty: 'Easy',
+    deadline: 'May 26',
+    labels: ['issues', 'dashboard'],
+    risk: 'medium',
+  }
+];
+
+const MOCK_WORKFLOWS = [
+  {
+    name: 'Frontend checks',
+    status: 'passing',
+    branch: 'frontend',
+    timeAgo: '12m ago',
+    duration: '1m 48s',
+    passedTests: 38,
+    failedTests: 0,
+  },
+  {
+    name: 'Pull request validation',
+    status: 'failing',
+    branch: 'main',
+    timeAgo: '43m ago',
+    duration: '3m 12s',
+    passedTests: 41,
+    failedTests: 2,
+  },
+  {
+    name: 'Deploy preview',
+    status: 'passing',
+    branch: 'frontend',
+    timeAgo: '1h ago',
+    duration: '2m 09s',
+    passedTests: 12,
+    failedTests: 0,
+  }
 ];
 
 /**
@@ -579,6 +664,217 @@ function renderStandupPreview() {
   `;
 }
 
+function renderRepoPulse() {
+  if (!repoPulseGrid) return;
+
+  const blockedPeople = MOCK_PEOPLE.filter(person => person.isBlocker).length;
+  const openIssues = MOCK_ISSUES.length;
+  const failingRuns = MOCK_WORKFLOWS.filter(run => run.status === 'failing').length;
+  const dueSoon = MOCK_ISSUES.filter(issue => issue.deadline === 'May 23' || issue.deadline === 'May 24').length;
+
+  const metrics = [
+    { label: 'Open issues', value: openIssues, tone: 'neutral' },
+    { label: 'Blocked updates', value: blockedPeople, tone: 'warning' },
+    { label: 'Failing workflows', value: failingRuns, tone: failingRuns ? 'danger' : 'success' },
+    { label: 'Due in 48h', value: dueSoon, tone: dueSoon ? 'warning' : 'success' },
+  ];
+
+  repoPulseGrid.innerHTML = '';
+
+  metrics.forEach(metric => {
+    const card = document.createElement('article');
+    card.className = `pulse-card pulse-card--${metric.tone}`;
+    card.innerHTML = `
+      <span class="pulse-card_value">${metric.value}</span>
+      <span class="pulse-card_label">${metric.label}</span>
+    `;
+    repoPulseGrid.appendChild(card);
+  });
+}
+
+function renderIssueCards() {
+  if (!issueList) return;
+
+  issueList.innerHTML = '';
+
+  MOCK_ISSUES.forEach(issue => {
+    const card = document.createElement('article');
+    card.className = `issue-card issue-card--${issue.risk}`;
+    card.innerHTML = `
+      <div class="issue-card_header">
+        <div>
+          <p class="issue-card_id">Issue #${issue.id}</p>
+          <h3 class="issue-card_title">${issue.title}</h3>
+        </div>
+        <span class="issue-status issue-status--${issue.status.toLowerCase().replace(/\s+/g, '-')}">${issue.status}</span>
+      </div>
+      <div class="issue-meta-row">
+        <span class="tag tag--difficulty">${issue.difficulty}</span>
+        <span class="tag tag--deadline">Due ${issue.deadline}</span>
+        <span class="tag tag--owner">${issue.owner}</span>
+      </div>
+      <div class="issue-label-row">
+        ${issue.labels.map(label => `<span class="tag tag--ghost">${label}</span>`).join('')}
+      </div>
+    `;
+    issueList.appendChild(card);
+  });
+}
+
+function renderWorkflowCards() {
+  if (!workflowList) return;
+
+  workflowList.innerHTML = '';
+
+  MOCK_WORKFLOWS.forEach(workflow => {
+    const card = document.createElement('article');
+    card.className = `workflow-card workflow-card--${workflow.status}`;
+    card.innerHTML = `
+      <div class="workflow-card_header">
+        <div>
+          <h3 class="workflow-card_title">${workflow.name}</h3>
+          <p class="workflow-card_meta">${workflow.branch} · ${workflow.timeAgo}</p>
+        </div>
+        <span class="workflow-state workflow-state--${workflow.status}">${workflow.status}</span>
+      </div>
+      <div class="workflow-card_stats">
+        <span>${workflow.duration}</span>
+        <span>${workflow.passedTests} passing</span>
+        <span>${workflow.failedTests} failing</span>
+      </div>
+    `;
+    workflowList.appendChild(card);
+  });
+}
+
+function renderAISummary() {
+  if (summaryBody) {
+    summaryBody.textContent = 'Five of seven teammates checked in, two blockers need human follow-up, and the frontend branch is healthy while pull request validation is still failing on two tests. The biggest sprint risk is CI reliability around issue #51 and the approaching deadline on dashboard issue metadata.';
+  }
+
+  if (summaryHighlights) {
+    const cards = [
+      { value: '71%', label: 'Check-in completion' },
+      { value: '2', label: 'Urgent blockers' },
+      { value: '1', label: 'Failing CI pipeline' },
+    ];
+
+    summaryHighlights.innerHTML = '';
+    cards.forEach(cardData => {
+      const card = document.createElement('div');
+      card.className = 'summary-highlight';
+      card.innerHTML = `
+        <span class="summary-highlight_value">${cardData.value}</span>
+        <span class="summary-highlight_label">${cardData.label}</span>
+      `;
+      summaryHighlights.appendChild(card);
+    });
+  }
+
+  if (summaryBlockers) {
+    const blockers = [
+      'Jamie is blocked on Cloudflare KV access and cannot move the persistence layer forward.',
+      'CI is red on pull request validation, so merges are carrying extra review risk.',
+      'Issue tags and deadlines are still not visible in the main dashboard, reducing planning clarity.',
+    ];
+
+    summaryBlockers.innerHTML = blockers.map(item => `<article class="priority-item priority-item--warning"><p>${item}</p></article>`).join('');
+  }
+
+  if (summaryActions) {
+    const actions = [
+      'Unblock issue #51 first, because the failed workflow is affecting confidence across the sprint.',
+      'Prioritize issue metadata in the dashboard so deadlines and difficulty are visible before TA review.',
+      'Use the when-to-meet overlap suggestions to book a 20-minute sync for blocker resolution.',
+    ];
+
+    summaryActions.innerHTML = actions.map(item => `<article class="priority-item"><p>${item}</p></article>`).join('');
+  }
+
+  if (meetingBrief) {
+    meetingBrief.innerHTML = `
+      <div class="brief-row"><span>Frontend scope</span><strong>All core screens mocked and responsive</strong></div>
+      <div class="brief-row"><span>Biggest risk</span><strong>PR validation still failing</strong></div>
+      <div class="brief-row"><span>Needs lead help</span><strong>Cloudflare KV access + CI fixes</strong></div>
+      <div class="brief-row"><span>Next handoff</span><strong>Begin backend once GitHub surfaces are stable</strong></div>
+    `;
+  }
+}
+
+function renderSprintHealth() {
+  if (healthMetrics) {
+    const metrics = [
+      { label: 'Sprint completion', value: '64%' },
+      { label: 'Workflows passing', value: '2/3' },
+      { label: 'Due this week', value: '3 issues' },
+      { label: 'Standups filed', value: '5/7' },
+    ];
+
+    healthMetrics.innerHTML = '';
+    metrics.forEach(metric => {
+      const card = document.createElement('div');
+      card.className = 'health-metric';
+      card.innerHTML = `
+        <span class="health-metric_value">${metric.value}</span>
+        <span class="health-metric_label">${metric.label}</span>
+      `;
+      healthMetrics.appendChild(card);
+    });
+  }
+
+  if (deadlineRiskList) {
+    const riskIssues = MOCK_ISSUES.filter(issue => issue.risk !== 'low');
+    deadlineRiskList.innerHTML = riskIssues.map(issue => `
+      <article class="risk-item risk-item--${issue.risk}">
+        <div>
+          <strong>#${issue.id} ${issue.title}</strong>
+          <p>${issue.owner} · ${issue.status} · Due ${issue.deadline}</p>
+        </div>
+        <span class="tag tag--deadline">${issue.difficulty}</span>
+      </article>
+    `).join('');
+  }
+
+  if (workflowTrend) {
+    workflowTrend.innerHTML = MOCK_WORKFLOWS.map(workflow => `
+      <article class="trend-row trend-row--${workflow.status}">
+        <div>
+          <strong>${workflow.name}</strong>
+          <p>${workflow.branch} · ${workflow.timeAgo} · ${workflow.duration}</p>
+        </div>
+        <div class="trend-stats">
+          <span>${workflow.passedTests} pass</span>
+          <span>${workflow.failedTests} fail</span>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  if (issueDistribution) {
+    const distribution = [
+      { label: 'Hard issues', value: MOCK_ISSUES.filter(issue => issue.difficulty === 'Hard').length },
+      { label: 'In progress', value: MOCK_ISSUES.filter(issue => issue.status === 'In progress').length },
+      { label: 'Blocked', value: MOCK_ISSUES.filter(issue => issue.status === 'Blocked').length },
+      { label: 'In review', value: MOCK_ISSUES.filter(issue => issue.status === 'Review').length },
+    ];
+
+    issueDistribution.innerHTML = distribution.map(item => `
+      <div class="distribution-row">
+        <span>${item.label}</span>
+        <strong>${item.value}</strong>
+      </div>
+    `).join('');
+  }
+}
+
+function renderFrontendSurfaces() {
+  renderRepoPulse();
+  renderIssueCards();
+  renderWorkflowCards();
+  renderAISummary();
+  renderSprintHealth();
+}
+
 if (standupForm) {
   standupForm.addEventListener('input', renderStandupPreview);
   standupForm.addEventListener('change', renderStandupPreview);
@@ -601,6 +897,7 @@ if (standupForm) {
 }
 
 renderMeetingPlanner();
+renderFrontendSurfaces();
 
 /**
  * Filter bar — called after feed items are rendered.
