@@ -112,18 +112,19 @@ ON CONFLICT(team_id, user_id, standup_date) DO UPDATE SET
   github_activity_summary = excluded.github_activity_summary,
   updated_at = CURRENT_TIMESTAMP;
 
-INSERT INTO availability_slots (id, team_id, user_id, week_start, day_index, slot_label, status) VALUES
-  ('avail-maya-2026-05-04-0-9', 'team-demo', 'user-maya', '2026-05-04', 0, '9 AM', 'available'),
-  ('avail-maya-2026-05-04-0-10', 'team-demo', 'user-maya', '2026-05-04', 0, '10 AM', 'available'),
-  ('avail-maya-2026-05-04-1-11', 'team-demo', 'user-maya', '2026-05-04', 1, '11 AM', 'available'),
-  ('avail-arav-2026-05-04-0-10', 'team-demo', 'user-arav', '2026-05-04', 0, '10 AM', 'available'),
-  ('avail-arav-2026-05-04-1-11', 'team-demo', 'user-arav', '2026-05-04', 1, '11 AM', 'available'),
-  ('avail-jamie-2026-05-04-3-9', 'team-demo', 'user-jamie', '2026-05-04', 3, '9 AM', 'available'),
-  ('avail-ray-2026-05-04-0-9', 'team-demo', 'user-ray', '2026-05-04', 0, '9 AM', 'available'),
-  ('avail-ray-2026-05-04-1-10', 'team-demo', 'user-ray', '2026-05-04', 1, '10 AM', 'maybe'),
-  ('avail-sam-2026-05-04-0-11', 'team-demo', 'user-sam', '2026-05-04', 0, '11 AM', 'available'),
-  ('avail-sam-2026-05-04-4-11', 'team-demo', 'user-sam', '2026-05-04', 4, '11 AM', 'available')
-ON CONFLICT(team_id, user_id, week_start, day_index, slot_label) DO UPDATE SET
+INSERT INTO availability_slots (id, team_id, user_id, week_start, day_index, slot_index, slot_label, status) VALUES
+  ('avail-maya-2026-05-04-0-0', 'team-demo', 'user-maya', '2026-05-04', 0, 0, '9 AM', 'available'),
+  ('avail-maya-2026-05-04-0-1', 'team-demo', 'user-maya', '2026-05-04', 0, 1, '10 AM', 'available'),
+  ('avail-maya-2026-05-04-1-2', 'team-demo', 'user-maya', '2026-05-04', 1, 2, '11 AM', 'available'),
+  ('avail-arav-2026-05-04-0-1', 'team-demo', 'user-arav', '2026-05-04', 0, 1, '10 AM', 'available'),
+  ('avail-arav-2026-05-04-1-2', 'team-demo', 'user-arav', '2026-05-04', 1, 2, '11 AM', 'available'),
+  ('avail-jamie-2026-05-04-3-0', 'team-demo', 'user-jamie', '2026-05-04', 3, 0, '9 AM', 'available'),
+  ('avail-ray-2026-05-04-0-0', 'team-demo', 'user-ray', '2026-05-04', 0, 0, '9 AM', 'available'),
+  ('avail-ray-2026-05-04-1-1', 'team-demo', 'user-ray', '2026-05-04', 1, 1, '10 AM', 'maybe'),
+  ('avail-sam-2026-05-04-0-2', 'team-demo', 'user-sam', '2026-05-04', 0, 2, '11 AM', 'available'),
+  ('avail-sam-2026-05-04-4-2', 'team-demo', 'user-sam', '2026-05-04', 4, 2, '11 AM', 'available')
+ON CONFLICT(team_id, user_id, week_start, day_index, slot_index) DO UPDATE SET
+  slot_label = excluded.slot_label,
   status = excluded.status,
   updated_at = CURRENT_TIMESTAMP;
 

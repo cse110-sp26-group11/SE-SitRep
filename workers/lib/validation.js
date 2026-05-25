@@ -1,4 +1,9 @@
-import { DEFAULT_TEAM_ID, MAX_TEXT_LENGTH, VALID_AVAILABILITY } from './config.js';
+import {
+  DEFAULT_TEAM_ID,
+  MAX_TEXT_LENGTH,
+  VALID_AVAILABILITY,
+  VALID_MEETING_STATUS,
+} from './config.js';
 
 export function normalizeRequiredString(value, fieldName, maxLength = MAX_TEXT_LENGTH) {
   if (typeof value !== 'string' || !value.trim()) {
@@ -66,6 +71,28 @@ export function normalizeDate(value, fieldName) {
   return normalized;
 }
 
+export function normalizeInteger(value, fieldName, min, max) {
+  if (!Number.isInteger(value)) {
+    throw new Error(`${fieldName} must be an integer`);
+  }
+
+  if (value < min || value > max) {
+    throw new Error(`${fieldName} must be between ${min} and ${max}`);
+  }
+
+  return value;
+}
+
+export function normalizeMeetingStatus(value) {
+  const normalized = normalizeRequiredString(value, 'status', 32).toLowerCase();
+
+  if (!VALID_MEETING_STATUS.has(normalized)) {
+    throw new Error('status must be available, maybe, or busy');
+  }
+
+  return normalized;
+}
+
 export function normalizeCreateStandupPayload(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new Error('Request body must be a JSON object');
@@ -128,4 +155,32 @@ export function normalizeUpdateStandupPayload(payload) {
   }
 
   return update;
+}
+
+export function normalizeUpdateAvailabilityPayload(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Request body must be a JSON object');
+  }
+
+  if (!Array.isArray(payload.slots) || !payload.slots.length) {
+    throw new Error('slots must be a non-empty array');
+  }
+
+  return {
+    teamId: normalizeOptionalString(payload.teamId, 'teamId', 128) || DEFAULT_TEAM_ID,
+    userId: normalizeRequiredString(payload.userId, 'userId', 128),
+    weekStart: normalizeDate(payload.weekStart, 'weekStart'),
+    slots: payload.slots.map((slot, index) => {
+      if (!slot || typeof slot !== 'object' || Array.isArray(slot)) {
+        throw new Error(`slots[${index}] must be an object`);
+      }
+
+      return {
+        dayIndex: normalizeInteger(slot.dayIndex, `slots[${index}].dayIndex`, 0, 6),
+        slotIndex: normalizeInteger(slot.slotIndex, `slots[${index}].slotIndex`, 0, 47),
+        slotLabel: normalizeRequiredString(slot.slotLabel, `slots[${index}].slotLabel`, 32),
+        status: normalizeMeetingStatus(slot.status),
+      };
+    }),
+  };
 }

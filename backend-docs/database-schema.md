@@ -151,6 +151,7 @@ team_id
 user_id
 week_start
 day_index
+slot_index
 slot_label
 status
 updated_at
@@ -164,11 +165,14 @@ maybe
 busy
 ```
 
-Unique constraint:
+Unique identity after migration `0002_add_availability_slot_index.sql`:
 
 ```txt
-(team_id, user_id, week_start, day_index, slot_label)
+(team_id, user_id, week_start, day_index, slot_index)
 ```
+
+`slot_label` is display text. `slot_index` is the stable calendar cell identity
+within a day.
 
 ### github_issue_snapshots
 
@@ -271,6 +275,11 @@ Availability queries:
 ```sql
 CREATE INDEX idx_availability_team_week ON availability_slots(team_id, week_start);
 CREATE INDEX idx_availability_user_week ON availability_slots(user_id, week_start);
+CREATE UNIQUE INDEX idx_availability_unique_slot_index
+ON availability_slots(team_id, user_id, week_start, day_index, slot_index);
+
+CREATE INDEX idx_availability_team_week_slot_index
+ON availability_slots(team_id, week_start, day_index, slot_index);
 ```
 
 GitHub issue queries:

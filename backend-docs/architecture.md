@@ -35,6 +35,9 @@ workers/handlers/team.js
 workers/handlers/standups.js
   Standup read, create, and update endpoints.
 
+workers/handlers/availability.js
+  Meeting availability read, upsert, and overlap endpoints.
+
 workers/lib/
   Shared helpers for config, request parsing, responses, validation, and mapping.
 
@@ -85,6 +88,9 @@ GET /api/team          -> handleTeam()
 GET /api/standups      -> handleGetStandups()
 POST /api/standups     -> handleCreateStandup()
 PUT /api/standups/:id  -> handleUpdateStandup()
+GET /api/availability          -> handleGetAvailability()
+PUT /api/availability/me       -> handleUpdateMyAvailability()
+GET /api/availability/overlap  -> handleGetAvailabilityOverlap()
 ```
 
 Unsupported methods return:

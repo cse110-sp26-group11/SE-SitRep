@@ -33,6 +33,9 @@ GET /api/team
 GET /api/standups
 POST /api/standups
 PUT /api/standups/:id
+GET /api/availability
+PUT /api/availability/me
+GET /api/availability/overlap
 ```
 
 Team-scoped endpoints default to the seeded `team-demo` team unless a `teamId`
