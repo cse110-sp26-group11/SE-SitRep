@@ -5,12 +5,14 @@ import {
 } from './handlers/availability.js';
 import { handleGetDashboard } from './handlers/dashboard.js';
 import { handleHealth } from './handlers/health.js';
+import { handleGetIssues } from './handlers/issues.js';
 import {
   handleCreateStandup,
   handleGetStandups,
   handleUpdateStandup,
 } from './handlers/standups.js';
 import { handleTeam } from './handlers/team.js';
+import { handleGetWorkflows } from './handlers/workflows.js';
 import { getPathParts } from './lib/request.js';
 import { errorResponse } from './lib/responses.js';
 
@@ -28,6 +30,14 @@ export async function routeRequest(request, env) {
 
   if (request.method === 'GET' && url.pathname === '/api/dashboard') {
     return handleGetDashboard(env, url);
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/issues') {
+    return handleGetIssues(env, url);
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/workflows') {
+    return handleGetWorkflows(env, url);
   }
 
   if (pathParts[0] === 'api' && pathParts[1] === 'standups') {

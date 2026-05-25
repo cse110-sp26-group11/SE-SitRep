@@ -262,6 +262,98 @@ normalized GitHub workflow snapshot rows.
 500 unexpected backend error
 ```
 
+## GET /api/issues
+
+Returns normalized GitHub issue snapshots for a team.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/issues?teamId=team-demo'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "issues": [
+    {
+      "id": "issue-demo-51",
+      "issueNumber": 51,
+      "title": "Workflow failures need a CI health card in sprint health",
+      "status": "Blocked",
+      "owner": "Arav Kumar",
+      "ownerUserId": "user-arav",
+      "difficulty": "Hard",
+      "deadline": "2026-05-23",
+      "risk": "high",
+      "labels": ["github-actions", "ci"],
+      "url": null,
+      "syncedAt": "2026-05-25 21:57:59"
+    }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded, even if issues is empty
+500 unexpected backend error
+```
+
+## GET /api/workflows
+
+Returns normalized GitHub workflow snapshots for a team.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/workflows?teamId=team-demo'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "workflows": [
+    {
+      "id": "workflow-demo-pr",
+      "name": "Pull request validation",
+      "branch": "main",
+      "status": "failing",
+      "durationSeconds": 192,
+      "passedTests": 41,
+      "failedTests": 2,
+      "url": null,
+      "createdAt": "2026-05-10T11:17:00Z",
+      "syncedAt": "2026-05-25 21:57:59"
+    }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded, even if workflows is empty
+500 unexpected backend error
+```
+
 ## POST /api/standups
 
 Creates one standup for a team member on a specific date.
