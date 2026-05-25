@@ -1,7 +1,13 @@
 import { DEFAULT_TEAM_ID } from '../lib/config.js';
 import { getQueryParam } from '../lib/request.js';
 import { jsonResponse, validationError } from '../lib/responses.js';
-import { getMetricTone, mapIssueRow, mapWorkflowRow } from '../lib/dashboard-mappers.js';
+import { mapIssueRow, mapWorkflowRow } from '../lib/dashboard-mappers.js';
+import {
+  buildMetrics,
+  getDueSoonCount,
+  getFailingWorkflowCount,
+  getOpenIssueCount,
+} from '../lib/dashboard-metrics.js';
 import { normalizeDate } from '../lib/validation.js';
 
 function normalizeDateFromUrl(url) {
@@ -102,67 +108,6 @@ async function fetchWorkflowRows(env, teamId) {
   ).bind(teamId).all();
 
   return results;
-}
-
-function getDueSoonCount(issues, date) {
-  const today = new Date(`${date}T00:00:00Z`);
-  const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
-
-  return issues.filter(issue => {
-    if (!issue.deadline) return false;
-
-    const deadline = new Date(`${issue.deadline}T00:00:00Z`);
-    const diff = deadline.getTime() - today.getTime();
-
-    return diff >= 0 && diff <= twoDaysMs;
-  }).length;
-}
-
-function getOpenIssueCount(issues) {
-  return issues.filter(issue => !['closed', 'done'].includes(String(issue.status).toLowerCase())).length;
-}
-
-function getFailingWorkflowCount(workflows) {
-  return workflows.filter(workflow => workflow.status === 'failing').length;
-}
-
-function buildMetrics({
-  activeMemberCount,
-  checkedInCount,
-  blockerCount,
-  openIssueCount,
-  failingWorkflowCount,
-  dueSoonCount,
-}) {
-  return {
-    checkedIn: {
-      label: 'Checked in today',
-      value: checkedInCount,
-      total: activeMemberCount,
-      completionRate: activeMemberCount ? checkedInCount / activeMemberCount : 0,
-      tone: checkedInCount === activeMemberCount ? 'success' : 'warning',
-    },
-    blockers: {
-      label: 'Active blockers',
-      value: blockerCount,
-      tone: getMetricTone(blockerCount),
-    },
-    openIssues: {
-      label: 'Open issues',
-      value: openIssueCount,
-      tone: openIssueCount ? 'neutral' : 'success',
-    },
-    failingWorkflows: {
-      label: 'Failing workflows',
-      value: failingWorkflowCount,
-      tone: failingWorkflowCount ? 'danger' : 'success',
-    },
-    dueSoon: {
-      label: 'Due in 48h',
-      value: dueSoonCount,
-      tone: dueSoonCount ? 'warning' : 'success',
-    },
-  };
 }
 
 export async function handleGetDashboard(env, url) {
