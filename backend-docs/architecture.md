@@ -32,6 +32,9 @@ workers/handlers/health.js
 workers/handlers/team.js
   Team and team member read endpoint.
 
+workers/handlers/dashboard.js
+  Dashboard aggregate endpoint for metrics, repo pulse, issues, and workflows.
+
 workers/handlers/standups.js
   Standup read, create, and update endpoints.
 
@@ -85,6 +88,7 @@ The API currently supports health/team reads plus standup reads and writes.
 ```txt
 GET /api/health        -> handleHealth()
 GET /api/team          -> handleTeam()
+GET /api/dashboard     -> handleGetDashboard()
 GET /api/standups      -> handleGetStandups()
 POST /api/standups     -> handleCreateStandup()
 PUT /api/standups/:id  -> handleUpdateStandup()

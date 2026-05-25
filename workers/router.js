@@ -3,6 +3,7 @@ import {
   handleGetAvailabilityOverlap,
   handleUpdateMyAvailability,
 } from './handlers/availability.js';
+import { handleGetDashboard } from './handlers/dashboard.js';
 import { handleHealth } from './handlers/health.js';
 import {
   handleCreateStandup,
@@ -23,6 +24,10 @@ export async function routeRequest(request, env) {
 
   if (request.method === 'GET' && url.pathname === '/api/team') {
     return handleTeam(env, url);
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/dashboard') {
+    return handleGetDashboard(env, url);
   }
 
   if (pathParts[0] === 'api' && pathParts[1] === 'standups') {

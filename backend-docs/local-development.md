@@ -64,6 +64,7 @@ Then test endpoints:
 ```sh
 curl http://localhost:8787/api/health
 curl http://localhost:8787/api/team
+curl 'http://localhost:8787/api/dashboard?date=2026-05-10'
 curl 'http://localhost:8787/api/standups?date=2026-05-10'
 curl 'http://localhost:8787/api/availability?weekStart=2026-05-04'
 curl 'http://localhost:8787/api/availability/overlap?weekStart=2026-05-04'

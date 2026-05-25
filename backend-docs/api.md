@@ -183,6 +183,85 @@ other member    -> null badge
 500 unexpected backend error
 ```
 
+## GET /api/dashboard
+
+Returns aggregate dashboard data for the Team Feed dashboard and repo context
+cards.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+date   required, YYYY-MM-DD
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/dashboard?teamId=team-demo&date=2026-05-10'
+```
+
+### Response Shape
+
+```json
+{
+  "team": {
+    "id": "team-demo",
+    "name": "SE SitRep Demo Team",
+    "repoOwner": "cse110-sp26-group11",
+    "repoName": "SE-SitRep",
+    "sprintName": "Sprint 2"
+  },
+  "teamId": "team-demo",
+  "date": "2026-05-10",
+  "metrics": {
+    "checkedIn": {
+      "label": "Checked in today",
+      "value": 5,
+      "total": 5,
+      "completionRate": 1,
+      "tone": "success"
+    },
+    "blockers": {
+      "label": "Active blockers",
+      "value": 1,
+      "tone": "warning"
+    },
+    "openIssues": {
+      "label": "Open issues",
+      "value": 4,
+      "tone": "neutral"
+    },
+    "failingWorkflows": {
+      "label": "Failing workflows",
+      "value": 1,
+      "tone": "danger"
+    },
+    "dueSoon": {
+      "label": "Due in 48h",
+      "value": 2,
+      "tone": "warning"
+    }
+  },
+  "repoPulse": [
+    { "label": "Open issues", "value": 4, "tone": "neutral" }
+  ],
+  "issues": [],
+  "workflows": []
+}
+```
+
+`issues` contains normalized GitHub issue snapshot rows. `workflows` contains
+normalized GitHub workflow snapshot rows.
+
+### Status Codes
+
+```txt
+200 query succeeded
+400 missing or invalid date
+500 unexpected backend error
+```
+
 ## POST /api/standups
 
 Creates one standup for a team member on a specific date.

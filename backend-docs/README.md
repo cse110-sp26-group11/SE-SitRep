@@ -30,6 +30,7 @@ summary generation are future backend work.
 ```txt
 GET /api/health
 GET /api/team
+GET /api/dashboard
 GET /api/standups
 POST /api/standups
 PUT /api/standups/:id
