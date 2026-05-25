@@ -183,14 +183,166 @@ other member    -> null badge
 500 unexpected backend error
 ```
 
+## POST /api/standups
+
+Creates one standup for a team member on a specific date.
+
+The database enforces one standup per `teamId`, `userId`, and `standupDate`.
+
+### Request
+
+```sh
+curl -X POST http://localhost:8787/api/standups \
+  -H 'content-type: application/json' \
+  --data '{
+    "teamId": "team-demo",
+    "userId": "user-maya",
+    "standupDate": "2026-05-11",
+    "yesterday": "Reviewed pull request feedback.",
+    "today": "Implementing standup API endpoints.",
+    "blocker": null,
+    "availability": "available",
+    "includeGithub": true,
+    "notifyLead": false,
+    "githubActivitySummary": "Opened one backend PR."
+  }'
+```
+
+### Body Fields
+
+```txt
+teamId                optional, defaults to team-demo
+userId                required
+standupDate           required, YYYY-MM-DD
+yesterday             optional string or null
+today                 required string
+blocker               optional string or null
+availability          optional, defaults to available
+includeGithub         optional boolean, defaults to true
+notifyLead            optional boolean, defaults to false
+githubActivitySummary optional string or null
+```
+
+Availability must be one of:
+
+```txt
+available
+partial
+unavailable
+```
+
+### Response Shape
+
+```json
+{
+  "standup": {
+    "id": "generated-uuid",
+    "userId": "user-maya",
+    "teamId": "team-demo",
+    "name": "Maya Rodriguez",
+    "initials": "MR",
+    "githubUsername": "maya-rodriguez",
+    "avatarColorKey": "mr",
+    "status": "available",
+    "badgeLabel": null,
+    "badgeType": null,
+    "standupDate": "2026-05-11",
+    "submittedAt": "2026-05-25 02:27:11",
+    "updatedAt": "2026-05-25 02:27:11",
+    "today": "Implementing standup API endpoints.",
+    "yesterday": "Reviewed pull request feedback.",
+    "blocker": null,
+    "availability": "available",
+    "includeGithub": true,
+    "notifyLead": false,
+    "githubActivitySummary": "Opened one backend PR.",
+    "isBlocker": false
+  }
+}
+```
+
+### Status Codes
+
+```txt
+201 standup created
+400 invalid JSON or invalid field value
+404 active team member not found
+409 standup already exists for this user/date/team
+500 unexpected backend error
+```
+
+## PUT /api/standups/:id
+
+Updates editable fields on an existing standup.
+
+This endpoint does not change `teamId`, `userId`, or `standupDate`. Create a new
+standup if the user/date needs to change.
+
+### Request
+
+```sh
+curl -X PUT http://localhost:8787/api/standups/generated-uuid \
+  -H 'content-type: application/json' \
+  --data '{
+    "today": "Finished standup API validation.",
+    "blocker": "Waiting for review",
+    "availability": "partial",
+    "notifyLead": true
+  }'
+```
+
+### Editable Fields
+
+```txt
+yesterday
+today
+blocker
+availability
+includeGithub
+notifyLead
+githubActivitySummary
+```
+
+At least one editable field is required.
+
+### Response Shape
+
+```json
+{
+  "standup": {
+    "id": "generated-uuid",
+    "status": "blocked",
+    "badgeLabel": "blocked",
+    "badgeType": "blocked",
+    "today": "Finished standup API validation.",
+    "blocker": "Waiting for review",
+    "availability": "partial",
+    "notifyLead": true,
+    "isBlocker": true
+  }
+}
+```
+
+The real response includes the full standup object, matching the `POST
+/api/standups` response shape.
+
+### Status Codes
+
+```txt
+200 standup updated
+400 invalid JSON, invalid field value, or no editable fields
+404 standup not found
+500 unexpected backend error
+```
+
 ## Unsupported Requests
 
-Only `GET` requests are currently supported.
+Unsupported method/path combinations return `405`.
 
 Example:
 
 ```sh
-curl -X POST http://localhost:8787/api/standups
+curl -X DELETE http://localhost:8787/api/standups/generated-uuid
 ```
 
 Response:

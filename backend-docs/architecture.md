@@ -18,7 +18,25 @@ Browser or curl
 
 ```txt
 workers/index.js
-  Worker entrypoint, request router, JSON helpers, and read-only handlers.
+  Thin Worker entrypoint. Verifies the D1 binding and delegates to the router.
+
+workers/router.js
+  Route matching for /api/health, /api/team, and /api/standups.
+
+workers/handlers/
+  Endpoint handlers grouped by API area.
+
+workers/handlers/health.js
+  Health check endpoint.
+
+workers/handlers/team.js
+  Team and team member read endpoint.
+
+workers/handlers/standups.js
+  Standup read, create, and update endpoints.
+
+workers/lib/
+  Shared helpers for config, request parsing, responses, validation, and mapping.
 
 wrangler.toml
   Cloudflare Worker config and D1 binding.
@@ -59,12 +77,14 @@ env.DB
 
 ## Current Routing Rules
 
-Only `GET` requests are allowed right now.
+The API currently supports health/team reads plus standup reads and writes.
 
 ```txt
-GET /api/health    -> handleHealth()
-GET /api/team      -> handleTeam()
-GET /api/standups  -> handleStandups()
+GET /api/health        -> handleHealth()
+GET /api/team          -> handleTeam()
+GET /api/standups      -> handleGetStandups()
+POST /api/standups     -> handleCreateStandup()
+PUT /api/standups/:id  -> handleUpdateStandup()
 ```
 
 Unsupported methods return:
@@ -109,7 +129,7 @@ submitted_at    -> submittedAt
 ## Current Limitations
 
 - No authentication or user identity yet.
-- No create/update/delete endpoints yet.
+- Standups can be created and updated, but other resource types are read-only.
 - `team-demo` is the default team.
 - Standup responses come from seeded/demo data unless the database has been
   manually populated.

@@ -3,9 +3,8 @@
 This folder documents the SE SitRep backend as it exists today: a Cloudflare
 Worker API backed by Cloudflare D1.
 
-The backend currently supports read-only API endpoints that prove the Worker can
-connect to D1 and return JSON for the seeded demo data. Frontend integration,
-write endpoints, GitHub sync, availability writes, notifications, and AI
+The backend currently supports read APIs plus standup create/update endpoints.
+Frontend integration, GitHub sync, availability writes, notifications, and AI
 summary generation are future backend work.
 
 ## Documents
@@ -32,7 +31,9 @@ summary generation are future backend work.
 GET /api/health
 GET /api/team
 GET /api/standups
+POST /api/standups
+PUT /api/standups/:id
 ```
 
-All current endpoints are read-only. They default to the seeded `team-demo`
-team unless a `teamId` query parameter is provided.
+Team-scoped endpoints default to the seeded `team-demo` team unless a `teamId`
+query parameter or request body field is provided.

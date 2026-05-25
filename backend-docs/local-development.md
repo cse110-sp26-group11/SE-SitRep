@@ -65,6 +65,9 @@ Then test endpoints:
 curl http://localhost:8787/api/health
 curl http://localhost:8787/api/team
 curl 'http://localhost:8787/api/standups?date=2026-05-10'
+curl -X POST http://localhost:8787/api/standups \
+  -H 'content-type: application/json' \
+  --data '{"teamId":"team-demo","userId":"user-maya","standupDate":"2026-05-11","today":"Testing the standup API.","availability":"available"}'
 ```
 
 ## Expected Smoke Test Results
