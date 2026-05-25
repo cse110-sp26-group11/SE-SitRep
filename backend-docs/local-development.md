@@ -65,6 +65,7 @@ Then test endpoints:
 curl http://localhost:8787/api/health
 curl http://localhost:8787/api/team
 curl 'http://localhost:8787/api/dashboard?date=2026-05-10'
+curl 'http://localhost:8787/api/sprint-health?date=2026-05-10'
 curl 'http://localhost:8787/api/issues'
 curl 'http://localhost:8787/api/workflows'
 curl 'http://localhost:8787/api/standups?date=2026-05-10'

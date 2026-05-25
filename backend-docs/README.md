@@ -31,6 +31,7 @@ summary generation are future backend work.
 GET /api/health
 GET /api/team
 GET /api/dashboard
+GET /api/sprint-health
 GET /api/issues
 GET /api/workflows
 GET /api/standups
