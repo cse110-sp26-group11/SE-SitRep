@@ -65,9 +65,14 @@ Then test endpoints:
 curl http://localhost:8787/api/health
 curl http://localhost:8787/api/team
 curl 'http://localhost:8787/api/standups?date=2026-05-10'
+curl 'http://localhost:8787/api/availability?weekStart=2026-05-04'
+curl 'http://localhost:8787/api/availability/overlap?weekStart=2026-05-04'
 curl -X POST http://localhost:8787/api/standups \
   -H 'content-type: application/json' \
   --data '{"teamId":"team-demo","userId":"user-maya","standupDate":"2026-05-11","today":"Testing the standup API.","availability":"available"}'
+curl -X PUT http://localhost:8787/api/availability/me \
+  -H 'content-type: application/json' \
+  --data '{"teamId":"team-demo","userId":"user-maya","weekStart":"2026-05-04","slots":[{"dayIndex":2,"slotIndex":5,"slotLabel":"2 PM","status":"available"}]}'
 ```
 
 ## Expected Smoke Test Results

@@ -335,6 +335,185 @@ The real response includes the full standup object, matching the `POST
 500 unexpected backend error
 ```
 
+## GET /api/availability
+
+Returns team availability slots for one week.
+
+### Query Params
+
+```txt
+teamId    optional, defaults to team-demo
+weekStart required, YYYY-MM-DD
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/availability?teamId=team-demo&weekStart=2026-05-04'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "weekStart": "2026-05-04",
+  "slots": [
+    {
+      "id": "avail-maya-2026-05-04-0-0",
+      "teamId": "team-demo",
+      "userId": "user-maya",
+      "weekStart": "2026-05-04",
+      "dayIndex": 0,
+      "slotIndex": 0,
+      "slotLabel": "9 AM",
+      "status": "available",
+      "updatedAt": "2026-05-25 02:27:11",
+      "member": {
+        "id": "user-maya",
+        "displayName": "Maya Rodriguez",
+        "initials": "MR",
+        "githubUsername": "maya-rodriguez",
+        "avatarColorKey": "mr"
+      }
+    }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded, even if slots is empty
+400 missing or invalid weekStart
+500 unexpected backend error
+```
+
+## PUT /api/availability/me
+
+Upserts availability slots for one active team member.
+
+There is no authentication yet, so the request body must include `userId`.
+When auth is added, this endpoint should derive the user from the session/token
+instead.
+
+### Request
+
+```sh
+curl -X PUT http://localhost:8787/api/availability/me \
+  -H 'content-type: application/json' \
+  --data '{
+    "teamId": "team-demo",
+    "userId": "user-maya",
+    "weekStart": "2026-05-04",
+    "slots": [
+      { "dayIndex": 2, "slotIndex": 5, "slotLabel": "2 PM", "status": "available" },
+      { "dayIndex": 2, "slotIndex": 6, "slotLabel": "3 PM", "status": "maybe" }
+    ]
+  }'
+```
+
+### Body Fields
+
+```txt
+teamId              optional, defaults to team-demo
+userId              required until auth exists
+weekStart           required, YYYY-MM-DD
+slots               required non-empty array
+slots[].dayIndex    integer from 0 to 6
+slots[].slotIndex   integer from 0 to 47
+slots[].slotLabel   required string
+slots[].status      available, maybe, or busy
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "userId": "user-maya",
+  "weekStart": "2026-05-04",
+  "slots": []
+}
+```
+
+The response returns that user's full availability rows for the requested week
+after the upsert.
+
+### Status Codes
+
+```txt
+200 availability updated
+400 invalid JSON or invalid field value
+404 active team member not found
+500 unexpected backend error
+```
+
+## GET /api/availability/overlap
+
+Returns availability slots grouped by time and sorted by strongest team overlap.
+
+### Query Params
+
+```txt
+teamId    optional, defaults to team-demo
+weekStart required, YYYY-MM-DD
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/availability/overlap?teamId=team-demo&weekStart=2026-05-04'
+```
+
+### Scoring
+
+```txt
+available = 1
+maybe     = 0.5
+busy      = 0
+missing   = counted as busy
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "weekStart": "2026-05-04",
+  "overlap": [
+    {
+      "teamId": "team-demo",
+      "weekStart": "2026-05-04",
+      "dayIndex": 0,
+      "slotIndex": 1,
+      "slotLabel": "10 AM",
+      "score": 2,
+      "availableCount": 2,
+      "maybeCount": 0,
+      "busyCount": 3,
+      "totalMembers": 5,
+      "members": [
+        {
+          "id": "user-arav",
+          "displayName": "Arav Kumar",
+          "initials": "AK",
+          "status": "available"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded, even if overlap is empty
+400 missing or invalid weekStart
+500 unexpected backend error
+```
+
 ## Unsupported Requests
 
 Unsupported method/path combinations return `405`.

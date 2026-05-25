@@ -1,3 +1,8 @@
+import {
+  handleGetAvailability,
+  handleGetAvailabilityOverlap,
+  handleUpdateMyAvailability,
+} from './handlers/availability.js';
 import { handleHealth } from './handlers/health.js';
 import {
   handleCreateStandup,
@@ -31,6 +36,22 @@ export async function routeRequest(request, env) {
 
     if (request.method === 'PUT' && pathParts.length === 3) {
       return handleUpdateStandup(request, env, pathParts[2]);
+    }
+
+    return errorResponse('Method not allowed', 405);
+  }
+
+  if (pathParts[0] === 'api' && pathParts[1] === 'availability') {
+    if (request.method === 'GET' && pathParts.length === 2) {
+      return handleGetAvailability(env, url);
+    }
+
+    if (request.method === 'PUT' && pathParts.length === 3 && pathParts[2] === 'me') {
+      return handleUpdateMyAvailability(request, env);
+    }
+
+    if (request.method === 'GET' && pathParts.length === 3 && pathParts[2] === 'overlap') {
+      return handleGetAvailabilityOverlap(env, url);
     }
 
     return errorResponse('Method not allowed', 405);
