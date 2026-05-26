@@ -1,0 +1,29 @@
+{
+  "name": "tatos",
+  "version": "1.0.0",
+  "description": "Teamwork software",
+  "homepage": "https://github.com/cse110-sp26-group11/SE-SitRep#readme",
+  "bugs": {
+    "url": "https://github.com/cse110-sp26-group11/SE-SitRep/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cse110-sp26-group11/SE-SitRep.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.html",
+  "scripts": {
+    "db:create": "wrangler d1 create se-sitrep",
+    "db:migrate:local": "wrangler d1 migrations apply se-sitrep --local",
+    "db:migrate:remote": "wrangler d1 migrations apply se-sitrep --remote",
+    "db:seed:local": "wrangler d1 execute se-sitrep --local --file=./d1/seeds/demo.sql",
+    "db:seed:remote": "wrangler d1 execute se-sitrep --remote --file=./d1/seeds/demo.sql",
+    "db:console:local": "wrangler d1 execute se-sitrep --local --command=\"SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;\"",
+    "test": "echo \"No automated tests configured yet.\""
+  },
+  "devDependencies": {
+    "wrangler": "^4.18.0"
+  }
+}
