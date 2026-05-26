@@ -35,6 +35,9 @@ workers/handlers/team.js
 workers/handlers/dashboard.js
   Dashboard aggregate endpoint for metrics, repo pulse, issues, and workflows.
 
+workers/handlers/sprint-health.js
+  Sprint health aggregate endpoint for health metrics, deadline risks, workflow trend, and issue distribution.
+
 workers/handlers/issues.js
   GitHub issue snapshot read endpoint.
 
@@ -95,6 +98,7 @@ The API currently supports health/team reads plus standup reads and writes.
 GET /api/health        -> handleHealth()
 GET /api/team          -> handleTeam()
 GET /api/dashboard     -> handleGetDashboard()
+GET /api/sprint-health -> handleGetSprintHealth()
 GET /api/issues        -> handleGetIssues()
 GET /api/workflows     -> handleGetWorkflows()
 GET /api/standups      -> handleGetStandups()

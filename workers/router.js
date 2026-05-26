@@ -6,6 +6,7 @@ import {
 import { handleGetDashboard } from './handlers/dashboard.js';
 import { handleHealth } from './handlers/health.js';
 import { handleGetIssues } from './handlers/issues.js';
+import { handleGetSprintHealth } from './handlers/sprint-health.js';
 import {
   handleCreateStandup,
   handleGetStandups,
@@ -38,6 +39,10 @@ export async function routeRequest(request, env) {
 
   if (request.method === 'GET' && url.pathname === '/api/workflows') {
     return handleGetWorkflows(env, url);
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/sprint-health') {
+    return handleGetSprintHealth(env, url);
   }
 
   if (pathParts[0] === 'api' && pathParts[1] === 'standups') {

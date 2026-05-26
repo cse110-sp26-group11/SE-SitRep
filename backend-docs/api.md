@@ -309,6 +309,74 @@ curl 'http://localhost:8787/api/issues?teamId=team-demo'
 500 unexpected backend error
 ```
 
+## GET /api/sprint-health
+
+Returns aggregate data for the Sprint Health view.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+date   required, YYYY-MM-DD
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/sprint-health?teamId=team-demo&date=2026-05-10'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "date": "2026-05-10",
+  "healthMetrics": [
+    {
+      "label": "Sprint completion",
+      "value": "100%",
+      "numericValue": 1
+    },
+    {
+      "label": "Workflows passing",
+      "value": "2/3",
+      "numericValue": 0.6666666666666666
+    }
+  ],
+  "deadlineRisks": [
+    {
+      "id": "issue-demo-51",
+      "issueNumber": 51,
+      "title": "Workflow failures need a CI health card in sprint health",
+      "owner": "Arav Kumar",
+      "ownerUserId": "user-arav",
+      "status": "Blocked",
+      "difficulty": "Hard",
+      "deadline": "2026-05-23",
+      "risk": "high",
+      "labels": ["github-actions", "ci"],
+      "url": null
+    }
+  ],
+  "workflowTrend": [],
+  "issueDistribution": [
+    { "label": "Hard issues", "value": 1 },
+    { "label": "In progress", "value": 1 },
+    { "label": "Blocked", "value": 1 },
+    { "label": "In review", "value": 1 }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded
+400 missing or invalid date
+500 unexpected backend error
+```
+
 ## GET /api/workflows
 
 Returns normalized GitHub workflow snapshots for a team.
