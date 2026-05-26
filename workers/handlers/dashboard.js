@@ -1,7 +1,14 @@
 import { DEFAULT_TEAM_ID } from '../lib/config.js';
 import { getQueryParam } from '../lib/request.js';
 import { jsonResponse, validationError } from '../lib/responses.js';
-import { getMetricTone, mapIssueRow, mapWorkflowRow } from '../lib/dashboard-mappers.js';
+import { mapIssueRow, mapWorkflowRow } from '../lib/dashboard-mappers.js';
+import {
+  buildMetrics,
+  getDueSoonCount,
+  getFailingWorkflowCount,
+  getOpenIssueCount,
+} from '../lib/dashboard-metrics.js';
+import { fetchIssueRows, fetchWorkflowRows } from '../lib/github-snapshots.js';
 import { normalizeDate } from '../lib/validation.js';
 
 function normalizeDateFromUrl(url) {
@@ -45,124 +52,6 @@ async function fetchStandupStats(env, teamId, date) {
       WHERE team_id = ? AND standup_date = ?
     `
   ).bind(teamId, date).first();
-}
-
-async function fetchIssueRows(env, teamId) {
-  const { results } = await env.DB.prepare(
-    `
-      SELECT
-        github_issue_snapshots.id,
-        github_issue_snapshots.issue_number,
-        github_issue_snapshots.title,
-        github_issue_snapshots.status,
-        github_issue_snapshots.owner_user_id,
-        users.display_name AS owner_display_name,
-        github_issue_snapshots.difficulty,
-        github_issue_snapshots.deadline,
-        github_issue_snapshots.risk,
-        github_issue_snapshots.labels_json,
-        github_issue_snapshots.html_url,
-        github_issue_snapshots.synced_at
-      FROM github_issue_snapshots
-      LEFT JOIN users ON users.id = github_issue_snapshots.owner_user_id
-      WHERE github_issue_snapshots.team_id = ?
-      ORDER BY
-        CASE github_issue_snapshots.risk
-          WHEN 'high' THEN 0
-          WHEN 'medium' THEN 1
-          WHEN 'low' THEN 2
-          ELSE 3
-        END,
-        github_issue_snapshots.deadline ASC,
-        github_issue_snapshots.issue_number ASC
-    `
-  ).bind(teamId).all();
-
-  return results;
-}
-
-async function fetchWorkflowRows(env, teamId) {
-  const { results } = await env.DB.prepare(
-    `
-      SELECT
-        id,
-        workflow_name,
-        branch,
-        status,
-        duration_seconds,
-        passed_tests,
-        failed_tests,
-        run_url,
-        created_at,
-        synced_at
-      FROM github_workflow_snapshots
-      WHERE team_id = ?
-      ORDER BY created_at DESC
-    `
-  ).bind(teamId).all();
-
-  return results;
-}
-
-function getDueSoonCount(issues, date) {
-  const today = new Date(`${date}T00:00:00Z`);
-  const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
-
-  return issues.filter(issue => {
-    if (!issue.deadline) return false;
-
-    const deadline = new Date(`${issue.deadline}T00:00:00Z`);
-    const diff = deadline.getTime() - today.getTime();
-
-    return diff >= 0 && diff <= twoDaysMs;
-  }).length;
-}
-
-function getOpenIssueCount(issues) {
-  return issues.filter(issue => !['closed', 'done'].includes(String(issue.status).toLowerCase())).length;
-}
-
-function getFailingWorkflowCount(workflows) {
-  return workflows.filter(workflow => workflow.status === 'failing').length;
-}
-
-function buildMetrics({
-  activeMemberCount,
-  checkedInCount,
-  blockerCount,
-  openIssueCount,
-  failingWorkflowCount,
-  dueSoonCount,
-}) {
-  return {
-    checkedIn: {
-      label: 'Checked in today',
-      value: checkedInCount,
-      total: activeMemberCount,
-      completionRate: activeMemberCount ? checkedInCount / activeMemberCount : 0,
-      tone: checkedInCount === activeMemberCount ? 'success' : 'warning',
-    },
-    blockers: {
-      label: 'Active blockers',
-      value: blockerCount,
-      tone: getMetricTone(blockerCount),
-    },
-    openIssues: {
-      label: 'Open issues',
-      value: openIssueCount,
-      tone: openIssueCount ? 'neutral' : 'success',
-    },
-    failingWorkflows: {
-      label: 'Failing workflows',
-      value: failingWorkflowCount,
-      tone: failingWorkflowCount ? 'danger' : 'success',
-    },
-    dueSoon: {
-      label: 'Due in 48h',
-      value: dueSoonCount,
-      tone: dueSoonCount ? 'warning' : 'success',
-    },
-  };
 }
 
 export async function handleGetDashboard(env, url) {
