@@ -9,6 +9,7 @@ import {
   handleGetStandups,
   handleUpdateStandup,
 } from './handlers/standups.js';
+import { handleDashboard } from './handlers/dashboard.js';
 import { handleTeam } from './handlers/team.js';
 import { getPathParts } from './lib/request.js';
 import { errorResponse } from './lib/responses.js';
@@ -23,6 +24,10 @@ export async function routeRequest(request, env) {
 
   if (request.method === 'GET' && url.pathname === '/api/team') {
     return handleTeam(env, url);
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/dashboard') {
+    return handleDashboard(env, url);
   }
 
   if (pathParts[0] === 'api' && pathParts[1] === 'standups') {

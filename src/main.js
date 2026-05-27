@@ -4,7 +4,7 @@
  * Three responsibilities:
  *  1. Theme switching (light / dark)
  *  2. Sidebar hamburger drawer and app views
- *  3. Feed rendering via <template> + mock data
+ *  3. Feed rendering via <template> + backend data
  *  4. Standup form preview
  *  5. Shared availability planner
  *     (swap mockFetch for a real fetch('/api/standups') when your backend is ready)
@@ -76,6 +76,39 @@ const healthMetrics = document.getElementById('health-metrics')
 const deadlineRiskList = document.getElementById('deadline-risk-list')
 const workflowTrend = document.getElementById('workflow-trend')
 const issueDistribution = document.getElementById('issue-distribution')
+const teamFeedMeta = document.getElementById('team-feed-meta')
+const currentUserSelect = document.getElementById('current-user-select')
+const meetingUserSelect = document.getElementById('meeting-user-select')
+const topbarProfileInitial = document.querySelector('.topbar_pfp span')
+const statCheckinsValue = document.getElementById('stat-checkins-value')
+const statBlockersValue = document.getElementById('stat-blockers-value')
+const statAvailabilityValue = document.getElementById('stat-availability-value')
+const meetingStatus = document.getElementById('meeting-status')
+
+const API_BASE = '/api'
+const DEFAULT_TEAM_ID = 'team-demo'
+const APP_STORAGE_CURRENT_USER_KEY = 'tatosCurrentUserId'
+
+const appState = {
+  teamId: DEFAULT_TEAM_ID,
+  team: null,
+  members: [],
+  currentUserId: '',
+  standups: [],
+  selectedFeedDate: '',
+  availabilityWeekStart: '',
+  availabilityRows: [],
+  overlapSlots: [],
+  dashboard: {
+    repoPulse: null,
+    issues: [],
+    workflows: [],
+    summary: null,
+    sprintHealth: null
+  }
+}
+
+let filtersWired = false
 
 /**
  * Opens the mobile sidebar drawer.
@@ -154,187 +187,313 @@ openViewButtons.forEach(button => {
 })
 
 /* ══════════════════════════════════════════════════════════
-   3. FEED — TEMPLATE RENDERING + MOCK DATA
+   3. FEED — TEMPLATE RENDERING + BACKEND DATA
    ══════════════════════════════════════════════════════════ */
 
 /**
- * Mock data — shaped exactly like what your real API will return.
- * When your backend is ready, delete this and uncomment the real fetch below.
- *
- * Fields:
- *   id         — short unique key; drives avatar CSS class + element IDs
- *   name       — full display name
- *   initials   — shown in avatar circle
- *   status     — 'available' | 'lead' | 'blocked' | null
- *   badgeLabel — text inside the badge (can differ from status, e.g. "Role: lead")
- *   badgeType  — CSS modifier: 'available' | 'lead' | 'blocked' | null (no badge)
- *   timeAgo    — display string, e.g. "2h ago"
- *   timeAgoLong— spoken string for aria-label, e.g. "2 hours ago"
- *   datetime   — ISO 8601 duration for <time datetime="…">
- *   today      — today's standup text (plain string; BLOCKER prefix included if needed)
- *   yesterday  — yesterday's text, or null if absent
- *   isBlocker  — true applies the red blocker style to the today entry
+ * Calls the Worker JSON API and surfaces backend error messages.
+ * @param {string} path API path beginning with a slash.
+ * @param {RequestInit} [options] Fetch options.
+ * @returns {Promise<object>} Parsed JSON response.
  */
-const MOCK_PEOPLE = [
-  {
-    id: 'mr',
-    name: 'Maya Rodriguez',
-    initials: 'MR',
-    status: 'available',
-    badgeLabel: 'available',
-    badgeType: 'available',
-    timeAgo: '2h ago',
-    timeAgoLong: '2 hours ago',
-    datetime: 'PT2H',
-    today: 'Working on commit summary widget and sprint dashboard UI',
-    yesterday: 'Finished GitHub OAuth flow, reviewed PR #12',
-    isBlocker: false
-  },
-  {
-    id: 'ak',
-    name: 'Arav Kumar',
-    initials: 'AK',
-    status: 'lead',
-    badgeLabel: 'lead',
-    badgeType: 'lead',
-    timeAgo: '1h ago',
-    timeAgoLong: '1 hour ago',
-    datetime: 'PT1H',
-    today: 'Sprint planning prep, coordinating TA meeting notes',
-    yesterday: 'Set up CI/CD pipeline on GitHub Actions',
-    isBlocker: false
-  },
-  {
-    id: 'jl',
-    name: 'Jamie Lee',
-    initials: 'JL',
-    status: 'blocked',
-    badgeLabel: 'blocked',
-    badgeType: 'blocked',
-    timeAgo: '3h ago',
-    timeAgoLong: '3 hours ago',
-    datetime: 'PT3H',
-    today: "BLOCKER — Waiting on Cloudflare KV access, can't proceed with persistence layer",
-    yesterday: null,
-    isBlocker: true
-  },
-  {
-    id: 'ry',
-    name: 'Ray Yang',
-    initials: 'RY',
-    status: 'available',
-    badgeLabel: null,
-    badgeType: null,
-    timeAgo: '30m ago',
-    timeAgoLong: '30 minutes ago',
-    datetime: 'PT30M',
-    today: 'Sprint 1 research doc, wireframes for all 4 screens',
-    yesterday: null,
-    isBlocker: false
-  },
-  {
-    id: 'sh',
-    name: 'Sam He',
-    initials: 'SH',
-    status: 'available',
-    badgeLabel: null,
-    badgeType: null,
-    timeAgo: '4h ago',
-    timeAgoLong: '4 hours ago',
-    datetime: 'PT4H',
-    today: 'User personas and user story refinement',
-    yesterday: null,
-    isBlocker: false
-  }
-]
+async function apiRequest (path, options) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      'content-type': 'application/json',
+      ...(options?.headers || {})
+    },
+    ...options
+  })
 
-const MOCK_ISSUES = [
-  {
-    id: 42,
-    title: 'Standup page should save draft state on refresh',
-    status: 'In progress',
-    owner: 'Maya Rodriguez',
-    difficulty: 'Medium',
-    deadline: 'May 24',
-    labels: ['frontend', 'ux'],
-    risk: 'medium'
-  },
-  {
-    id: 51,
-    title: 'Workflow failures need a CI health card in sprint health',
-    status: 'Blocked',
-    owner: 'Arav Kumar',
-    difficulty: 'Hard',
-    deadline: 'May 23',
-    labels: ['github-actions', 'ci'],
-    risk: 'high'
-  },
-  {
-    id: 56,
-    title: 'When-to-meet should highlight best team overlap slots',
-    status: 'Review',
-    owner: 'Ray Yang',
-    difficulty: 'Medium',
-    deadline: 'May 25',
-    labels: ['scheduling', 'frontend'],
-    risk: 'low'
-  },
-  {
-    id: 63,
-    title: 'Surface issue deadlines and difficulty tags on dashboard',
-    status: 'Todo',
-    owner: 'Sam He',
-    difficulty: 'Easy',
-    deadline: 'May 26',
-    labels: ['issues', 'dashboard'],
-    risk: 'medium'
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(payload?.error || `Request failed with HTTP ${response.status}`)
   }
-]
 
-const MOCK_WORKFLOWS = [
-  {
-    name: 'Frontend checks',
-    status: 'passing',
-    branch: 'frontend',
-    timeAgo: '12m ago',
-    duration: '1m 48s',
-    passedTests: 38,
-    failedTests: 0
-  },
-  {
-    name: 'Pull request validation',
-    status: 'failing',
-    branch: 'main',
-    timeAgo: '43m ago',
-    duration: '3m 12s',
-    passedTests: 41,
-    failedTests: 2
-  },
-  {
-    name: 'Deploy preview',
-    status: 'passing',
-    branch: 'frontend',
-    timeAgo: '1h ago',
-    duration: '2m 09s',
-    passedTests: 12,
-    failedTests: 0
-  }
-]
+  return payload
+}
 
 /**
- * Simulates a network request. Replace the body with a real fetch:
- *
- * async function fetchStandups() {
- * const res = await fetch('/api/standups');
- * if (!res.ok) throw new Error(`HTTP ${res.status}`);
- * return res.json();
- * }
- * @returns {Promise<object[]>} Mock standup entries.
+ * Formats a date as YYYY-MM-DD in local time.
+ * @param {Date} date Date to format.
+ * @returns {string} Local date string.
+ */
+function formatDateYmd (date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Returns today's local date as YYYY-MM-DD.
+ * @returns {string} Today's local date.
+ */
+function getTodayYmd () {
+  return formatDateYmd(new Date())
+}
+
+/**
+ * Returns the Monday for the week that contains the supplied date.
+ * @param {Date} date Reference date.
+ * @returns {string} Week start date in YYYY-MM-DD.
+ */
+function getWeekStartYmd (date) {
+  const copy = new Date(date)
+  const day = copy.getDay()
+  const delta = day === 0 ? -6 : 1 - day
+  copy.setDate(copy.getDate() + delta)
+  return formatDateYmd(copy)
+}
+
+/**
+ * Formats a YYYY-MM-DD date for UI display.
+ * @param {string} ymd Date string.
+ * @returns {string} Human-readable date label.
+ */
+function formatLongDate (ymd) {
+  if (!ymd) return 'No date selected'
+
+  return new Date(`${ymd}T00:00:00`).toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
+/**
+ * Formats a backend timestamp as a relative label.
+ * @param {string} timestamp Backend timestamp string.
+ * @returns {{label: string, longLabel: string, datetime: string}} Relative display metadata.
+ */
+function formatRelativeTime (timestamp) {
+  if (!timestamp) {
+    return {
+      label: 'just now',
+      longLabel: 'just now',
+      datetime: new Date().toISOString()
+    }
+  }
+
+  const normalizedTimestamp = timestamp.includes('T') ? timestamp : `${timestamp.replace(' ', 'T')}Z`
+  const then = new Date(normalizedTimestamp)
+  const diffMs = Date.now() - then.getTime()
+  const diffMinutes = Math.max(0, Math.round(diffMs / 60000))
+
+  if (diffMinutes < 1) {
+    return {
+      label: 'just now',
+      longLabel: 'just now',
+      datetime: then.toISOString()
+    }
+  }
+
+  if (diffMinutes < 60) {
+    return {
+      label: `${diffMinutes}m ago`,
+      longLabel: `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`,
+      datetime: then.toISOString()
+    }
+  }
+
+  const diffHours = Math.round(diffMinutes / 60)
+  if (diffHours < 24) {
+    return {
+      label: `${diffHours}h ago`,
+      longLabel: `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`,
+      datetime: then.toISOString()
+    }
+  }
+
+  const diffDays = Math.round(diffHours / 24)
+  return {
+    label: `${diffDays}d ago`,
+    longLabel: `${diffDays} day${diffDays === 1 ? '' : 's'} ago`,
+    datetime: then.toISOString()
+  }
+}
+
+/**
+ * Converts API availability values into UI labels.
+ * @param {string} availability Availability value.
+ * @returns {string} Human-readable label.
+ */
+function humanizeAvailability (availability) {
+  if (!availability) return 'Available'
+  return availability.charAt(0).toUpperCase() + availability.slice(1)
+}
+
+/**
+ * Persists the current team member selection.
+ * @param {string} userId Team member id.
+ * @returns {void}
+ */
+function persistCurrentUserId (userId) {
+  localStorage.setItem(APP_STORAGE_CURRENT_USER_KEY, userId)
+}
+
+/**
+ * Restores the previously selected team member id.
+ * @returns {string} Stored user id, if any.
+ */
+function restoreCurrentUserId () {
+  return localStorage.getItem(APP_STORAGE_CURRENT_USER_KEY) || ''
+}
+
+/**
+ * Returns only active members from the loaded team response.
+ * @returns {object[]} Active team members.
+ */
+function getActiveMembers () {
+  return appState.members.filter(member => member.isActive !== false)
+}
+
+/**
+ * Looks up a team member by id.
+ * @param {string} userId Team member id.
+ * @returns {object|undefined} Matching member, if found.
+ */
+function getMemberById (userId) {
+  return getActiveMembers().find(member => member.id === userId)
+}
+
+/**
+ * Keeps the standup and meeting selectors in sync.
+ * @returns {void}
+ */
+function syncUserSelects () {
+  if (currentUserSelect) currentUserSelect.value = appState.currentUserId
+  if (meetingUserSelect) meetingUserSelect.value = appState.currentUserId
+}
+
+/**
+ * Populates the current-user selectors from team data.
+ * @returns {void}
+ */
+function renderCurrentUserOptions () {
+  const activeMembers = getActiveMembers()
+  const optionMarkup = activeMembers.map(member => {
+    return `<option value="${member.id}">${member.displayName}</option>`
+  }).join('')
+
+  if (currentUserSelect) currentUserSelect.innerHTML = optionMarkup
+  if (meetingUserSelect) meetingUserSelect.innerHTML = optionMarkup
+  syncUserSelects()
+}
+
+/**
+ * Updates profile chrome tied to the selected member.
+ * @returns {void}
+ */
+function updateCurrentUserUI () {
+  const member = getMemberById(appState.currentUserId)
+  if (!member) return
+
+  if (topbarProfileInitial) {
+    topbarProfileInitial.textContent = member.initials || member.displayName.slice(0, 1).toUpperCase()
+  }
+
+  syncUserSelects()
+}
+
+/**
+ * Finds a standup for one user on one date.
+ * @param {string} userId Team member id.
+ * @param {string} standupDate YYYY-MM-DD standup date.
+ * @returns {object|undefined} Matching standup, if any.
+ */
+function findStandupForUserDate (userId, standupDate) {
+  return appState.standups.find(standup => standup.userId === userId && standup.standupDate === standupDate)
+}
+
+/**
+ * Applies a saved standup to the standup form.
+ * @param {object|undefined} standup Existing standup entry.
+ * @returns {void}
+ */
+function applyStandupToForm (standup) {
+  if (!standupForm) return
+
+  standupForm.elements.yesterday.value = standup?.yesterday || ''
+  standupForm.elements.today.value = standup?.today || ''
+  standupForm.elements.blocker.value = standup?.blocker || ''
+  standupForm.elements.availability.value = standup?.availability || 'available'
+  standupForm.elements.includeGithub.checked = standup?.includeGithub ?? true
+  standupForm.elements.notifyLead.checked = standup?.notifyLead ?? false
+  renderStandupPreview()
+}
+
+/**
+ * Updates the team feed header with live team/date information.
+ * @returns {void}
+ */
+function updateTeamFeedMeta () {
+  if (!teamFeedMeta) return
+
+  const sprintName = appState.team?.sprintName || 'Current sprint'
+  const teamName = appState.team?.name || 'Team'
+  const formattedDate = formatLongDate(appState.selectedFeedDate)
+  teamFeedMeta.innerHTML = `${sprintName} · ${teamName} · <time datetime="${appState.selectedFeedDate}">${formattedDate}</time>`
+}
+
+/**
+ * Maps a backend standup row into the existing feed renderer shape.
+ * @param {object} standup Backend standup object.
+ * @returns {object} Feed view model.
+ */
+function mapStandupToFeedPerson (standup) {
+  const relative = formatRelativeTime(standup.submittedAt || standup.updatedAt)
+
+  return {
+    id: standup.avatarColorKey || standup.initials?.toLowerCase() || standup.userId,
+    name: standup.name || 'Unknown teammate',
+    initials: standup.initials || '??',
+    status: standup.status || 'available',
+    badgeLabel: standup.badgeLabel,
+    badgeType: standup.badgeType,
+    timeAgo: relative.label,
+    timeAgoLong: relative.longLabel,
+    datetime: relative.datetime,
+    today: standup.today || 'No update provided.',
+    yesterday: standup.yesterday,
+    isBlocker: Boolean(standup.isBlocker)
+  }
+}
+
+/**
+ * Fetches standups for the current team.
+ * @returns {Promise<object[]>} Standup rows from the backend.
  */
 async function fetchStandups () {
-  // Simulate ~400ms network latency so the loading state is visible
-  await new Promise(resolve => setTimeout(resolve, 400))
-  return MOCK_PEOPLE
+  const params = new URLSearchParams({ teamId: appState.teamId })
+  const payload = await apiRequest(`/standups?${params.toString()}`)
+  return payload.standups || []
+}
+
+/**
+ * Fetches aggregated dashboard data for the current team and feed date.
+ * @param {string} date YYYY-MM-DD feed date.
+ * @returns {Promise<object>} Dashboard payload.
+ */
+async function fetchDashboardData (date) {
+  const params = new URLSearchParams({ teamId: appState.teamId, date })
+  return apiRequest(`/dashboard?${params.toString()}`)
+}
+
+/**
+ * Loads dashboard state used by repo pulse, issues, workflows, AI summary, and sprint health.
+ * @param {string} date YYYY-MM-DD feed date.
+ * @returns {Promise<void>} Resolves after dashboard state is updated.
+ */
+async function loadDashboardData (date) {
+  const payload = await fetchDashboardData(date)
+  appState.dashboard = {
+    repoPulse: payload.repoPulse || null,
+    issues: payload.issues || [],
+    workflows: payload.workflows || [],
+    summary: payload.summary || null,
+    sprintHealth: payload.sprintHealth || null
+  }
 }
 
 /**
@@ -352,6 +511,7 @@ function renderFeedItem (person, index, total) {
 
   // ARIA position attributes
   article.dataset.status = person.status || 'available'
+  article.dataset.hasYesterday = String(Boolean(person.yesterday))
   article.setAttribute('aria-labelledby', `entry-name-${person.id}`)
   article.setAttribute('aria-posinset', index + 1)
   article.setAttribute('aria-setsize', total)
@@ -404,27 +564,91 @@ function renderFeedItem (person, index, total) {
 
 /**
  * Main load function — fetches data, renders items, wires up filters.
+ * When no preferred date is supplied, the newest standup date becomes the feed date.
+ * @param {string} [preferredDate] Preferred YYYY-MM-DD date to keep selected.
  * @returns {Promise<void>} Resolves after the feed finishes rendering.
  */
-async function loadFeed () {
+async function loadFeed (preferredDate) {
   const feedList = document.getElementById('feed-list')
 
   try {
-    const people = await fetchStandups()
+    appState.standups = await fetchStandups()
+
+    const dates = [...new Set(appState.standups.map(standup => standup.standupDate).filter(Boolean))].sort((left, right) => {
+      return right.localeCompare(left)
+    })
+
+    appState.selectedFeedDate = preferredDate || dates[0] || getTodayYmd()
+    try {
+      await loadDashboardData(appState.selectedFeedDate)
+    } catch (dashboardError) {
+      appState.dashboard = {
+        repoPulse: null,
+        issues: [],
+        workflows: [],
+        summary: null,
+        sprintHealth: null
+      }
+      console.error('Dashboard load failed:', dashboardError)
+    }
+
+    const filteredStandups = appState.standups
+      .filter(standup => standup.standupDate === appState.selectedFeedDate)
+      .map(mapStandupToFeedPerson)
 
     feedList.innerHTML = '' // clear loading message
 
-    people.forEach((person, i) => {
-      feedList.appendChild(renderFeedItem(person, i, people.length))
+    if (!filteredStandups.length) {
+      feedList.innerHTML = '<p class="feed-loading">No standups have been submitted for this day yet.</p>'
+    }
+
+    filteredStandups.forEach((person, i) => {
+      feedList.appendChild(renderFeedItem(person, i, filteredStandups.length))
     })
 
+    updateTeamFeedMeta()
+  renderFrontendSurfaces()
+
     feedList.setAttribute('aria-busy', 'false')
-    wireUpFilters() // attach filter logic now that items exist in the DOM
+    if (!filtersWired) {
+      wireUpFilters()
+      filtersWired = true
+    }
   } catch (err) {
     feedList.innerHTML = '<p class="feed-error" role="alert">Could not load standup entries. Please refresh.</p>'
     feedList.setAttribute('aria-busy', 'false')
     console.error('Feed load failed:', err)
   }
+}
+
+/**
+ * Loads the current team and initializes the selected member.
+ * @returns {Promise<void>} Resolves after team state is ready.
+ */
+async function loadTeamData () {
+  const payload = await apiRequest(`/team?teamId=${appState.teamId}`)
+  appState.team = payload.team || null
+  appState.members = payload.members || []
+
+  const storedUserId = restoreCurrentUserId()
+  const activeMembers = getActiveMembers()
+  appState.currentUserId = activeMembers.some(member => member.id === storedUserId)
+    ? storedUserId
+    : activeMembers[0]?.id || ''
+
+  renderCurrentUserOptions()
+  updateCurrentUserUI()
+}
+
+/**
+ * Applies current-user dependent UI after member selection changes.
+ * @returns {Promise<void>} Resolves after dependent views are refreshed.
+ */
+async function syncSelectedUserData () {
+  updateCurrentUserUI()
+  persistCurrentUserId(appState.currentUserId)
+  applyStandupToForm(findStandupForUserDate(appState.currentUserId, getTodayYmd()))
+  await loadAvailabilityData()
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -438,7 +662,6 @@ const meetingGrid = document.getElementById('meeting-grid')
 const meetingRoster = document.getElementById('meeting-roster')
 const meetingOverlapList = document.getElementById('meeting-overlap-list')
 
-const MEETING_STORAGE_KEY = 'meetingAvailability'
 const MEETING_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 const MEETING_DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 const MEETING_SLOTS = Array.from({ length: 17 }, (_, index) => {
@@ -447,132 +670,7 @@ const MEETING_SLOTS = Array.from({ length: 17 }, (_, index) => {
   const period = hour < 12 ? 'AM' : 'PM'
   return `${normalizedHour} ${period}`
 })
-const MEETING_DEFAULT_OFFSET = 3
-
-/**
- * Shifts a teammate availability map by a number of time slots.
- * @param {object} availability Availability keyed by day and slot.
- * @param {number} offset Number of slot positions to shift.
- * @returns {object} Shifted availability map.
- */
-function offsetAvailability (availability, offset) {
-  return Object.fromEntries(
-    Object.entries(availability)
-      .map(([key, status]) => {
-        const [dayIndex, slotIndex] = key.split('-').map(Number)
-        return [`${dayIndex}-${slotIndex + offset}`, status]
-      })
-      .filter(([key]) => {
-        const [dayIndex, slotIndex] = key.split('-').map(Number)
-        return dayIndex >= 0 && dayIndex < MEETING_DAYS.length && slotIndex >= 0 && slotIndex < MEETING_SLOTS.length
-      })
-  )
-}
-
-const TEAM_MEETING_DATA = [
-  {
-    id: 'mr',
-    name: 'Maya Rodriguez',
-    initials: 'MR',
-    availability: offsetAvailability({
-      '0-0': 'available',
-      '0-1': 'available',
-      '0-2': 'maybe',
-      '1-2': 'available',
-      '1-3': 'available',
-      '1-4': 'available',
-      '2-1': 'available',
-      '2-2': 'available',
-      '2-3': 'maybe',
-      '3-4': 'available',
-      '3-5': 'available',
-      '4-1': 'available',
-      '4-2': 'available',
-      '4-3': 'available'
-    }, MEETING_DEFAULT_OFFSET)
-  },
-  {
-    id: 'ak',
-    name: 'Arav Kumar',
-    initials: 'AK',
-    availability: offsetAvailability({
-      '0-1': 'available',
-      '0-2': 'available',
-      '0-3': 'available',
-      '1-1': 'maybe',
-      '1-2': 'available',
-      '2-3': 'available',
-      '2-4': 'available',
-      '2-5': 'maybe',
-      '3-2': 'available',
-      '3-3': 'available',
-      '3-4': 'available',
-      '4-2': 'available',
-      '4-3': 'maybe',
-      '4-4': 'available'
-    }, MEETING_DEFAULT_OFFSET)
-  },
-  {
-    id: 'jl',
-    name: 'Jamie Lee',
-    initials: 'JL',
-    availability: offsetAvailability({
-      '0-4': 'maybe',
-      '0-5': 'available',
-      '1-4': 'available',
-      '1-5': 'available',
-      '2-0': 'available',
-      '2-1': 'maybe',
-      '2-5': 'available',
-      '3-0': 'available',
-      '3-1': 'available',
-      '3-5': 'maybe',
-      '4-4': 'available',
-      '4-5': 'available'
-    }, MEETING_DEFAULT_OFFSET)
-  },
-  {
-    id: 'ry',
-    name: 'Ray Yang',
-    initials: 'RY',
-    availability: offsetAvailability({
-      '0-0': 'available',
-      '0-1': 'maybe',
-      '1-0': 'available',
-      '1-1': 'available',
-      '1-2': 'maybe',
-      '2-2': 'available',
-      '2-3': 'available',
-      '2-4': 'available',
-      '3-3': 'maybe',
-      '3-4': 'available',
-      '4-0': 'available',
-      '4-1': 'available',
-      '4-2': 'maybe'
-    }, MEETING_DEFAULT_OFFSET)
-  },
-  {
-    id: 'sh',
-    name: 'Sam He',
-    initials: 'SH',
-    availability: offsetAvailability({
-      '0-2': 'available',
-      '0-3': 'available',
-      '1-3': 'available',
-      '1-4': 'maybe',
-      '2-2': 'maybe',
-      '2-3': 'available',
-      '3-1': 'available',
-      '3-2': 'available',
-      '3-3': 'maybe',
-      '4-1': 'available',
-      '4-2': 'available',
-      '4-3': 'available'
-    }, MEETING_DEFAULT_OFFSET)
-  }
-]
-
-const myMeetingAvailability = loadMeetingAvailability()
+let myMeetingAvailability = {}
 
 /**
  * Reads a form field with a fallback value.
@@ -597,38 +695,41 @@ function slotKey (dayIndex, slotIndex) {
 }
 
 /**
- * Loads saved meeting availability from local storage.
- * @returns {object} Saved availability keyed by day and slot.
+ * Groups availability rows for the selected user into a grid lookup.
+ * @param {object[]} rows Backend availability rows.
+ * @param {string} userId Team member id.
+ * @returns {object} Availability keyed by day-slot.
  */
-function loadMeetingAvailability () {
-  try {
-    const saved = localStorage.getItem(MEETING_STORAGE_KEY)
-    if (!saved) return {}
-
-    return Object.fromEntries(
-      Object.entries(JSON.parse(saved)).filter(([key, status]) => {
-        const [dayIndex, slotIndex] = key.split('-').map(Number)
-        const isValidKey = Number.isInteger(dayIndex) &&
-          Number.isInteger(slotIndex) &&
-          dayIndex >= 0 &&
-          dayIndex < MEETING_DAYS.length &&
-          slotIndex >= 0 &&
-          slotIndex < MEETING_SLOTS.length
-
-        return isValidKey && ['available', 'maybe', 'busy'].includes(status)
-      })
-    )
-  } catch {
-    return {}
-  }
+function buildAvailabilityLookup (rows, userId) {
+  return Object.fromEntries(
+    rows
+      .filter(row => row.userId === userId && row.dayIndex < MEETING_DAYS.length && row.slotIndex < MEETING_SLOTS.length)
+      .map(row => [slotKey(row.dayIndex, row.slotIndex), row.status])
+  )
 }
 
 /**
- * Persists the current meeting availability to local storage.
- * @returns {void}
+ * Builds a quick lookup for overlap rows.
+ * @returns {Map<string, object>} Overlap rows keyed by day-slot.
  */
-function saveMeetingAvailability () {
-  localStorage.setItem(MEETING_STORAGE_KEY, JSON.stringify(myMeetingAvailability))
+function getOverlapMap () {
+  return new Map(appState.overlapSlots.map(slot => [slotKey(slot.dayIndex, slot.slotIndex), slot]))
+}
+
+/**
+ * Converts current availability selections into the API payload format.
+ * @returns {object[]} Availability rows to upsert.
+ */
+function getAvailabilityPayloadSlots () {
+  return Object.entries(myMeetingAvailability).map(([key, status]) => {
+    const [dayIndex, slotIndex] = key.split('-').map(Number)
+    return {
+      dayIndex,
+      slotIndex,
+      slotLabel: MEETING_SLOTS[slotIndex],
+      status
+    }
+  })
 }
 
 /**
@@ -649,12 +750,8 @@ function getAvailabilityWeight (status) {
  * @returns {number} Combined overlap score.
  */
 function getOverlapScore (dayIndex, slotIndex) {
-  const key = slotKey(dayIndex, slotIndex)
-  const teammateScore = TEAM_MEETING_DATA.reduce((total, teammate) => {
-    return total + getAvailabilityWeight(teammate.availability[key] || 'busy')
-  }, 0)
-
-  return teammateScore + getAvailabilityWeight(myMeetingAvailability[key] || 'busy')
+  const overlap = getOverlapMap().get(slotKey(dayIndex, slotIndex))
+  return overlap?.score || 0
 }
 
 /**
@@ -688,6 +785,62 @@ function getMyAvailabilitySummary () {
 }
 
 /**
+ * Loads weekly availability and overlap from the backend.
+ * @returns {Promise<void>} Resolves after state and UI refresh.
+ */
+async function loadAvailabilityData () {
+  if (!appState.currentUserId) return
+
+  if (meetingStatus) {
+    meetingStatus.textContent = `Loading availability for ${formatLongDate(appState.availabilityWeekStart)} week…`
+  }
+
+  const params = new URLSearchParams({
+    teamId: appState.teamId,
+    weekStart: appState.availabilityWeekStart
+  })
+
+  const [availabilityPayload, overlapPayload] = await Promise.all([
+    apiRequest(`/availability?${params.toString()}`),
+    apiRequest(`/availability/overlap?${params.toString()}`)
+  ])
+
+  appState.availabilityRows = availabilityPayload.slots || []
+  appState.overlapSlots = overlapPayload.overlap || []
+  myMeetingAvailability = buildAvailabilityLookup(appState.availabilityRows, appState.currentUserId)
+
+  if (meetingStatus) {
+    meetingStatus.textContent = `Availability synced for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+  }
+
+  renderMeetingPlanner()
+}
+
+/**
+ * Saves the selected member's availability back to the backend.
+ * @returns {Promise<void>} Resolves after the save and reload complete.
+ */
+async function saveMeetingAvailability () {
+  if (!appState.currentUserId) return
+
+  if (meetingStatus) {
+    meetingStatus.textContent = 'Saving availability…'
+  }
+
+  await apiRequest('/availability/me', {
+    method: 'PUT',
+    body: JSON.stringify({
+      teamId: appState.teamId,
+      userId: appState.currentUserId,
+      weekStart: appState.availabilityWeekStart,
+      slots: getAvailabilityPayloadSlots()
+    })
+  })
+
+  await loadAvailabilityData()
+}
+
+/**
  * Finds the next status when a meeting cell is toggled.
  * @param {string} currentStatus Current cell status.
  * @param {boolean} hasSavedStatus Whether the cell has an explicit saved value.
@@ -707,36 +860,24 @@ function getNextMeetingStatus (currentStatus, hasSavedStatus) {
 function renderMeetingOverlap () {
   if (!meetingOverlapList) return
 
-  const slots = []
-
-  MEETING_DAYS.forEach((day, dayIndex) => {
-    MEETING_SLOTS.forEach((slotLabel, slotIndex) => {
-      const score = getOverlapScore(dayIndex, slotIndex)
-      slots.push({
-        day,
-        dayLabel: MEETING_DAY_LABELS[dayIndex],
-        slotLabel,
-        score
-      })
-    })
-  })
-
-  slots.sort((left, right) => right.score - left.score)
-
   meetingOverlapList.innerHTML = ''
 
-  slots.slice(0, 5).forEach(slot => {
+  appState.overlapSlots.slice(0, 5).forEach(slot => {
     const item = document.createElement('li')
     item.className = 'meeting-overlap-item'
     item.innerHTML = `
       <div>
-        <strong>${slot.dayLabel} · ${slot.slotLabel}</strong>
-        <p>${slot.score.toFixed(slot.score % 1 === 0 ? 0 : 1)} team availability score</p>
+        <strong>${MEETING_DAY_LABELS[slot.dayIndex]} · ${slot.slotLabel}</strong>
+        <p>${slot.availableCount}/${slot.totalMembers} available · ${slot.maybeCount} maybe</p>
       </div>
       <span class="meeting-overlap-score">${slot.score.toFixed(slot.score % 1 === 0 ? 0 : 1)}</span>
     `
     meetingOverlapList.appendChild(item)
   })
+
+  if (!appState.overlapSlots.length) {
+    meetingOverlapList.innerHTML = '<li class="meeting-overlap-item">No saved availability yet for this week.</li>'
+  }
 }
 
 /**
@@ -746,34 +887,20 @@ function renderMeetingOverlap () {
 function renderMeetingRoster () {
   if (!meetingRoster) return
 
-  const mySummary = getMyAvailabilitySummary()
-  const team = [
-    ...TEAM_MEETING_DATA.map(teammate => {
-      const availableCount = Object.values(teammate.availability).filter(value => value === 'available').length
-      const maybeCount = Object.values(teammate.availability).filter(value => value === 'maybe').length
-      return {
-        initials: teammate.initials,
-        name: teammate.name,
-        meta: `${availableCount} available · ${maybeCount} maybe`
-      }
-    }),
-    {
-      initials: 'YO',
-      name: 'You',
-      meta: `${mySummary.available} available · ${mySummary.maybe} maybe`
-    }
-  ]
-
   meetingRoster.innerHTML = ''
 
-  team.forEach(member => {
+  getActiveMembers().forEach(member => {
+    const memberRows = appState.availabilityRows.filter(row => row.userId === member.id)
+    const availableCount = memberRows.filter(row => row.status === 'available').length
+    const maybeCount = memberRows.filter(row => row.status === 'maybe').length
+    const isCurrentUser = member.id === appState.currentUserId
     const item = document.createElement('div')
     item.className = 'meeting-roster-item'
     item.innerHTML = `
       <div class="meeting-roster-avatar">${member.initials}</div>
       <div>
-        <strong>${member.name}</strong>
-        <p>${member.meta}</p>
+        <strong>${member.displayName}${isCurrentUser ? ' (You)' : ''}</strong>
+        <p>${availableCount} available · ${maybeCount} maybe</p>
       </div>
     `
     meetingRoster.appendChild(item)
@@ -786,6 +913,8 @@ function renderMeetingRoster () {
  */
 function renderMeetingGrid () {
   if (!meetingGrid) return
+
+  const overlapMap = getOverlapMap()
 
   meetingGrid.innerHTML = ''
 
@@ -812,6 +941,7 @@ function renderMeetingGrid () {
       const myStatus = myMeetingAvailability[key] || 'busy'
       const score = getOverlapScore(dayIndex, slotIndex)
       const overlapBucket = getOverlapBucket(score)
+      const overlap = overlapMap.get(key)
       const button = document.createElement('button')
       button.type = 'button'
       button.className = 'meeting-cell'
@@ -821,7 +951,7 @@ function renderMeetingGrid () {
       button.dataset.overlap = String(overlapBucket)
       button.setAttribute(
         'aria-label',
-        `${MEETING_DAY_LABELS[dayIndex]} ${slotLabel}. Your status: ${myStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}`
+        `${MEETING_DAY_LABELS[dayIndex]} ${slotLabel}. Your status: ${myStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}. ${overlap?.availableCount || 0} teammates available.`
       )
       button.innerHTML = `
         <span class="meeting-cell_status">${myStatus === 'busy' ? 'Busy' : myStatus === 'maybe' ? 'Maybe' : 'Free'}</span>
@@ -843,7 +973,7 @@ function renderMeetingPlanner () {
   renderMeetingRoster()
 }
 
-meetingGrid?.addEventListener('click', event => {
+meetingGrid?.addEventListener('click', async event => {
   const cell = event.target.closest('.meeting-cell')
   if (!cell) return
 
@@ -851,8 +981,17 @@ meetingGrid?.addEventListener('click', event => {
   const hasSavedStatus = Object.prototype.hasOwnProperty.call(myMeetingAvailability, key)
   const currentStatus = hasSavedStatus ? myMeetingAvailability[key] : 'busy'
   myMeetingAvailability[key] = getNextMeetingStatus(currentStatus, hasSavedStatus)
-  saveMeetingAvailability()
   renderMeetingPlanner()
+
+  try {
+    await saveMeetingAvailability()
+  } catch (error) {
+    console.error('Availability save failed:', error)
+    if (meetingStatus) {
+      meetingStatus.textContent = `Could not save availability: ${error.message}`
+    }
+    await loadAvailabilityData().catch(() => {})
+  }
 })
 
 /**
@@ -871,7 +1010,7 @@ function renderStandupPreview () {
     <p><strong>Yesterday:</strong> ${readField(formData, 'yesterday', 'No update yet.')}</p>
     <p><strong>Today:</strong> ${readField(formData, 'today', 'No update yet.')}</p>
     <p><strong>Blocker:</strong> ${readField(formData, 'blocker', 'None.')}</p>
-    <p><strong>Availability:</strong> ${readField(formData, 'availability', 'Available')}</p>
+    <p><strong>Availability:</strong> ${humanizeAvailability(readField(formData, 'availability', 'available'))}</p>
     <p><strong>GitHub:</strong> ${githubText}</p>
   `
 }
@@ -883,16 +1022,14 @@ function renderStandupPreview () {
 function renderRepoPulse () {
   if (!repoPulseGrid) return
 
-  const blockedPeople = MOCK_PEOPLE.filter(person => person.isBlocker).length
-  const openIssues = MOCK_ISSUES.length
-  const failingRuns = MOCK_WORKFLOWS.filter(run => run.status === 'failing').length
-  const dueSoon = MOCK_ISSUES.filter(issue => issue.deadline === 'May 23' || issue.deadline === 'May 24').length
+  const repoPulse = appState.dashboard.repoPulse
+  const activeMembers = repoPulse?.activeMembers || getActiveMembers().length
 
   const metrics = [
-    { label: 'Open issues', value: openIssues, tone: 'neutral' },
-    { label: 'Blocked updates', value: blockedPeople, tone: 'warning' },
-    { label: 'Failing workflows', value: failingRuns, tone: failingRuns ? 'danger' : 'success' },
-    { label: 'Due in 48h', value: dueSoon, tone: dueSoon ? 'warning' : 'success' }
+    { label: 'Open issues', value: repoPulse?.openIssues ?? 0, tone: 'neutral' },
+    { label: 'Blocked updates', value: repoPulse?.blockedUpdates ?? 0, tone: 'warning' },
+    { label: 'Failing workflows', value: repoPulse?.failingWorkflows ?? 0, tone: (repoPulse?.failingWorkflows ?? 0) ? 'danger' : 'success' },
+    { label: 'Due in 48h', value: repoPulse?.dueSoon ?? 0, tone: (repoPulse?.dueSoon ?? 0) ? 'warning' : 'success' }
   ]
 
   repoPulseGrid.innerHTML = ''
@@ -906,6 +1043,18 @@ function renderRepoPulse () {
     `
     repoPulseGrid.appendChild(card)
   })
+
+  if (statCheckinsValue) {
+    statCheckinsValue.innerHTML = `${repoPulse?.standupsFiled ?? 0}<span class="stat-card_denom">/${activeMembers || 0}</span>`
+  }
+
+  if (statBlockersValue) {
+    statBlockersValue.textContent = String(repoPulse?.blockedUpdates ?? 0)
+  }
+
+  if (statAvailabilityValue) {
+    statAvailabilityValue.textContent = String(repoPulse?.availableToday ?? 0)
+  }
 }
 
 /**
@@ -917,7 +1066,7 @@ function renderIssueCards () {
 
   issueList.innerHTML = ''
 
-  MOCK_ISSUES.forEach(issue => {
+  appState.dashboard.issues.forEach(issue => {
     const card = document.createElement('article')
     card.className = `issue-card issue-card--${issue.risk}`
     card.innerHTML = `
@@ -939,6 +1088,10 @@ function renderIssueCards () {
     `
     issueList.appendChild(card)
   })
+
+  if (!appState.dashboard.issues.length) {
+    issueList.innerHTML = '<p class="feed-loading">No issue snapshots are available yet.</p>'
+  }
 }
 
 /**
@@ -950,7 +1103,7 @@ function renderWorkflowCards () {
 
   workflowList.innerHTML = ''
 
-  MOCK_WORKFLOWS.forEach(workflow => {
+  appState.dashboard.workflows.forEach(workflow => {
     const card = document.createElement('article')
     card.className = `workflow-card workflow-card--${workflow.status}`
     card.innerHTML = `
@@ -969,6 +1122,10 @@ function renderWorkflowCards () {
     `
     workflowList.appendChild(card)
   })
+
+  if (!appState.dashboard.workflows.length) {
+    workflowList.innerHTML = '<p class="feed-loading">No workflow snapshots are available yet.</p>'
+  }
 }
 
 /**
@@ -976,16 +1133,14 @@ function renderWorkflowCards () {
  * @returns {void}
  */
 function renderAISummary () {
+  const summary = appState.dashboard.summary
+
   if (summaryBody) {
-    summaryBody.textContent = 'Five of seven teammates checked in, two blockers need human follow-up, and the frontend branch is healthy while pull request validation is still failing on two tests. The biggest sprint risk is CI reliability around issue #51 and the approaching deadline on dashboard issue metadata.'
+    summaryBody.textContent = summary?.body || 'No AI summary is available yet.'
   }
 
   if (summaryHighlights) {
-    const cards = [
-      { value: '71%', label: 'Check-in completion' },
-      { value: '2', label: 'Urgent blockers' },
-      { value: '1', label: 'Failing CI pipeline' }
-    ]
+    const cards = summary?.highlights || []
 
     summaryHighlights.innerHTML = ''
     cards.forEach(cardData => {
@@ -1000,32 +1155,22 @@ function renderAISummary () {
   }
 
   if (summaryBlockers) {
-    const blockers = [
-      'Jamie is blocked on Cloudflare KV access and cannot move the persistence layer forward.',
-      'CI is red on pull request validation, so merges are carrying extra review risk.',
-      'Issue tags and deadlines are still not visible in the main dashboard, reducing planning clarity.'
-    ]
+    const blockers = summary?.blockers || ['No blockers are currently surfaced.']
 
     summaryBlockers.innerHTML = blockers.map(item => `<article class="priority-item priority-item--warning"><p>${item}</p></article>`).join('')
   }
 
   if (summaryActions) {
-    const actions = [
-      'Unblock issue #51 first, because the failed workflow is affecting confidence across the sprint.',
-      'Prioritize issue metadata in the dashboard so deadlines and difficulty are visible before TA review.',
-      'Use the when-to-meet overlap suggestions to book a 20-minute sync for blocker resolution.'
-    ]
+    const actions = summary?.actions || ['No recommended actions are available yet.']
 
     summaryActions.innerHTML = actions.map(item => `<article class="priority-item"><p>${item}</p></article>`).join('')
   }
 
   if (meetingBrief) {
-    meetingBrief.innerHTML = `
-      <div class="brief-row"><span>Frontend scope</span><strong>All core screens mocked and responsive</strong></div>
-      <div class="brief-row"><span>Biggest risk</span><strong>PR validation still failing</strong></div>
-      <div class="brief-row"><span>Needs lead help</span><strong>Cloudflare KV access + CI fixes</strong></div>
-      <div class="brief-row"><span>Next handoff</span><strong>Begin backend once GitHub surfaces are stable</strong></div>
-    `
+    const brief = summary?.brief || []
+    meetingBrief.innerHTML = brief.map(item => {
+      return `<div class="brief-row"><span>${item.label}</span><strong>${item.value}</strong></div>`
+    }).join('')
   }
 }
 
@@ -1034,13 +1179,10 @@ function renderAISummary () {
  * @returns {void}
  */
 function renderSprintHealth () {
+  const sprintHealth = appState.dashboard.sprintHealth
+
   if (healthMetrics) {
-    const metrics = [
-      { label: 'Sprint completion', value: '64%' },
-      { label: 'Workflows passing', value: '2/3' },
-      { label: 'Due this week', value: '3 issues' },
-      { label: 'Standups filed', value: '5/7' }
-    ]
+    const metrics = sprintHealth?.metrics || []
 
     healthMetrics.innerHTML = ''
     metrics.forEach(metric => {
@@ -1055,7 +1197,7 @@ function renderSprintHealth () {
   }
 
   if (deadlineRiskList) {
-    const riskIssues = MOCK_ISSUES.filter(issue => issue.risk !== 'low')
+    const riskIssues = sprintHealth?.deadlineRisks || []
     deadlineRiskList.innerHTML = riskIssues.map(issue => `
       <article class="risk-item risk-item--${issue.risk}">
         <div>
@@ -1065,10 +1207,15 @@ function renderSprintHealth () {
         <span class="tag tag--deadline">${issue.difficulty}</span>
       </article>
     `).join('')
+
+    if (!riskIssues.length) {
+      deadlineRiskList.innerHTML = '<p class="feed-loading">No deadline risks are currently flagged.</p>'
+    }
   }
 
   if (workflowTrend) {
-    workflowTrend.innerHTML = MOCK_WORKFLOWS.map(workflow => `
+    const workflows = sprintHealth?.workflowTrend || []
+    workflowTrend.innerHTML = workflows.map(workflow => `
       <article class="trend-row trend-row--${workflow.status}">
         <div>
           <strong>${workflow.name}</strong>
@@ -1080,15 +1227,14 @@ function renderSprintHealth () {
         </div>
       </article>
     `).join('')
+
+    if (!workflows.length) {
+      workflowTrend.innerHTML = '<p class="feed-loading">No workflow trend data is available yet.</p>'
+    }
   }
 
   if (issueDistribution) {
-    const distribution = [
-      { label: 'Hard issues', value: MOCK_ISSUES.filter(issue => issue.difficulty === 'Hard').length },
-      { label: 'In progress', value: MOCK_ISSUES.filter(issue => issue.status === 'In progress').length },
-      { label: 'Blocked', value: MOCK_ISSUES.filter(issue => issue.status === 'Blocked').length },
-      { label: 'In review', value: MOCK_ISSUES.filter(issue => issue.status === 'Review').length }
-    ]
+    const distribution = sprintHealth?.issueDistribution || []
 
     issueDistribution.innerHTML = distribution.map(item => `
       <div class="distribution-row">
@@ -1096,6 +1242,10 @@ function renderSprintHealth () {
         <strong>${item.value}</strong>
       </div>
     `).join('')
+
+    if (!distribution.length) {
+      issueDistribution.innerHTML = '<p class="feed-loading">No issue distribution data is available yet.</p>'
+    }
   }
 }
 
@@ -1115,25 +1265,92 @@ if (standupForm) {
   standupForm.addEventListener('input', renderStandupPreview)
   standupForm.addEventListener('change', renderStandupPreview)
 
-  standupForm.addEventListener('submit', event => {
+  standupForm.addEventListener('submit', async event => {
     event.preventDefault()
     renderStandupPreview()
 
     const formData = new FormData(standupForm)
     const blockerText = readField(formData, 'blocker', '')
 
+    if (!appState.currentUserId) {
+      if (standupStatus) {
+        standupStatus.textContent = 'Pick a team member before saving a standup.'
+      }
+      return
+    }
+
+    const standupDate = getTodayYmd()
+    const existingStandup = findStandupForUserDate(appState.currentUserId, standupDate)
+    const todayText = readField(formData, 'today', '')
+
+    if (!todayText) {
+      if (standupStatus) {
+        standupStatus.textContent = 'Add what you are doing today before saving your standup.'
+      }
+      return
+    }
+
+    const payload = {
+      teamId: appState.teamId,
+      userId: appState.currentUserId,
+      standupDate,
+      yesterday: readField(formData, 'yesterday', ''),
+      today: todayText,
+      blocker: blockerText,
+      availability: readField(formData, 'availability', 'available'),
+      includeGithub: formData.get('includeGithub') === 'on',
+      notifyLead: formData.get('notifyLead') === 'on'
+    }
+
     if (standupStatus) {
-      standupStatus.textContent = blockerText
-        ? 'Standup saved locally. Blocker flagged for follow-up.'
-        : 'Standup saved locally. Ready for feed integration.'
+      standupStatus.textContent = 'Saving standup…'
+    }
+
+    try {
+      await apiRequest(existingStandup ? `/standups/${existingStandup.id}` : '/standups', {
+        method: existingStandup ? 'PUT' : 'POST',
+        body: JSON.stringify(existingStandup
+          ? {
+              yesterday: payload.yesterday,
+              today: payload.today,
+              blocker: payload.blocker,
+              availability: payload.availability,
+              includeGithub: payload.includeGithub,
+              notifyLead: payload.notifyLead
+            }
+          : payload)
+      })
+
+      await loadFeed(standupDate)
+      applyStandupToForm(findStandupForUserDate(appState.currentUserId, standupDate))
+
+      if (standupStatus) {
+        standupStatus.textContent = blockerText
+          ? 'Standup saved. Blocker is now visible in the team feed.'
+          : 'Standup saved to the backend and added to the team feed.'
+      }
+    } catch (error) {
+      console.error('Standup save failed:', error)
+      if (standupStatus) {
+        standupStatus.textContent = `Could not save standup: ${error.message}`
+      }
     }
   })
 
   renderStandupPreview()
 }
 
-renderMeetingPlanner()
 renderFrontendSurfaces()
+
+currentUserSelect?.addEventListener('change', async event => {
+  appState.currentUserId = event.target.value
+  await syncSelectedUserData()
+})
+
+meetingUserSelect?.addEventListener('change', async event => {
+  appState.currentUserId = event.target.value
+  await syncSelectedUserData()
+})
 
 /**
  * Filter bar — called after feed items are rendered.
@@ -1160,7 +1377,7 @@ function wireUpFilters () {
       items.forEach(item => {
         if (filter === 'all') item.hidden = false
         else if (filter === 'blocked') item.hidden = item.dataset.status !== 'blocked'
-        else if (filter === 'no-update') item.hidden = false // TODO: wire to real data field
+        else if (filter === 'no-update') item.hidden = item.dataset.hasYesterday !== 'false'
       })
 
       // Re-number aria-posinset / aria-setsize after filtering
@@ -1175,5 +1392,29 @@ function wireUpFilters () {
   })
 }
 
+/**
+ * Initializes backend-backed frontend data.
+ * @returns {Promise<void>} Resolves when the MVP surfaces are loaded.
+ */
+async function initializeApp () {
+  try {
+    appState.availabilityWeekStart = getWeekStartYmd(new Date())
+    await loadTeamData()
+    await loadFeed()
+    await syncSelectedUserData()
+  } catch (error) {
+    console.error('App initialization failed:', error)
+
+    if (standupStatus) {
+      standupStatus.textContent = `Could not load backend data: ${error.message}`
+    }
+
+    if (meetingStatus) {
+      meetingStatus.textContent = `Could not load availability: ${error.message}`
+    }
+  }
+}
+
 // Kick everything off
-loadFeed()
+renderMeetingPlanner()
+initializeApp()

@@ -488,9 +488,9 @@ body {
   font-weight: 700;
 }
 
-.standup-field textarea {
+.standup-field textarea,
+.standup-field select {
   width: 100%;
-  min-height: 104px;
   resize: vertical;
   padding: 12px 14px;
   border: 1px solid var(--color-border);
@@ -501,7 +501,22 @@ body {
   transition: border-color .12s, background .12s, box-shadow .12s;
 }
 
-.standup-field textarea:hover {
+.standup-field textarea {
+  min-height: 104px;
+}
+
+.standup-field select {
+  min-height: 48px;
+  resize: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%), linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.standup-field textarea:hover,
+.standup-field select:hover {
   border-color: color-mix(in srgb, var(--color-text-muted) 22%, var(--color-border));
 }
 
@@ -510,6 +525,7 @@ body {
 }
 
 .standup-field textarea:focus-visible,
+.standup-field select:focus-visible,
 .availability-pill :where(input:focus-visible + span),
 .standup-check :where(input:focus-visible + span),
 .btn:focus-visible,
@@ -521,9 +537,14 @@ body {
   outline-offset: 2px;
 }
 
-.standup-field textarea:focus-visible {
+.standup-field textarea:focus-visible,
+.standup-field select:focus-visible {
   border-color: color-mix(in srgb, var(--color-active-text) 42%, var(--color-border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-active-bg) 55%, transparent);
+}
+
+.standup-field--compact {
+  margin-bottom: 14px;
 }
 
 .standup-grid {
@@ -802,13 +823,20 @@ body {
 
 .summary-hero,
 .health-hero {
-  padding: clamp(16px, 2.1vh, 24px);
+  padding: clamp(20px, 2.4vh, 30px);
+  border-radius: calc(var(--radius-lg) + 8px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 90%, white 10%), var(--color-surface));
 }
 
 .summary-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.9fr);
-  gap: clamp(16px, 1.8vw, 24px);
+  gap: clamp(18px, 2vw, 28px);
+}
+
+.summary-hero_copy {
+  max-width: 70ch;
 }
 
 .summary-kicker {
@@ -816,56 +844,84 @@ body {
   font-size: clamp(11px, 0.82vw, 13px);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: .12em;
 }
 
 .summary-hero_title {
-  margin-top: 8px;
-  font-size: clamp(20px, 2vw, 30px);
+  margin-top: 10px;
+  font-size: clamp(22px, 2.2vw, 34px);
   font-weight: 800;
-  letter-spacing: -.04em;
+  letter-spacing: -.05em;
   font-family: var(--font-display);
+  line-height: 1.05;
 }
 
 .summary-hero_body {
-  margin-top: 10px;
+  margin-top: 14px;
   max-width: 65ch;
   color: var(--color-text-muted);
-  line-height: 1.7;
+  line-height: 1.8;
+  font-size: clamp(12px, 0.95vw, 15px);
 }
 
 .summary-highlight-list,
 .health-metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
+  gap: 12px;
+  align-self: start;
 }
 
 .summary-highlight,
 .health-metric {
-  padding: 14px;
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-surface) 96%, var(--color-bg));
+  padding: 16px 17px;
+  border-radius: calc(var(--radius-md) + 6px);
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-bg));
   border: 1px solid var(--color-border);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-text) 5%, transparent);
 }
 
 .summary-highlight_value,
 .health-metric_value {
   display: block;
-  font-size: clamp(18px, 1.5vw, 24px);
+  font-size: clamp(20px, 1.7vw, 28px);
   font-weight: 800;
+  letter-spacing: -.04em;
 }
 
 .summary-highlight_label,
 .health-metric_label {
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
   color: var(--color-text-muted);
   font-size: clamp(11px, 0.84vw, 13px);
+  line-height: 1.5;
 }
 
 .summary-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-grid .insight-card,
+.health-grid .insight-card {
+  padding: clamp(18px, 2vh, 24px);
+  border-radius: calc(var(--radius-lg) + 6px);
+  background: color-mix(in srgb, var(--color-surface) 97%, var(--color-bg));
+}
+
+.summary-grid .insight-card_header,
+.health-grid .insight-card_header {
+  margin-bottom: 16px;
+}
+
+.summary-grid .insight-card_title,
+.health-grid .insight-card_title {
+  font-size: clamp(16px, 1.18vw, 20px);
+}
+
+.summary-grid .insight-card_meta,
+.health-grid .insight-card_meta {
+  max-width: 52ch;
 }
 
 .priority-item p,
@@ -883,19 +939,67 @@ body {
   gap: 12px;
 }
 
+.priority-item,
+.risk-item,
+.trend-row {
+  padding: 16px 17px;
+  border-radius: calc(var(--radius-md) + 5px);
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-bg));
+}
+
+.priority-item {
+  line-height: 1.7;
+}
+
+.priority-item p,
+.risk-item p,
+.trend-row p {
+  margin-top: 4px;
+}
+
+.priority-item p {
+  color: color-mix(in srgb, var(--color-text) 74%, var(--color-text-muted));
+  font-size: clamp(12px, 0.92vw, 14.5px);
+  line-height: 1.72;
+}
+
 .brief-row,
 .distribution-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  gap: 16px;
+  padding: 15px 16px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+  border-radius: calc(var(--radius-md) + 4px);
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-bg));
 }
 
 .brief-row:last-child,
 .distribution-row:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+}
+
+.brief-row strong,
+.distribution-row strong,
+.trend-stats {
+  font-size: clamp(11px, 0.88vw, 13.5px);
+}
+
+.brief-row span {
+  flex: 0 0 34%;
+  font-size: clamp(10.5px, 0.8vw, 12.5px);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.brief-row strong {
+  flex: 1;
+  text-align: right;
+  font-size: clamp(12px, 0.96vw, 15px);
+  font-weight: 700;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-text) 90%, black 10%);
 }
 
 .health-grid {
@@ -906,7 +1010,7 @@ body {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
-  gap: clamp(16px, 1.8vw, 24px);
+  gap: clamp(18px, 2vw, 28px);
 }
 
 .trend-stats {

@@ -213,7 +213,7 @@
         <header class="page-header" aria-label="Page title and actions">
           <div>
             <h1 class="page-header_title">Team feed</h1>
-            <p class="page-header_meta">
+            <p class="page-header_meta" id="team-feed-meta">
               Sprint 2 · Day 4 ·
               <time datetime="2026-05-10">May 10, 2026</time>
             </p>
@@ -228,7 +228,7 @@
           <div class="stats">
 
             <article class="stat-card" aria-label="5 out of 7 team members checked in today">
-              <div class="stat-card_value" aria-hidden="true">
+              <div class="stat-card_value" aria-hidden="true" id="stat-checkins-value">
                 5<span class="stat-card_denom">/7</span>
               </div>
               <div class="stat-card_label" aria-hidden="true">
@@ -242,7 +242,7 @@
             </article>
 
             <article class="stat-card stat-card--warning" aria-label="2 active blockers">
-              <div class="stat-card_value" aria-hidden="true">2</div>
+              <div class="stat-card_value" aria-hidden="true" id="stat-blockers-value">2</div>
               <div class="stat-card_label" aria-hidden="true">
                 <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor" stroke-width="2"
@@ -255,8 +255,8 @@
               </div>
             </article>
 
-            <article class="stat-card stat-card--success" aria-label="14 commits today">
-              <div class="stat-card_value" aria-hidden="true">14</div>
+            <article class="stat-card stat-card--success" aria-label="4 teammates available today">
+              <div class="stat-card_value" aria-hidden="true" id="stat-availability-value">4</div>
               <div class="stat-card_label" aria-hidden="true">
                 <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor" stroke-width="2"
@@ -264,7 +264,7 @@
                   <polyline points="16 18 22 12 16 6"></polyline>
                   <polyline points="8 6 2 12 8 18"></polyline>
                 </svg>
-                Commits today
+                Available today
               </div>
             </article>
 
@@ -342,6 +342,11 @@
             </div>
 
             <form class="standup-form" id="standup-form">
+              <label class="standup-field">
+                <span class="standup-label">Who's updating?</span>
+                <select name="currentUser" id="current-user-select"></select>
+              </label>
+
               <label class="standup-field">
                 <span class="standup-label">What did you finish yesterday?</span>
                 <textarea name="yesterday" rows="4" placeholder="Finished the responsive feed layout and reviewed pull request feedback."></textarea>
@@ -444,9 +449,16 @@
               <p class="meeting-card_meta">Click a time slot to cycle your status from available to busy to maybe.</p>
             </div>
 
+            <label class="standup-field standup-field--compact">
+              <span class="standup-label">Viewing availability for</span>
+              <select id="meeting-user-select"></select>
+            </label>
+
             <div class="meeting-grid-shell">
               <div class="meeting-grid" id="meeting-grid" role="grid" aria-label="Team availability schedule"></div>
             </div>
+
+            <p class="standup-status" id="meeting-status" aria-live="polite">Availability will sync with the backend once a team member is selected.</p>
           </section>
 
           <aside class="meeting-sidebar" aria-label="Meeting planning details">
@@ -475,7 +487,7 @@
             <section class="meeting-card" aria-labelledby="meeting-team-heading">
               <div class="meeting-card_header">
                 <h2 class="meeting-card_title" id="meeting-team-heading">Current team</h2>
-                <p class="meeting-card_meta">Mock team availability until backend data is wired in.</p>
+                <p class="meeting-card_meta">Live team roster and saved availability for the selected week.</p>
               </div>
 
               <div class="meeting-roster" id="meeting-roster"></div>
