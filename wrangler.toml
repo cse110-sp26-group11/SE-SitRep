@@ -1,9 +1,10 @@
 name = "se-sitrep"
 compatibility_date = "2026-05-24"
 
-# Placeholder Worker entrypoint for future backend/API work. This PR only adds
-# D1 configuration, migrations, seed data, and setup documentation.
 main = "workers/index.js"
+
+[assets]
+directory = "./src"
 
 [[d1_databases]]
 binding = "DB"
