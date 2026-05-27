@@ -10,6 +10,8 @@
  *     (swap mockFetch for a real fetch('/api/standups') when your backend is ready)
  */
 
+/* global localStorage */
+
 /* ══════════════════════════════════════════════════════════
    1. THEME SWITCHER
    ══════════════════════════════════════════════════════════ */
@@ -20,19 +22,21 @@ const themeBtn = document.getElementById('theme-toggle')
 // Labels describe the theme you'll switch TO (not the current one)
 const NEXT_LABEL = {
   light: 'Switch to dark theme',
-  dark: 'Switch to light theme',
+  dark: 'Switch to light theme'
 }
 
 /**
- *
+ * Reads the active page theme.
+ * @returns {string} Current theme name.
  */
 function currentTheme () {
   return document.documentElement.getAttribute('data-theme') || 'light'
 }
 
 /**
- *
- * @param theme
+ * Applies a theme and updates the theme toggle label.
+ * @param {string} theme Theme name to apply.
+ * @returns {void}
  */
 function applyTheme (theme) {
   document.documentElement.setAttribute('data-theme', theme)
@@ -74,7 +78,8 @@ const workflowTrend = document.getElementById('workflow-trend')
 const issueDistribution = document.getElementById('issue-distribution')
 
 /**
- *
+ * Opens the mobile sidebar drawer.
+ * @returns {void}
  */
 function openSidebar () {
   sidebar.classList.add('is-open')
@@ -85,7 +90,8 @@ function openSidebar () {
 }
 
 /**
- *
+ * Closes the mobile sidebar drawer.
+ * @returns {void}
  */
 function closeSidebar () {
   sidebar.classList.remove('is-open')
@@ -107,8 +113,9 @@ document.addEventListener('keydown', e => {
 })
 
 /**
- *
- * @param viewName
+ * Activates a sidebar view and hides the other view panels.
+ * @param {string} viewName View identifier from the sidebar link.
+ * @returns {void}
  */
 function setActiveView (viewName) {
   sidebarLinks.forEach(link => {
@@ -181,7 +188,7 @@ const MOCK_PEOPLE = [
     datetime: 'PT2H',
     today: 'Working on commit summary widget and sprint dashboard UI',
     yesterday: 'Finished GitHub OAuth flow, reviewed PR #12',
-    isBlocker: false,
+    isBlocker: false
   },
   {
     id: 'ak',
@@ -195,7 +202,7 @@ const MOCK_PEOPLE = [
     datetime: 'PT1H',
     today: 'Sprint planning prep, coordinating TA meeting notes',
     yesterday: 'Set up CI/CD pipeline on GitHub Actions',
-    isBlocker: false,
+    isBlocker: false
   },
   {
     id: 'jl',
@@ -209,7 +216,7 @@ const MOCK_PEOPLE = [
     datetime: 'PT3H',
     today: "BLOCKER — Waiting on Cloudflare KV access, can't proceed with persistence layer",
     yesterday: null,
-    isBlocker: true,
+    isBlocker: true
   },
   {
     id: 'ry',
@@ -223,7 +230,7 @@ const MOCK_PEOPLE = [
     datetime: 'PT30M',
     today: 'Sprint 1 research doc, wireframes for all 4 screens',
     yesterday: null,
-    isBlocker: false,
+    isBlocker: false
   },
   {
     id: 'sh',
@@ -237,8 +244,8 @@ const MOCK_PEOPLE = [
     datetime: 'PT4H',
     today: 'User personas and user story refinement',
     yesterday: null,
-    isBlocker: false,
-  },
+    isBlocker: false
+  }
 ]
 
 const MOCK_ISSUES = [
@@ -250,7 +257,7 @@ const MOCK_ISSUES = [
     difficulty: 'Medium',
     deadline: 'May 24',
     labels: ['frontend', 'ux'],
-    risk: 'medium',
+    risk: 'medium'
   },
   {
     id: 51,
@@ -260,7 +267,7 @@ const MOCK_ISSUES = [
     difficulty: 'Hard',
     deadline: 'May 23',
     labels: ['github-actions', 'ci'],
-    risk: 'high',
+    risk: 'high'
   },
   {
     id: 56,
@@ -270,7 +277,7 @@ const MOCK_ISSUES = [
     difficulty: 'Medium',
     deadline: 'May 25',
     labels: ['scheduling', 'frontend'],
-    risk: 'low',
+    risk: 'low'
   },
   {
     id: 63,
@@ -280,7 +287,7 @@ const MOCK_ISSUES = [
     difficulty: 'Easy',
     deadline: 'May 26',
     labels: ['issues', 'dashboard'],
-    risk: 'medium',
+    risk: 'medium'
   }
 ]
 
@@ -292,7 +299,7 @@ const MOCK_WORKFLOWS = [
     timeAgo: '12m ago',
     duration: '1m 48s',
     passedTests: 38,
-    failedTests: 0,
+    failedTests: 0
   },
   {
     name: 'Pull request validation',
@@ -301,7 +308,7 @@ const MOCK_WORKFLOWS = [
     timeAgo: '43m ago',
     duration: '3m 12s',
     passedTests: 41,
-    failedTests: 2,
+    failedTests: 2
   },
   {
     name: 'Deploy preview',
@@ -310,18 +317,19 @@ const MOCK_WORKFLOWS = [
     timeAgo: '1h ago',
     duration: '2m 09s',
     passedTests: 12,
-    failedTests: 0,
+    failedTests: 0
   }
 ]
 
 /**
  * Simulates a network request. Replace the body with a real fetch:
  *
- *   async function fetchStandups() {
- *     const res = await fetch('/api/standups');
- *     if (!res.ok) throw new Error(`HTTP ${res.status}`);
- *     return res.json();
- *   }
+ * async function fetchStandups() {
+ * const res = await fetch('/api/standups');
+ * if (!res.ok) throw new Error(`HTTP ${res.status}`);
+ * return res.json();
+ * }
+ * @returns {Promise<object[]>} Mock standup entries.
  */
 async function fetchStandups () {
   // Simulate ~400ms network latency so the loading state is visible
@@ -332,9 +340,10 @@ async function fetchStandups () {
 /**
  * Clones the <template>, fills in one person's data, returns the <article>.
  * This function never touches the HTML — all structure lives in the template.
- * @param person
- * @param index
- * @param total
+ * @param {object} person Standup entry to render.
+ * @param {number} index Zero-based position in the feed.
+ * @param {number} total Total number of feed entries.
+ * @returns {object} Rendered feed item article.
  */
 function renderFeedItem (person, index, total) {
   const template = document.getElementById('feed-item-template')
@@ -395,6 +404,7 @@ function renderFeedItem (person, index, total) {
 
 /**
  * Main load function — fetches data, renders items, wires up filters.
+ * @returns {Promise<void>} Resolves after the feed finishes rendering.
  */
 async function loadFeed () {
   const feedList = document.getElementById('feed-list')
@@ -440,9 +450,10 @@ const MEETING_SLOTS = Array.from({ length: 17 }, (_, index) => {
 const MEETING_DEFAULT_OFFSET = 3
 
 /**
- *
- * @param availability
- * @param offset
+ * Shifts a teammate availability map by a number of time slots.
+ * @param {object} availability Availability keyed by day and slot.
+ * @param {number} offset Number of slot positions to shift.
+ * @returns {object} Shifted availability map.
  */
 function offsetAvailability (availability, offset) {
   return Object.fromEntries(
@@ -564,10 +575,11 @@ const TEAM_MEETING_DATA = [
 const myMeetingAvailability = loadMeetingAvailability()
 
 /**
- *
- * @param formData
- * @param fieldName
- * @param fallback
+ * Reads a form field with a fallback value.
+ * @param {FormData} formData Submitted form data.
+ * @param {string} fieldName Field name to read.
+ * @param {string} fallback Value to use when the field is empty.
+ * @returns {string} Trimmed field value or fallback.
  */
 function readField (formData, fieldName, fallback) {
   const value = formData.get(fieldName)
@@ -575,16 +587,18 @@ function readField (formData, fieldName, fallback) {
 }
 
 /**
- *
- * @param dayIndex
- * @param slotIndex
+ * Builds the storage key for a meeting availability cell.
+ * @param {number} dayIndex Zero-based meeting day index.
+ * @param {number} slotIndex Zero-based meeting slot index.
+ * @returns {string} Availability cell key.
  */
 function slotKey (dayIndex, slotIndex) {
   return `${dayIndex}-${slotIndex}`
 }
 
 /**
- *
+ * Loads saved meeting availability from local storage.
+ * @returns {object} Saved availability keyed by day and slot.
  */
 function loadMeetingAvailability () {
   try {
@@ -610,15 +624,17 @@ function loadMeetingAvailability () {
 }
 
 /**
- *
+ * Persists the current meeting availability to local storage.
+ * @returns {void}
  */
 function saveMeetingAvailability () {
   localStorage.setItem(MEETING_STORAGE_KEY, JSON.stringify(myMeetingAvailability))
 }
 
 /**
- *
- * @param status
+ * Converts an availability status into a numeric overlap weight.
+ * @param {string} status Availability status.
+ * @returns {number} Numeric weight for overlap scoring.
  */
 function getAvailabilityWeight (status) {
   if (status === 'available') return 1
@@ -627,9 +643,10 @@ function getAvailabilityWeight (status) {
 }
 
 /**
- *
- * @param dayIndex
- * @param slotIndex
+ * Calculates the team overlap score for a meeting cell.
+ * @param {number} dayIndex Zero-based meeting day index.
+ * @param {number} slotIndex Zero-based meeting slot index.
+ * @returns {number} Combined overlap score.
  */
 function getOverlapScore (dayIndex, slotIndex) {
   const key = slotKey(dayIndex, slotIndex)
@@ -641,8 +658,9 @@ function getOverlapScore (dayIndex, slotIndex) {
 }
 
 /**
- *
- * @param score
+ * Maps an overlap score to a visual bucket.
+ * @param {number} score Combined overlap score.
+ * @returns {number} Bucket number used by heat map styles.
  */
 function getOverlapBucket (score) {
   if (score >= 5) return 6
@@ -654,7 +672,8 @@ function getOverlapBucket (score) {
 }
 
 /**
- *
+ * Counts the current user's saved availability statuses.
+ * @returns {object} Availability counts by status.
  */
 function getMyAvailabilitySummary () {
   const counts = { available: 0, maybe: 0, busy: 0 }
@@ -669,9 +688,10 @@ function getMyAvailabilitySummary () {
 }
 
 /**
- *
- * @param currentStatus
- * @param hasSavedStatus
+ * Finds the next status when a meeting cell is toggled.
+ * @param {string} currentStatus Current cell status.
+ * @param {boolean} hasSavedStatus Whether the cell has an explicit saved value.
+ * @returns {string} Next cell status.
  */
 function getNextMeetingStatus (currentStatus, hasSavedStatus) {
   if (!hasSavedStatus) return 'available'
@@ -681,7 +701,8 @@ function getNextMeetingStatus (currentStatus, hasSavedStatus) {
 }
 
 /**
- *
+ * Renders the highest-scoring meeting slots.
+ * @returns {void}
  */
 function renderMeetingOverlap () {
   if (!meetingOverlapList) return
@@ -695,7 +716,7 @@ function renderMeetingOverlap () {
         day,
         dayLabel: MEETING_DAY_LABELS[dayIndex],
         slotLabel,
-        score,
+        score
       })
     })
   })
@@ -719,7 +740,8 @@ function renderMeetingOverlap () {
 }
 
 /**
- *
+ * Renders teammate availability summaries.
+ * @returns {void}
  */
 function renderMeetingRoster () {
   if (!meetingRoster) return
@@ -732,13 +754,13 @@ function renderMeetingRoster () {
       return {
         initials: teammate.initials,
         name: teammate.name,
-        meta: `${availableCount} available · ${maybeCount} maybe`,
+        meta: `${availableCount} available · ${maybeCount} maybe`
       }
     }),
     {
       initials: 'YO',
       name: 'You',
-      meta: `${mySummary.available} available · ${mySummary.maybe} maybe`,
+      meta: `${mySummary.available} available · ${mySummary.maybe} maybe`
     }
   ]
 
@@ -759,7 +781,8 @@ function renderMeetingRoster () {
 }
 
 /**
- *
+ * Renders the interactive meeting availability grid.
+ * @returns {void}
  */
 function renderMeetingGrid () {
   if (!meetingGrid) return
@@ -810,7 +833,8 @@ function renderMeetingGrid () {
 }
 
 /**
- *
+ * Renders all meeting planner surfaces.
+ * @returns {void}
  */
 function renderMeetingPlanner () {
   if (!meetingGrid) return
@@ -832,7 +856,8 @@ meetingGrid?.addEventListener('click', event => {
 })
 
 /**
- *
+ * Renders the local standup preview from the form values.
+ * @returns {void}
  */
 function renderStandupPreview () {
   if (!standupForm || !standupPreview) return
@@ -852,7 +877,8 @@ function renderStandupPreview () {
 }
 
 /**
- *
+ * Renders repository summary metric cards.
+ * @returns {void}
  */
 function renderRepoPulse () {
   if (!repoPulseGrid) return
@@ -866,7 +892,7 @@ function renderRepoPulse () {
     { label: 'Open issues', value: openIssues, tone: 'neutral' },
     { label: 'Blocked updates', value: blockedPeople, tone: 'warning' },
     { label: 'Failing workflows', value: failingRuns, tone: failingRuns ? 'danger' : 'success' },
-    { label: 'Due in 48h', value: dueSoon, tone: dueSoon ? 'warning' : 'success' },
+    { label: 'Due in 48h', value: dueSoon, tone: dueSoon ? 'warning' : 'success' }
   ]
 
   repoPulseGrid.innerHTML = ''
@@ -883,7 +909,8 @@ function renderRepoPulse () {
 }
 
 /**
- *
+ * Renders issue cards for the dashboard.
+ * @returns {void}
  */
 function renderIssueCards () {
   if (!issueList) return
@@ -915,7 +942,8 @@ function renderIssueCards () {
 }
 
 /**
- *
+ * Renders workflow status cards for the dashboard.
+ * @returns {void}
  */
 function renderWorkflowCards () {
   if (!workflowList) return
@@ -944,7 +972,8 @@ function renderWorkflowCards () {
 }
 
 /**
- *
+ * Renders the static AI summary dashboard section.
+ * @returns {void}
  */
 function renderAISummary () {
   if (summaryBody) {
@@ -955,7 +984,7 @@ function renderAISummary () {
     const cards = [
       { value: '71%', label: 'Check-in completion' },
       { value: '2', label: 'Urgent blockers' },
-      { value: '1', label: 'Failing CI pipeline' },
+      { value: '1', label: 'Failing CI pipeline' }
     ]
 
     summaryHighlights.innerHTML = ''
@@ -974,7 +1003,7 @@ function renderAISummary () {
     const blockers = [
       'Jamie is blocked on Cloudflare KV access and cannot move the persistence layer forward.',
       'CI is red on pull request validation, so merges are carrying extra review risk.',
-      'Issue tags and deadlines are still not visible in the main dashboard, reducing planning clarity.',
+      'Issue tags and deadlines are still not visible in the main dashboard, reducing planning clarity.'
     ]
 
     summaryBlockers.innerHTML = blockers.map(item => `<article class="priority-item priority-item--warning"><p>${item}</p></article>`).join('')
@@ -984,7 +1013,7 @@ function renderAISummary () {
     const actions = [
       'Unblock issue #51 first, because the failed workflow is affecting confidence across the sprint.',
       'Prioritize issue metadata in the dashboard so deadlines and difficulty are visible before TA review.',
-      'Use the when-to-meet overlap suggestions to book a 20-minute sync for blocker resolution.',
+      'Use the when-to-meet overlap suggestions to book a 20-minute sync for blocker resolution.'
     ]
 
     summaryActions.innerHTML = actions.map(item => `<article class="priority-item"><p>${item}</p></article>`).join('')
@@ -1001,7 +1030,8 @@ function renderAISummary () {
 }
 
 /**
- *
+ * Renders sprint health metrics and risk lists.
+ * @returns {void}
  */
 function renderSprintHealth () {
   if (healthMetrics) {
@@ -1009,7 +1039,7 @@ function renderSprintHealth () {
       { label: 'Sprint completion', value: '64%' },
       { label: 'Workflows passing', value: '2/3' },
       { label: 'Due this week', value: '3 issues' },
-      { label: 'Standups filed', value: '5/7' },
+      { label: 'Standups filed', value: '5/7' }
     ]
 
     healthMetrics.innerHTML = ''
@@ -1057,7 +1087,7 @@ function renderSprintHealth () {
       { label: 'Hard issues', value: MOCK_ISSUES.filter(issue => issue.difficulty === 'Hard').length },
       { label: 'In progress', value: MOCK_ISSUES.filter(issue => issue.status === 'In progress').length },
       { label: 'Blocked', value: MOCK_ISSUES.filter(issue => issue.status === 'Blocked').length },
-      { label: 'In review', value: MOCK_ISSUES.filter(issue => issue.status === 'Review').length },
+      { label: 'In review', value: MOCK_ISSUES.filter(issue => issue.status === 'Review').length }
     ]
 
     issueDistribution.innerHTML = distribution.map(item => `
@@ -1070,7 +1100,8 @@ function renderSprintHealth () {
 }
 
 /**
- *
+ * Renders the dashboard support surfaces.
+ * @returns {void}
  */
 function renderFrontendSurfaces () {
   renderRepoPulse()
@@ -1106,6 +1137,7 @@ renderFrontendSurfaces()
 
 /**
  * Filter bar — called after feed items are rendered.
+ * @returns {void}
  */
 function wireUpFilters () {
   const filterBtns = document.querySelectorAll('.filter-btn')

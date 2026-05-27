@@ -510,8 +510,8 @@ body {
 }
 
 .standup-field textarea:focus-visible,
-.availability-pill input:focus-visible + span,
-.standup-check input:focus-visible + span,
+.availability-pill :where(input:focus-visible + span),
+.standup-check :where(input:focus-visible + span),
 .btn:focus-visible,
 .sidebar_link:focus-visible,
 .topbar_icon-btn:focus-visible,
@@ -871,8 +871,8 @@ body {
 .priority-item p,
 .risk-item p,
 .trend-row p,
-.brief-row span,
-.distribution-row span {
+.brief-row :where(span),
+.distribution-row :where(span) {
   color: var(--color-text-muted);
   font-size: clamp(11px, 0.84vw, 13px);
 }
@@ -1366,7 +1366,7 @@ body {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }

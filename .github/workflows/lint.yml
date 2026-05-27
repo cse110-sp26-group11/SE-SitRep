@@ -13,7 +13,7 @@ jobs:
           node-version: 20
 
       - name: Install linters
-        run: npm install eslint@9 neostandard eslint-plugin-jsdoc
+        run: npm install
 
       - name: Run ESLint
         run: npx eslint "src/**/*.js" --no-error-on-unmatched-pattern
