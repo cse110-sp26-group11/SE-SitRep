@@ -193,7 +193,7 @@ openViewButtons.forEach(button => {
 /**
  * Calls the Worker JSON API and surfaces backend error messages.
  * @param {string} path API path beginning with a slash.
- * @param {RequestInit} [options] Fetch options.
+ * @param {object} [options] Fetch options.
  * @returns {Promise<object>} Parsed JSON response.
  */
 async function apiRequest (path, options) {
@@ -607,7 +607,7 @@ async function loadFeed (preferredDate) {
     })
 
     updateTeamFeedMeta()
-  renderFrontendSurfaces()
+    renderFrontendSurfaces()
 
     feedList.setAttribute('aria-busy', 'false')
     if (!filtersWired) {
@@ -733,17 +733,6 @@ function getAvailabilityPayloadSlots () {
 }
 
 /**
- * Converts an availability status into a numeric overlap weight.
- * @param {string} status Availability status.
- * @returns {number} Numeric weight for overlap scoring.
- */
-function getAvailabilityWeight (status) {
-  if (status === 'available') return 1
-  if (status === 'maybe') return 0.5
-  return 0
-}
-
-/**
  * Calculates the team overlap score for a meeting cell.
  * @param {number} dayIndex Zero-based meeting day index.
  * @param {number} slotIndex Zero-based meeting slot index.
@@ -766,22 +755,6 @@ function getOverlapBucket (score) {
   if (score >= 2) return 3
   if (score >= 1) return 2
   return 1
-}
-
-/**
- * Counts the current user's saved availability statuses.
- * @returns {object} Availability counts by status.
- */
-function getMyAvailabilitySummary () {
-  const counts = { available: 0, maybe: 0, busy: 0 }
-
-  Object.values(myMeetingAvailability).forEach(status => {
-    if (status === 'available') counts.available += 1
-    else if (status === 'maybe') counts.maybe += 1
-  })
-
-  counts.busy = (MEETING_DAYS.length * MEETING_SLOTS.length) - counts.available - counts.maybe
-  return counts
 }
 
 /**
