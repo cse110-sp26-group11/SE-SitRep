@@ -1,19 +1,63 @@
 /**
  * tatOS — main.js
  *
- * Three responsibilities:
- *  1. Theme switching (light / dark)
- *  2. Sidebar hamburger drawer and app views
- *  3. Feed rendering via <template> + mock data
- *  4. Standup form preview
- *  5. Shared availability planner
+ *  Responsibilities:
+ *  1. GitHub OAuth authentication
+ *  2. Theme switching (light / dark)
+ *  3. Sidebar hamburger drawer and app views
+ *  4. Feed rendering via <template> + mock data
+ *  5. Standup form preview
+ *  6. Shared availability planner
  *     (swap mockFetch for a real fetch('/api/standups') when your backend is ready)
  */
 
-/* global localStorage */
+/* ══════════════════════════════════════════════════════════
+   1. GITHUB OAUTH AUTHENTICATION
+   ══════════════════════════════════════════════════════════ */
+
+const API_BASE = 'http://localhost:8787';
+const GITHUB_CLIENT_ID = 'Ov23likol0wN6t1EA8vo';
+
+// Check if user is already authenticated
+const token = localStorage.getItem('github_token');
+const loginView = document.getElementById('login-view');
+const appShell = document.getElementById('app-shell');
+
+if (!token) {
+  // Not authenticated: show login page, hide main app
+  if (loginView) {
+    loginView.style.display = 'flex';
+    loginView.style.flexDirection = 'column';
+    loginView.style.alignItems = 'center';
+    loginView.style.justifyContent = 'center';
+    loginView.style.minHeight = '100vh';
+    loginView.style.gap = '24px';
+  }
+  if (appShell) {
+    appShell.style.display = 'none';
+  }
+} else {
+  // Already authenticated: hide login page
+  if (loginView) {
+    loginView.style.display = 'none';
+  }
+}
+
+// Wire up the login button click handler
+const loginBtn = document.getElementById('github-login-btn');
+if (loginBtn) {
+  loginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const authUrl = 'https://github.com/login/oauth/authorize'
+      + `?client_id=${GITHUB_CLIENT_ID}`
+      + '&redirect_uri=http://localhost:5500/src/callback.html'
+      + '&scope=user';
+    window.location.href = authUrl;
+  });
+}
 
 /* ══════════════════════════════════════════════════════════
-   1. THEME SWITCHER
+   2. THEME SWITCHER
    ══════════════════════════════════════════════════════════ */
 
 const THEMES = ['light', 'dark']
@@ -55,7 +99,7 @@ themeBtn?.addEventListener('click', () => {
 if (themeBtn) themeBtn.setAttribute('aria-label', NEXT_LABEL[currentTheme()])
 
 /* ══════════════════════════════════════════════════════════
-   2. SIDEBAR / HAMBURGER DRAWER
+   3. SIDEBAR / HAMBURGER DRAWER
    ══════════════════════════════════════════════════════════ */
 
 const toggleBtn = document.getElementById('sidebar-toggle')
@@ -154,7 +198,7 @@ openViewButtons.forEach(button => {
 })
 
 /* ══════════════════════════════════════════════════════════
-   3. FEED — TEMPLATE RENDERING + MOCK DATA
+   4. FEED — TEMPLATE RENDERING + MOCK DATA
    ══════════════════════════════════════════════════════════ */
 
 /**
@@ -428,7 +472,7 @@ async function loadFeed () {
 }
 
 /* ══════════════════════════════════════════════════════════
-   4. STANDUP FORM — LOCAL PREVIEW + SAVE FEEDBACK
+   5. STANDUP FORM — LOCAL PREVIEW + SAVE FEEDBACK
    ══════════════════════════════════════════════════════════ */
 
 const standupForm = document.getElementById('standup-form')
