@@ -85,6 +85,7 @@ The API currently supports health/team reads plus standup reads and writes.
 ```txt
 GET /api/health        -> handleHealth()
 GET /api/team          -> handleTeam()
+GET /api/dashboard     -> handleDashboard()
 GET /api/standups      -> handleGetStandups()
 POST /api/standups     -> handleCreateStandup()
 PUT /api/standups/:id  -> handleUpdateStandup()
