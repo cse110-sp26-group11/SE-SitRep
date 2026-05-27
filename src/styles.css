@@ -933,6 +933,13 @@ body {
   font-size: clamp(11px, 0.84vw, 13px);
 }
 
+.brief-row :where(span) {
+  flex: 0 0 34%;
+  font-size: clamp(10.5px, 0.8vw, 12.5px);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
 .meeting-brief {
   display: flex;
   flex-direction: column;
@@ -984,13 +991,6 @@ body {
 .distribution-row strong,
 .trend-stats {
   font-size: clamp(11px, 0.88vw, 13.5px);
-}
-
-.meeting-brief .brief-row span {
-  flex: 0 0 34%;
-  font-size: clamp(10.5px, 0.8vw, 12.5px);
-  font-weight: 600;
-  letter-spacing: .02em;
 }
 
 .brief-row strong {
