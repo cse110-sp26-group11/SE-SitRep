@@ -1,12 +1,12 @@
-import { DEFAULT_TEAM_ID } from '../lib/config.js';
-import { getQueryParam, readJson } from '../lib/request.js';
-import { errorResponse, jsonResponse, validationError } from '../lib/responses.js';
+import { DEFAULT_TEAM_ID } from '../lib/config.js'
+import { getQueryParam, readJson } from '../lib/request.js'
+import { errorResponse, jsonResponse, validationError } from '../lib/responses.js'
 import {
   getAvailabilityWeight,
   mapAvailabilityRow,
-  mapOverlapSlot,
-} from '../lib/availability-mappers.js';
-import { normalizeDate, normalizeUpdateAvailabilityPayload } from '../lib/validation.js';
+  mapOverlapSlot
+} from '../lib/availability-mappers.js'
+import { normalizeDate, normalizeUpdateAvailabilityPayload } from '../lib/validation.js'
 
 async function ensureActiveTeamMember(env, teamId, userId) {
   const member = await env.DB.prepare(
@@ -17,9 +17,9 @@ async function ensureActiveTeamMember(env, teamId, userId) {
     `
   )
     .bind(teamId, userId)
-    .first();
+    .first()
 
-  return Boolean(member);
+  return Boolean(member)
 }
 
 async function fetchAvailabilityRows(env, teamId, weekStart) {
@@ -51,9 +51,9 @@ async function fetchAvailabilityRows(env, teamId, weekStart) {
     `
   )
     .bind(teamId, weekStart)
-    .all();
+    .all()
 
-  return results;
+  return results
 }
 
 async function fetchActiveMemberCount(env, teamId) {
@@ -65,53 +65,53 @@ async function fetchActiveMemberCount(env, teamId) {
     `
   )
     .bind(teamId)
-    .first();
+    .first()
 
-  return row?.count || 0;
+  return row?.count || 0
 }
 
 function normalizeWeekStartFromUrl(url) {
   try {
-    return normalizeDate(url.searchParams.get('weekStart'), 'weekStart');
+    return normalizeDate(url.searchParams.get('weekStart'), 'weekStart')
   } catch (error) {
-    return { error };
+    return { error }
   }
 }
 
 export async function handleGetAvailability(env, url) {
-  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID);
-  const weekStart = normalizeWeekStartFromUrl(url);
+  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID)
+  const weekStart = normalizeWeekStartFromUrl(url)
 
   if (weekStart.error) {
-    return validationError(weekStart.error.message);
+    return validationError(weekStart.error.message)
   }
 
-  const rows = await fetchAvailabilityRows(env, teamId, weekStart);
+  const rows = await fetchAvailabilityRows(env, teamId, weekStart)
 
   return jsonResponse({
     teamId,
     weekStart,
-    slots: rows.map(mapAvailabilityRow),
-  });
+    slots: rows.map(mapAvailabilityRow)
+  })
 }
 
 export async function handleUpdateMyAvailability(request, env) {
-  let payload;
+  let payload
 
   try {
-    payload = normalizeUpdateAvailabilityPayload(await readJson(request));
+    payload = normalizeUpdateAvailabilityPayload(await readJson(request))
   } catch (error) {
-    return validationError(error.message);
+    return validationError(error.message)
   }
 
-  const isMember = await ensureActiveTeamMember(env, payload.teamId, payload.userId);
+  const isMember = await ensureActiveTeamMember(env, payload.teamId, payload.userId)
   if (!isMember) {
-    return errorResponse('Active team member not found', 404);
+    return errorResponse('Active team member not found', 404)
   }
 
   const statements = payload.slots.map((slot) => {
-    const userKey = payload.userId.replace(/^user-/, '');
-    const id = ['avail', userKey, payload.weekStart, slot.dayIndex, slot.slotIndex].join('-');
+    const userKey = payload.userId.replace(/^user-/, '')
+    const id = ['avail', userKey, payload.weekStart, slot.dayIndex, slot.slotIndex].join('-')
 
     return env.DB.prepare(
       `
@@ -140,39 +140,39 @@ export async function handleUpdateMyAvailability(request, env) {
       slot.slotIndex,
       slot.slotLabel,
       slot.status
-    );
-  });
+    )
+  })
 
-  await env.DB.batch(statements);
+  await env.DB.batch(statements)
 
-  const rows = await fetchAvailabilityRows(env, payload.teamId, payload.weekStart);
-  const userSlots = rows.filter((row) => row.user_id === payload.userId);
+  const rows = await fetchAvailabilityRows(env, payload.teamId, payload.weekStart)
+  const userSlots = rows.filter((row) => row.user_id === payload.userId)
 
   return jsonResponse({
     teamId: payload.teamId,
     userId: payload.userId,
     weekStart: payload.weekStart,
-    slots: userSlots.map(mapAvailabilityRow),
-  });
+    slots: userSlots.map(mapAvailabilityRow)
+  })
 }
 
 export async function handleGetAvailabilityOverlap(env, url) {
-  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID);
-  const weekStart = normalizeWeekStartFromUrl(url);
+  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID)
+  const weekStart = normalizeWeekStartFromUrl(url)
 
   if (weekStart.error) {
-    return validationError(weekStart.error.message);
+    return validationError(weekStart.error.message)
   }
 
   const [rows, totalMembers] = await Promise.all([
     fetchAvailabilityRows(env, teamId, weekStart),
-    fetchActiveMemberCount(env, teamId),
-  ]);
+    fetchActiveMemberCount(env, teamId)
+  ])
 
-  const slotsByTime = new Map();
+  const slotsByTime = new Map()
 
   rows.forEach((row) => {
-    const key = `${row.day_index}-${row.slot_index}`;
+    const key = `${row.day_index}-${row.slot_index}`
     const current = slotsByTime.get(key) || {
       teamId,
       weekStart,
@@ -184,39 +184,39 @@ export async function handleGetAvailabilityOverlap(env, url) {
       maybeCount: 0,
       busyCount: 0,
       totalMembers,
-      members: [],
-    };
+      members: []
+    }
 
-    current.score += getAvailabilityWeight(row.status);
-    if (row.status === 'available') current.availableCount += 1;
-    else if (row.status === 'maybe') current.maybeCount += 1;
-    else current.busyCount += 1;
+    current.score += getAvailabilityWeight(row.status)
+    if (row.status === 'available') current.availableCount += 1
+    else if (row.status === 'maybe') current.maybeCount += 1
+    else current.busyCount += 1
 
     current.members.push({
       id: row.user_id,
       displayName: row.display_name,
       initials: row.initials,
-      status: row.status,
-    });
+      status: row.status
+    })
 
-    slotsByTime.set(key, current);
-  });
+    slotsByTime.set(key, current)
+  })
 
   const overlap = [...slotsByTime.values()]
     .map((slot) => ({
       ...slot,
-      busyCount: slot.busyCount + Math.max(totalMembers - slot.members.length, 0),
+      busyCount: slot.busyCount + Math.max(totalMembers - slot.members.length, 0)
     }))
     .sort((left, right) => {
-      if (right.score !== left.score) return right.score - left.score;
-      if (left.dayIndex !== right.dayIndex) return left.dayIndex - right.dayIndex;
-      return left.slotIndex - right.slotIndex;
+      if (right.score !== left.score) return right.score - left.score
+      if (left.dayIndex !== right.dayIndex) return left.dayIndex - right.dayIndex
+      return left.slotIndex - right.slotIndex
     })
-    .map(mapOverlapSlot);
+    .map(mapOverlapSlot)
 
   return jsonResponse({
     teamId,
     weekStart,
-    overlap,
-  });
+    overlap
+  })
 }

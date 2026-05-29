@@ -1,9 +1,9 @@
 // eslint.config.mjs
-import { FlatCompat } from '@eslint/eslintrc';
-import standard from 'eslint-config-standard';
-import jsdoc from 'eslint-plugin-jsdoc';
+import { FlatCompat } from '@eslint/eslintrc'
+import standard from 'eslint-config-standard'
+import jsdoc from 'eslint-plugin-jsdoc'
 
-const compat = new FlatCompat();
+const compat = new FlatCompat()
 
 export default [
   ...compat.config(standard),
@@ -11,6 +11,7 @@ export default [
   {
     plugins: { jsdoc },
     rules: {
+      'space-before-function-paren': 'off',
       'jsdoc/require-jsdoc': [
         'error',
         {
@@ -19,9 +20,9 @@ export default [
             ArrowFunctionExpression: false,
             FunctionExpression: true,
             ClassDeclaration: true,
-            MethodDefinition: true,
-          },
-        },
+            MethodDefinition: true
+          }
+        }
       ],
       'jsdoc/require-param': 'error',
       'jsdoc/require-param-type': 'error',
@@ -30,10 +31,10 @@ export default [
       'jsdoc/valid-types': 'error',
       'jsdoc/check-types': 'error',
       'jsdoc/check-param-names': 'error',
-      'jsdoc/require-description': 'warn',
-    },
+      'jsdoc/require-description': 'warn'
+    }
   },
   {
-    ignores: ['node_modules/'],
-  },
-];
+    ignores: ['node_modules/']
+  }
+]

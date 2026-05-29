@@ -16,11 +16,11 @@
     is applied before CSS is painted — eliminates theme flash on reload.
   -->
     <script>
-      (function () {
-        const saved = localStorage.getItem('theme');
-        const theme = saved === 'dark' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
-      })();
+      ;(function () {
+        const saved = localStorage.getItem('theme')
+        const theme = saved === 'dark' ? 'dark' : 'light'
+        document.documentElement.setAttribute('data-theme', theme)
+      })()
     </script>
   </head>
   <body>

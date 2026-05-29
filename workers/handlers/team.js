@@ -1,9 +1,9 @@
-import { DEFAULT_TEAM_ID } from '../lib/config.js';
-import { getQueryParam } from '../lib/request.js';
-import { errorResponse, jsonResponse } from '../lib/responses.js';
+import { DEFAULT_TEAM_ID } from '../lib/config.js'
+import { getQueryParam } from '../lib/request.js'
+import { errorResponse, jsonResponse } from '../lib/responses.js'
 
 export async function handleTeam(env, url) {
-  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID);
+  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID)
 
   const team = await env.DB.prepare(
     `
@@ -13,10 +13,10 @@ export async function handleTeam(env, url) {
     `
   )
     .bind(teamId)
-    .first();
+    .first()
 
   if (!team) {
-    return errorResponse('Team not found', 404);
+    return errorResponse('Team not found', 404)
   }
 
   const { results: members } = await env.DB.prepare(
@@ -38,7 +38,7 @@ export async function handleTeam(env, url) {
     `
   )
     .bind(teamId)
-    .all();
+    .all()
 
   return jsonResponse({
     team: {
@@ -48,7 +48,7 @@ export async function handleTeam(env, url) {
       repoName: team.repo_name,
       sprintName: team.sprint_name,
       createdAt: team.created_at,
-      updatedAt: team.updated_at,
+      updatedAt: team.updated_at
     },
     members: members.map((member) => ({
       id: member.id,
@@ -59,7 +59,7 @@ export async function handleTeam(env, url) {
       role: member.role,
       isLead: Boolean(member.is_lead),
       active: Boolean(member.active),
-      joinedAt: member.joined_at,
-    })),
-  });
+      joinedAt: member.joined_at
+    }))
+  })
 }

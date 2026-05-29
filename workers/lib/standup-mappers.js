@@ -1,14 +1,14 @@
 function getBadgeForMember(member) {
   if (member.is_lead) {
-    return { badgeLabel: 'lead', badgeType: 'lead' };
+    return { badgeLabel: 'lead', badgeType: 'lead' }
   }
 
-  return { badgeLabel: null, badgeType: null };
+  return { badgeLabel: null, badgeType: null }
 }
 
 export function mapStandupRow(row) {
-  const hasBlocker = Boolean(row.blocker);
-  const leadBadge = getBadgeForMember(row);
+  const hasBlocker = Boolean(row.blocker)
+  const leadBadge = getBadgeForMember(row)
 
   return {
     id: row.id,
@@ -31,6 +31,6 @@ export function mapStandupRow(row) {
     includeGithub: Boolean(row.include_github),
     notifyLead: Boolean(row.notify_lead),
     githubActivitySummary: row.github_activity_summary,
-    isBlocker: hasBlocker,
-  };
+    isBlocker: hasBlocker
+  }
 }

@@ -1,93 +1,93 @@
-import { DEFAULT_TEAM_ID } from '../lib/config.js';
-import { getQueryParam } from '../lib/request.js';
-import { errorResponse, jsonResponse } from '../lib/responses.js';
-import { mapStandupRow } from '../lib/standup-mappers.js';
+import { DEFAULT_TEAM_ID } from '../lib/config.js'
+import { getQueryParam } from '../lib/request.js'
+import { errorResponse, jsonResponse } from '../lib/responses.js'
+import { mapStandupRow } from '../lib/standup-mappers.js'
 
 function formatDateYmd(date) {
-  return date.toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10)
 }
 
 function getTodayYmd() {
-  return formatDateYmd(new Date());
+  return formatDateYmd(new Date())
 }
 
 function addDaysYmd(ymd, days) {
-  const date = new Date(`${ymd}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return formatDateYmd(date);
+  const date = new Date(`${ymd}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + days)
+  return formatDateYmd(date)
 }
 
 function formatDisplayDate(ymd) {
   if (!ymd) {
-    return 'No date';
+    return 'No date'
   }
 
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
-    day: 'numeric',
-  }).format(new Date(`${ymd}T00:00:00Z`));
+    day: 'numeric'
+  }).format(new Date(`${ymd}T00:00:00Z`))
 }
 
 function formatRelativeTime(timestamp) {
   if (!timestamp) {
-    return 'just now';
+    return 'just now'
   }
 
-  const then = new Date(timestamp.includes('T') ? timestamp : `${timestamp.replace(' ', 'T')}Z`);
-  const diffMinutes = Math.max(0, Math.round((Date.now() - then.getTime()) / 60000));
+  const then = new Date(timestamp.includes('T') ? timestamp : `${timestamp.replace(' ', 'T')}Z`)
+  const diffMinutes = Math.max(0, Math.round((Date.now() - then.getTime()) / 60000))
 
   if (diffMinutes < 1) {
-    return 'just now';
+    return 'just now'
   }
 
   if (diffMinutes < 60) {
-    return `${diffMinutes}m ago`;
+    return `${diffMinutes}m ago`
   }
 
-  const diffHours = Math.round(diffMinutes / 60);
+  const diffHours = Math.round(diffMinutes / 60)
   if (diffHours < 24) {
-    return `${diffHours}h ago`;
+    return `${diffHours}h ago`
   }
 
-  const diffDays = Math.round(diffHours / 24);
-  return `${diffDays}d ago`;
+  const diffDays = Math.round(diffHours / 24)
+  return `${diffDays}d ago`
 }
 
 function formatDuration(durationSeconds) {
   if (!durationSeconds && durationSeconds !== 0) {
-    return 'Unknown';
+    return 'Unknown'
   }
 
-  const minutes = Math.floor(durationSeconds / 60);
-  const seconds = durationSeconds % 60;
-  return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+  const minutes = Math.floor(durationSeconds / 60)
+  const seconds = durationSeconds % 60
+  return `${minutes}m ${String(seconds).padStart(2, '0')}s`
 }
 
 function parseLabels(labelsJson) {
   try {
-    const parsed = JSON.parse(labelsJson || '[]');
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(labelsJson || '[]')
+    return Array.isArray(parsed) ? parsed : []
   } catch {
-    return [];
+    return []
   }
 }
 
 function clampPercent(numerator, denominator) {
   if (!denominator) {
-    return 0;
+    return 0
   }
 
-  return Math.max(0, Math.min(100, Math.round((numerator / denominator) * 100)));
+  return Math.max(0, Math.min(100, Math.round((numerator / denominator) * 100)))
 }
 
 function buildSummary(team, standups, activeMemberCount, issues, workflows) {
-  const standupCount = standups.length;
-  const blockers = standups.filter((standup) => standup.isBlocker);
-  const failingWorkflows = workflows.filter((workflow) => workflow.status === 'failing');
-  const deadlineRisks = issues.filter((issue) => issue.risk !== 'low');
-  const completionRate = clampPercent(standupCount, activeMemberCount);
+  const standupCount = standups.length
+  const blockers = standups.filter((standup) => standup.isBlocker)
+  const failingWorkflows = workflows.filter((workflow) => workflow.status === 'failing')
+  const deadlineRisks = issues.filter((issue) => issue.risk !== 'low')
+  const completionRate = clampPercent(standupCount, activeMemberCount)
 
-  const body = `${standupCount} of ${activeMemberCount} teammates checked in for ${team.sprint_name}, ${blockers.length} blocker${blockers.length === 1 ? '' : 's'} need follow-up, and ${failingWorkflows.length} workflow${failingWorkflows.length === 1 ? '' : 's'} are currently failing.`;
+  const body = `${standupCount} of ${activeMemberCount} teammates checked in for ${team.sprint_name}, ${blockers.length} blocker${blockers.length === 1 ? '' : 's'} need follow-up, and ${failingWorkflows.length} workflow${failingWorkflows.length === 1 ? '' : 's'} are currently failing.`
 
   const blockerItems = [
     ...blockers
@@ -100,27 +100,27 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
       .slice(0, 1)
       .map(
         (issue) => `Issue #${issue.id} is carrying ${issue.risk} risk ahead of ${issue.deadline}.`
-      ),
-  ].slice(0, 3);
+      )
+  ].slice(0, 3)
 
-  const actions = [];
+  const actions = []
   if (blockers.length) {
     actions.push(
       `Resolve ${blockers[0].name || 'the current'} blocker first so the feed is no longer carrying a blocked status.`
-    );
+    )
   }
   if (failingWorkflows.length) {
     actions.push(
       `Address ${failingWorkflows[0].name} before merging more work into ${failingWorkflows[0].branch}.`
-    );
+    )
   }
   if (deadlineRisks.length) {
     actions.push(
       `Review issue #${deadlineRisks[0].id} because it is both due soon and marked ${deadlineRisks[0].risk} risk.`
-    );
+    )
   }
   if (!actions.length) {
-    actions.push('No urgent follow-up surfaced from the current sprint data.');
+    actions.push('No urgent follow-up surfaced from the current sprint data.')
   }
 
   return {
@@ -128,7 +128,7 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
     highlights: [
       { value: `${completionRate}%`, label: 'Check-in completion' },
       { value: String(blockers.length), label: 'Urgent blockers' },
-      { value: String(failingWorkflows.length), label: 'Failing pipelines' },
+      { value: String(failingWorkflows.length), label: 'Failing pipelines' }
     ],
     blockers: blockerItems.length
       ? blockerItems
@@ -140,21 +140,21 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
         label: 'Biggest risk',
         value: failingWorkflows[0]
           ? `${failingWorkflows[0].name} still failing`
-          : 'No failing workflows',
+          : 'No failing workflows'
       },
       { label: 'Needs lead help', value: blockers[0]?.blocker || 'No blocker currently escalated' },
       {
         label: 'Next handoff',
         value: deadlineRisks[0]
           ? `Review issue #${deadlineRisks[0].id}`
-          : 'Continue sprint execution',
-      },
-    ],
-  };
+          : 'Continue sprint execution'
+      }
+    ]
+  }
 }
 
 export async function handleDashboard(env, url) {
-  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID);
+  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID)
 
   const team = await env.DB.prepare(
     `
@@ -164,10 +164,10 @@ export async function handleDashboard(env, url) {
     `
   )
     .bind(teamId)
-    .first();
+    .first()
 
   if (!team) {
-    return errorResponse('Team not found', 404);
+    return errorResponse('Team not found', 404)
   }
 
   const activeMembersResult = await env.DB.prepare(
@@ -178,7 +178,7 @@ export async function handleDashboard(env, url) {
     `
   )
     .bind(teamId)
-    .first();
+    .first()
 
   const latestStandup = await env.DB.prepare(
     `
@@ -190,10 +190,10 @@ export async function handleDashboard(env, url) {
     `
   )
     .bind(teamId)
-    .first();
+    .first()
 
-  const selectedDate = getQueryParam(url, 'date', latestStandup?.standup_date || getTodayYmd());
-  const dueSoonEndDate = addDaysYmd(selectedDate, 2);
+  const selectedDate = getQueryParam(url, 'date', latestStandup?.standup_date || getTodayYmd())
+  const dueSoonEndDate = addDaysYmd(selectedDate, 2)
 
   const { results: standupRows } = await env.DB.prepare(
     `
@@ -226,9 +226,9 @@ export async function handleDashboard(env, url) {
     `
   )
     .bind(teamId, selectedDate)
-    .all();
+    .all()
 
-  const standups = standupRows.map(mapStandupRow);
+  const standups = standupRows.map(mapStandupRow)
 
   const { results: issueRows } = await env.DB.prepare(
     `
@@ -255,7 +255,7 @@ export async function handleDashboard(env, url) {
     `
   )
     .bind(teamId)
-    .all();
+    .all()
 
   const issues = issueRows.map((issue) => ({
     id: issue.issue_number,
@@ -266,8 +266,8 @@ export async function handleDashboard(env, url) {
     deadline: formatDisplayDate(issue.deadline),
     deadlineDate: issue.deadline,
     labels: parseLabels(issue.labels_json),
-    risk: issue.risk || 'low',
-  }));
+    risk: issue.risk || 'low'
+  }))
 
   const { results: workflowRows } = await env.DB.prepare(
     `
@@ -285,7 +285,7 @@ export async function handleDashboard(env, url) {
     `
   )
     .bind(teamId)
-    .all();
+    .all()
 
   const workflows = workflowRows.map((workflow) => ({
     name: workflow.workflow_name,
@@ -294,25 +294,25 @@ export async function handleDashboard(env, url) {
     timeAgo: formatRelativeTime(workflow.created_at),
     duration: formatDuration(workflow.duration_seconds),
     passedTests: workflow.passed_tests,
-    failedTests: workflow.failed_tests,
-  }));
+    failedTests: workflow.failed_tests
+  }))
 
-  const activeMemberCount = Number(activeMembersResult?.active_count || 0);
-  const blockedCount = standups.filter((standup) => standup.isBlocker).length;
-  const failingWorkflowCount = workflows.filter((workflow) => workflow.status === 'failing').length;
+  const activeMemberCount = Number(activeMembersResult?.active_count || 0)
+  const blockedCount = standups.filter((standup) => standup.isBlocker).length
+  const failingWorkflowCount = workflows.filter((workflow) => workflow.status === 'failing').length
   const dueSoonCount = issues.filter((issue) => {
     return (
       Boolean(issue.deadlineDate) &&
       issue.deadlineDate >= selectedDate &&
       issue.deadlineDate <= dueSoonEndDate
-    );
-  }).length;
-  const availableToday = standups.filter((standup) => standup.availability === 'available').length;
+    )
+  }).length
+  const availableToday = standups.filter((standup) => standup.availability === 'available').length
 
   const sprintCompletion = clampPercent(
     issues.filter((issue) => ['Review', 'Done'].includes(issue.status)).length,
     issues.length || 1
-  );
+  )
 
   return jsonResponse({
     teamId,
@@ -324,7 +324,7 @@ export async function handleDashboard(env, url) {
       dueSoon: dueSoonCount,
       availableToday,
       standupsFiled: standups.length,
-      activeMembers: activeMemberCount,
+      activeMembers: activeMemberCount
     },
     issues,
     workflows,
@@ -334,28 +334,28 @@ export async function handleDashboard(env, url) {
         { label: 'Sprint completion', value: `${sprintCompletion}%` },
         {
           label: 'Workflows passing',
-          value: `${workflows.filter((workflow) => workflow.status === 'passing').length}/${workflows.length || 0}`,
+          value: `${workflows.filter((workflow) => workflow.status === 'passing').length}/${workflows.length || 0}`
         },
         {
           label: 'Due this week',
-          value: `${issues.filter((issue) => issue.deadlineDate && issue.deadlineDate >= selectedDate && issue.deadlineDate <= addDaysYmd(selectedDate, 7)).length} issues`,
+          value: `${issues.filter((issue) => issue.deadlineDate && issue.deadlineDate >= selectedDate && issue.deadlineDate <= addDaysYmd(selectedDate, 7)).length} issues`
         },
-        { label: 'Standups filed', value: `${standups.length}/${activeMemberCount || 0}` },
+        { label: 'Standups filed', value: `${standups.length}/${activeMemberCount || 0}` }
       ],
       deadlineRisks: issues.filter((issue) => issue.risk !== 'low'),
       workflowTrend: workflows,
       issueDistribution: [
         {
           label: 'Hard issues',
-          value: issues.filter((issue) => issue.difficulty === 'Hard').length,
+          value: issues.filter((issue) => issue.difficulty === 'Hard').length
         },
         {
           label: 'In progress',
-          value: issues.filter((issue) => issue.status === 'In progress').length,
+          value: issues.filter((issue) => issue.status === 'In progress').length
         },
         { label: 'Blocked', value: issues.filter((issue) => issue.status === 'Blocked').length },
-        { label: 'In review', value: issues.filter((issue) => issue.status === 'Review').length },
-      ],
-    },
-  });
+        { label: 'In review', value: issues.filter((issue) => issue.status === 'Review').length }
+      ]
+    }
+  })
 }
