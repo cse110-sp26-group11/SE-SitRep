@@ -17,11 +17,13 @@ The project prompt specifically references **Steady** (formerly Status Hero) as 
 ## Apps Surveyed
 
 ### Steady (runsteady.com)
-*Formerly Status Hero. Rebranded 2024.*
+
+_Formerly Status Hero. Rebranded 2024._
 
 Steady describes itself as a "continuous coordination platform" rather than just a standup bot. It is the most feature-complete tool in the space and the direct inspiration named in the project prompt.
 
 **What it does well:**
+
 - Daily check-in form with async, schedule-based reminders via Slack DM
 - AI Quick Fill — drafts your standup update in one click using activity pulled from connected tools (GitHub, Jira, Linear, Asana, etc.)
 - "Echoes" — AI agents that generate automated reports and deliver them as personalized digests on a schedule
@@ -35,6 +37,7 @@ Steady describes itself as a "continuous coordination platform" rather than just
 - SOC 2 Type 2 certified for enterprise use
 
 **Weaknesses / gaps:**
+
 - Increasingly complex and feature-heavy — can feel like overkill for a small 5–8 person agile team
 - Pricing scales per user and can get expensive
 - No explicit "when can we all meet?" availability polling
@@ -44,11 +47,13 @@ Steady describes itself as a "continuous coordination platform" rather than just
 ---
 
 ### Geekbot
-*Slack/Teams-first standup bot. 200,000+ users.*
+
+_Slack/Teams-first standup bot. 200,000+ users._
 
 Geekbot is the most widely adopted tool in this category, used by teams at GitHub, Shopify, Airbnb, and GitLab. It is deliberately narrow in scope — async standups and surveys, nothing else.
 
 **What it does well:**
+
 - Frictionless Slack integration — works out of the box
 - Customizable standup questions (text, multiple choice, number)
 - Multi-timezone scheduling
@@ -58,6 +63,7 @@ Geekbot is the most widely adopted tool in this category, used by teams at GitHu
 - Has more user reviews on Capterra and G2 than all standup competitors combined
 
 **Weaknesses / gaps:**
+
 - No real standalone web UI — entirely dependent on Slack
 - No blocker alerts (just visible in the feed)
 - No mood or wellness tracking
@@ -69,11 +75,13 @@ Geekbot is the most widely adopted tool in this category, used by teams at GitHu
 ---
 
 ### DailyBot
-*Standup bot with team culture features.*
+
+_Standup bot with team culture features._
 
 DailyBot positions itself between pure standup bots and full coordination platforms. It adds mood tracking and "team building" features like kudos and birthday reminders.
 
 **What it does well:**
+
 - Async standups via Slack, Teams, Google Chat, or email
 - Mood tracking per check-in
 - Kudos system for teammate recognition
@@ -82,6 +90,7 @@ DailyBot positions itself between pure standup bots and full coordination platfo
 - Birthday and work anniversary reminders
 
 **Weaknesses / gaps:**
+
 - The culture features (birthdays, icebreakers) feel off-brand and disconnected for engineering-focused teams — users frequently cite this
 - No goal tracking or OKRs
 - No AI-powered summaries
@@ -92,11 +101,13 @@ DailyBot positions itself between pure standup bots and full coordination platfo
 ---
 
 ### Range
-*Team check-ins with a human-centered UX focus.*
+
+_Team check-ins with a human-centered UX focus._
 
 Range is praised consistently for its clean, well-designed interface and its emphasis on team connection — not just status updates. It combines check-ins, meeting agendas, and goal tracking in a single tool with a polished standalone web app.
 
 **What it does well:**
+
 - Daily check-ins that capture mood/sentiment alongside work updates — users love this
 - Meeting agenda builder and 1:1 support
 - Icebreaker/team question prompts to build culture
@@ -106,6 +117,7 @@ Range is praised consistently for its clean, well-designed interface and its emp
 - Consistently rated for having the best standalone web UI in the category
 
 **Weaknesses / gaps:**
+
 - Users frequently complain about paying for OKR and meeting features they don't use
 - OKR UX described as "difficult to navigate" and "messy with hashtags" in multiple reviews
 - Primarily Slack-focused; some features require webhooks which complicates setup
@@ -116,11 +128,13 @@ Range is praised consistently for its clean, well-designed interface and its emp
 ---
 
 ### Jell
-*OKR and performance-focused standup tool.*
+
+_OKR and performance-focused standup tool._
 
 Jell is performance-oriented, designed for teams that want to link daily standup updates directly to sprint goals and OKRs. It is more structured and formal than most competitors.
 
 **What it does well:**
+
 - Flexible standup question types: text, list, multiple choice, number
 - Goal and OKR tracking with daily activity linked to objectives
 - Performance view showing team accomplishments over the week or month
@@ -128,6 +142,7 @@ Jell is performance-oriented, designed for teams that want to link daily standup
 - Good for Scrum teams with structured sprint cycles
 
 **Weaknesses / gaps:**
+
 - Described as "not the right fit for teams that prefer a more casual or conversational approach to standups"
 - No mood or wellness tracking
 - No AI features
@@ -138,11 +153,13 @@ Jell is performance-oriented, designed for teams that want to link daily standup
 ---
 
 ### Standuply
-*Agile ceremonies automation bot.*
+
+_Agile ceremonies automation bot._
 
 Standuply focuses specifically on automating the full set of Scrum ceremonies — not just standups, but retrospectives, planning poker, and backlog grooming — within Slack and Teams.
 
 **What it does well:**
+
 - Automates full Scrum ceremony suite: standups, retros, planning poker, sprint reviews
 - Voice and video responses in addition to text
 - Deep Jira integration for sprint tracking
@@ -150,6 +167,7 @@ Standuply focuses specifically on automating the full set of Scrum ceremonies �
 - Works for teams that live entirely in Microsoft Teams
 
 **Weaknesses / gaps:**
+
 - Very narrow use case — if your coordination needs go beyond Agile ceremonies, it doesn't help
 - No standalone web app
 - No goal tracking beyond sprint artifacts
@@ -161,25 +179,25 @@ Standuply focuses specifically on automating the full set of Scrum ceremonies �
 
 ## Feature Coverage Summary
 
-| Feature | Steady | Geekbot | DailyBot | Range | Jell | Standuply | SE SitRep |
-|---|---|---|---|---|---|---|---|
-| Daily check-in form | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Team dashboard | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Blocker alerts | ✓ | — | ~ | ✓ | — | — | ✓ |
-| Check-in reminders | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ |
-| Check-in history | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | ✓ |
-| Participation analytics | ✓ | ✓ | ~ | ✓ | ✓ | — | ~ |
-| Mood / wellness tracking | ✓ | — | ✓ | ✓ | — | — | ~ |
-| Team health dashboard | ✓ | — | — | ~ | — | — | — |
-| Availability polling | ✓ | — | — | ✓ | — | — | ✓ |
-| Coverage requests | — | — | — | — | — | — | ✓ |
-| Reactions on check-ins | ✓ | — | — | ✓ | — | — | — |
-| Kudos / team building | — | — | ✓ | ✓ | — | — | — |
-| AI daily summary | ✓ | — | — | — | — | — | ~ |
-| AI blocker pattern detection | ✓ | — | — | — | — | — | — |
-| AI agent check-ins | — | — | — | — | — | — | ~ |
+| Feature                      | Steady | Geekbot | DailyBot | Range | Jell | Standuply | SE SitRep |
+| ---------------------------- | ------ | ------- | -------- | ----- | ---- | --------- | --------- |
+| Daily check-in form          | ✓      | ✓       | ✓        | ✓     | ✓    | ✓         | ✓         |
+| Team dashboard               | ✓      | ✓       | ✓        | ✓     | ✓    | ✓         | ✓         |
+| Blocker alerts               | ✓      | —       | ~        | ✓     | —    | —         | ✓         |
+| Check-in reminders           | ✓      | ✓       | ✓        | ✓     | ✓    | ✓         | ~         |
+| Check-in history             | ✓      | ✓       | ✓        | ✓     | ✓    | ~         | ✓         |
+| Participation analytics      | ✓      | ✓       | ~        | ✓     | ✓    | —         | ~         |
+| Mood / wellness tracking     | ✓      | —       | ✓        | ✓     | —    | —         | ~         |
+| Team health dashboard        | ✓      | —       | —        | ~     | —    | —         | —         |
+| Availability polling         | ✓      | —       | —        | ✓     | —    | —         | ✓         |
+| Coverage requests            | —      | —       | —        | —     | —    | —         | ✓         |
+| Reactions on check-ins       | ✓      | —       | —        | ✓     | —    | —         | —         |
+| Kudos / team building        | —      | —       | ✓        | ✓     | —    | —         | —         |
+| AI daily summary             | ✓      | —       | —        | —     | —    | —         | ~         |
+| AI blocker pattern detection | ✓      | —       | —        | —     | —    | —         | —         |
+| AI agent check-ins           | —      | —       | —        | —     | —    | —         | ~         |
 
-*✓ = yes, — = no, ~ = partial or planned*
+_✓ = yes, — = no, ~ = partial or planned_
 
 ---
 
@@ -217,7 +235,7 @@ Standuply focuses specifically on automating the full set of Scrum ceremonies �
 
 ## The Untouched Opportunity: AI Agent Tracking
 
-The project prompt asks: *"How does it change with AI agents in the mix? Do they need tracking too?"*
+The project prompt asks: _"How does it change with AI agents in the mix? Do they need tracking too?"_
 
 No existing tool in this space addresses this question at all. Every app surveyed treats team members as humans only. As AI agents become common participants in software development workflows — running tests, opening PRs, summarizing issues — the question of whether they need status visibility is genuinely open.
 
@@ -244,4 +262,4 @@ The following should feed directly into design artifacts:
 
 ---
 
-*Research conducted May 2026. Sources: runsteady.com, research.com/software/reviews/status-hero, stepsize.com/blog, geekbot.com/blog, softwareadvice.com, sourceforge.net, ayanza.com.*
+_Research conducted May 2026. Sources: runsteady.com, research.com/software/reviews/status-hero, stepsize.com/blog, geekbot.com/blog, softwareadvice.com, sourceforge.net, ayanza.com._

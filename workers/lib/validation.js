@@ -108,7 +108,10 @@ export function normalizeCreateStandupPayload(payload) {
     availability: normalizeAvailability(payload.availability ?? 'available'),
     includeGithub: normalizeBoolean(payload.includeGithub, 'includeGithub', true),
     notifyLead: normalizeBoolean(payload.notifyLead, 'notifyLead', false),
-    githubActivitySummary: normalizeOptionalString(payload.githubActivitySummary, 'githubActivitySummary'),
+    githubActivitySummary: normalizeOptionalString(
+      payload.githubActivitySummary,
+      'githubActivitySummary'
+    ),
   };
 }
 

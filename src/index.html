@@ -1,596 +1,780 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
   data-theme on <html> is the single toggle point for the whole palette.
   JS reads localStorage on load and sets it here before first paint,
   preventing a flash of the wrong theme.
 -->
 <html lang="en" data-theme="light">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tatOS — Team Feed</title>
-  <link rel="stylesheet" href="styles.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tatOS — Team Feed</title>
+    <link rel="stylesheet" href="styles.css" />
 
-  <!--
+    <!--
     Inline script runs before body renders so the correct theme class
     is applied before CSS is painted — eliminates theme flash on reload.
   -->
-  <script>
-    (function () {
-      const saved = localStorage.getItem('theme');
-      const theme = saved === 'dark' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', theme);
-    })();
-  </script>
-</head>
-<body>
+    <script>
+      (function () {
+        const saved = localStorage.getItem('theme');
+        const theme = saved === 'dark' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- ── Skip link ─────────────────────────────────────────────────── -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- ── Skip link ─────────────────────────────────────────────────── -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
+    <!-- ── Top Bar ───────────────────────────────────────────────────── -->
+    <header class="topbar" role="banner">
+      <div class="topbar_brand">
+        <!-- Hamburger: shown only on mobile via CSS -->
+        <button
+          class="topbar_hamburger"
+          id="sidebar-toggle"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="sidebar"
+        >
+          <svg
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
 
-  <!-- ── Top Bar ───────────────────────────────────────────────────── -->
-  <header class="topbar" role="banner">
+        <a href="#main-content" class="topbar_brand-link" aria-label="tatOS — go to dashboard">
+          <svg
+            class="topbar_logo"
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M4 6.5h16"></path>
+            <path d="M8 6.5v11"></path>
+            <path d="M5 11.5h6"></path>
+            <circle cx="16.5" cy="13.5" r="4.5"></circle>
+          </svg>
+          <span>tatOS</span>
+        </a>
+      </div>
 
-    <div class="topbar_brand">
+      <div class="topbar_actions" role="toolbar" aria-label="User actions">
+        <!-- Theme switcher — toggles light and dark modes. -->
+        <button class="topbar_icon-btn" id="theme-toggle" aria-label="Switch to dark theme">
+          <!-- Sun icon (shown in light mode) -->
+          <svg
+            class="icon-light"
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon icon (shown in dark mode) -->
+          <svg
+            class="icon-dark"
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
 
-      <!-- Hamburger: shown only on mobile via CSS -->
-      <button
-        class="topbar_hamburger"
-        id="sidebar-toggle"
-        aria-label="Open navigation menu"
-        aria-expanded="false"
-        aria-controls="sidebar"
-      >
-        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="6"  x2="21" y2="6"></line>
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
+        <button class="topbar_icon-btn" aria-label="Notifications" aria-haspopup="true">
+          <svg
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </button>
 
-      <a href="#main-content" class="topbar_brand-link" aria-label="tatOS — go to dashboard">
-        <svg class="topbar_logo" aria-hidden="true" focusable="false"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 6.5h16"></path>
-          <path d="M8 6.5v11"></path>
-          <path d="M5 11.5h6"></path>
-          <circle cx="16.5" cy="13.5" r="4.5"></circle>
-        </svg>
-        <span>tatOS</span>
-      </a>
-    </div>
+        <button class="topbar_pfp" aria-label="User menu for R" aria-haspopup="true">
+          <span aria-hidden="true">R</span>
+        </button>
 
-    <div class="topbar_actions" role="toolbar" aria-label="User actions">
+        <button class="topbar_icon-btn" aria-label="More options" aria-haspopup="true">
+          <svg
+            aria-hidden="true"
+            focusable="false"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
+        </button>
+      </div>
+    </header>
 
-      <!-- Theme switcher — toggles light and dark modes. -->
-      <button
-        class="topbar_icon-btn"
-        id="theme-toggle"
-        aria-label="Switch to dark theme"
-      >
-        <!-- Sun icon (shown in light mode) -->
-        <svg class="icon-light" aria-hidden="true" focusable="false"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1"  x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22"   x2="5.64"  y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1"  y1="12" x2="3"  y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78"  x2="5.64"  y2="18.36"></line>
-          <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"></line>
-        </svg>
-        <!-- Moon icon (shown in dark mode) -->
-        <svg class="icon-dark" aria-hidden="true" focusable="false"
-             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
+    <!-- Mobile overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" role="presentation" aria-hidden="true"></div>
 
-      <button class="topbar_icon-btn" aria-label="Notifications" aria-haspopup="true">
-        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
-      </button>
-
-      <button class="topbar_pfp" aria-label="User menu for R" aria-haspopup="true">
-        <span aria-hidden="true">R</span>
-      </button>
-
-      <button class="topbar_icon-btn" aria-label="More options" aria-haspopup="true">
-        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="5"  r="1"></circle>
-          <circle cx="12" cy="12" r="1"></circle>
-          <circle cx="12" cy="19" r="1"></circle>
-        </svg>
-      </button>
-
-    </div>
-  </header>
-
-  <!-- Mobile overlay -->
-  <div class="sidebar-overlay" id="sidebar-overlay"
-       role="presentation" aria-hidden="true"></div>
-
-  <!-- ── Layout ────────────────────────────────────────────────────── -->
-  <div class="layout">
-
-    <!-- ── Sidebar ───────────────────────────────────────────────── -->
-    <nav class="sidebar" id="sidebar" aria-label="Main navigation">
-
-      <section class="sidebar_section" aria-labelledby="nav-heading-main">
-        <h2 class="sidebar_label" id="nav-heading-main">Main</h2>
-        <ul class="sidebar_nav" role="list">
-          <li role="listitem">
-            <a href="#" class="sidebar_link sidebar_link--active"
-               data-view="team-feed" aria-current="page">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3"  y="3"  width="7" height="7"></rect>
-                <rect x="14" y="3"  width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3"  y="14" width="7" height="7"></rect>
-              </svg>
-              Team feed
-            </a>
-          </li>
-          <li role="listitem">
-            <a href="#" class="sidebar_link" data-view="my-standup">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-              My standup
-            </a>
-          </li>
-          <li role="listitem">
-            <a href="#" class="sidebar_link" data-view="when-to-meet">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              When to meet
-            </a>
-          </li>
-        </ul>
-      </section>
-
-      <section class="sidebar_section" aria-labelledby="nav-heading-insights">
-        <h2 class="sidebar_label" id="nav-heading-insights">Insights</h2>
-        <ul class="sidebar_nav" role="list">
-          <li role="listitem">
-            <a href="#" class="sidebar_link" data-view="ai-summary">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-              AI summary
-            </a>
-          </li>
-          <li role="listitem">
-            <a href="#" class="sidebar_link" data-view="sprint-health">
-              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                   fill="none" stroke="currentColor" stroke-width="2"
-                   stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6"  y1="20" x2="6"  y2="14"></line>
-              </svg>
-              Sprint health
-            </a>
-          </li>
-        </ul>
-      </section>
-
-    </nav>
-
-    <!-- ── Main content ──────────────────────────────────────────── -->
-    <main class="content" id="main-content" role="main"
-          aria-label="tatOS application views">
-
-      <section class="app-view app-view--active" data-view-panel="team-feed" aria-hidden="false">
-
-        <!-- Page header -->
-        <header class="page-header" aria-label="Page title and actions">
-          <div>
-            <h1 class="page-header_title">Team feed</h1>
-            <p class="page-header_meta" id="team-feed-meta">
-              Sprint 2 · Day 4 ·
-              <time datetime="2026-05-10">May 10, 2026</time>
-            </p>
-          </div>
-          <button class="btn btn--primary" aria-label="Add a new standup entry" data-open-view="my-standup" type="button">
-            + Add standup
-          </button>
-        </header>
-
-        <section aria-labelledby="stats-heading">
-          <h2 id="stats-heading" class="sr-only">Sprint stats</h2>
-          <div class="stats">
-
-            <article class="stat-card" aria-label="5 out of 7 team members checked in today">
-              <div class="stat-card_value" aria-hidden="true" id="stat-checkins-value">
-                5<span class="stat-card_denom">/7</span>
-              </div>
-              <div class="stat-card_label" aria-hidden="true">
-                <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
+    <!-- ── Layout ────────────────────────────────────────────────────── -->
+    <div class="layout">
+      <!-- ── Sidebar ───────────────────────────────────────────────── -->
+      <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+        <section class="sidebar_section" aria-labelledby="nav-heading-main">
+          <h2 class="sidebar_label" id="nav-heading-main">Main</h2>
+          <ul class="sidebar_nav" role="list">
+            <li role="listitem">
+              <a
+                href="#"
+                class="sidebar_link sidebar_link--active"
+                data-view="team-feed"
+                aria-current="page"
+              >
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
                 </svg>
-                Checked in today
-              </div>
-            </article>
-
-            <article class="stat-card stat-card--warning" aria-label="2 active blockers">
-              <div class="stat-card_value" aria-hidden="true" id="stat-blockers-value">2</div>
-              <div class="stat-card_label" aria-hidden="true">
-                <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                Team feed
+              </a>
+            </li>
+            <li role="listitem">
+              <a href="#" class="sidebar_link" data-view="my-standup">
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                 </svg>
-                Active blockers
-              </div>
-            </article>
-
-            <article class="stat-card stat-card--success" aria-label="4 teammates available today">
-              <div class="stat-card_value" aria-hidden="true" id="stat-availability-value">4</div>
-              <div class="stat-card_label" aria-hidden="true">
-                <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="16 18 22 12 16 6"></polyline>
-                  <polyline points="8 6 2 12 8 18"></polyline>
+                My standup
+              </a>
+            </li>
+            <li role="listitem">
+              <a href="#" class="sidebar_link" data-view="when-to-meet">
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                Available today
-              </div>
-            </article>
-
-          </div>
+                When to meet
+              </a>
+            </li>
+          </ul>
         </section>
 
-        <section aria-labelledby="feed-heading">
-          <h2 id="feed-heading" class="sr-only">Team standup entries</h2>
+        <section class="sidebar_section" aria-labelledby="nav-heading-insights">
+          <h2 class="sidebar_label" id="nav-heading-insights">Insights</h2>
+          <ul class="sidebar_nav" role="list">
+            <li role="listitem">
+              <a href="#" class="sidebar_link" data-view="ai-summary">
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                  ></polygon>
+                </svg>
+                AI summary
+              </a>
+            </li>
+            <li role="listitem">
+              <a href="#" class="sidebar_link" data-view="sprint-health">
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Sprint health
+              </a>
+            </li>
+          </ul>
+        </section>
+      </nav>
 
-          <div class="dashboard-layout">
-            <div class="dashboard-primary">
-              <div class="filter-bar" role="group" aria-labelledby="filter-label">
-                <span id="filter-label" class="sr-only">Filter entries by status</span>
-                <button class="filter-btn filter-btn--active" data-filter="all" aria-pressed="true">All</button>
-                <button class="filter-btn" data-filter="blocked" aria-pressed="false">Blocked</button>
-                <button class="filter-btn" data-filter="no-update" aria-pressed="false">No update</button>
-              </div>
-
-              <div
-                class="feed"
-                id="feed-list"
-                role="feed"
-                aria-label="Standup entries"
-                aria-live="polite"
-                aria-busy="true"
-              >
-                <p class="feed-loading" aria-live="polite">Loading standup entries…</p>
-              </div>
+      <!-- ── Main content ──────────────────────────────────────────── -->
+      <main class="content" id="main-content" role="main" aria-label="tatOS application views">
+        <section class="app-view app-view--active" data-view-panel="team-feed" aria-hidden="false">
+          <!-- Page header -->
+          <header class="page-header" aria-label="Page title and actions">
+            <div>
+              <h1 class="page-header_title">Team feed</h1>
+              <p class="page-header_meta" id="team-feed-meta">
+                Sprint 2 · Day 4 ·
+                <time datetime="2026-05-10">May 10, 2026</time>
+              </p>
             </div>
+            <button
+              class="btn btn--primary"
+              aria-label="Add a new standup entry"
+              data-open-view="my-standup"
+              type="button"
+            >
+              + Add standup
+            </button>
+          </header>
 
-            <aside class="dashboard-sidebar" aria-label="GitHub and team context">
-              <section class="insight-card" aria-labelledby="repo-pulse-heading">
-                <div class="insight-card_header">
-                  <h2 class="insight-card_title" id="repo-pulse-heading">Repo pulse</h2>
-                  <p class="insight-card_meta">Snapshot of issues, PRs, and test health from mocked GitHub data.</p>
+          <section aria-labelledby="stats-heading">
+            <h2 id="stats-heading" class="sr-only">Sprint stats</h2>
+            <div class="stats">
+              <article class="stat-card" aria-label="5 out of 7 team members checked in today">
+                <div class="stat-card_value" aria-hidden="true" id="stat-checkins-value">
+                  5<span class="stat-card_denom">/7</span>
                 </div>
-                <div class="repo-pulse-grid" id="repo-pulse-grid"></div>
+                <div class="stat-card_label" aria-hidden="true">
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  Checked in today
+                </div>
+              </article>
+
+              <article class="stat-card stat-card--warning" aria-label="2 active blockers">
+                <div class="stat-card_value" aria-hidden="true" id="stat-blockers-value">2</div>
+                <div class="stat-card_label" aria-hidden="true">
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                    ></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  Active blockers
+                </div>
+              </article>
+
+              <article
+                class="stat-card stat-card--success"
+                aria-label="4 teammates available today"
+              >
+                <div class="stat-card_value" aria-hidden="true" id="stat-availability-value">4</div>
+                <div class="stat-card_label" aria-hidden="true">
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                  </svg>
+                  Available today
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section aria-labelledby="feed-heading">
+            <h2 id="feed-heading" class="sr-only">Team standup entries</h2>
+
+            <div class="dashboard-layout">
+              <div class="dashboard-primary">
+                <div class="filter-bar" role="group" aria-labelledby="filter-label">
+                  <span id="filter-label" class="sr-only">Filter entries by status</span>
+                  <button
+                    class="filter-btn filter-btn--active"
+                    data-filter="all"
+                    aria-pressed="true"
+                  >
+                    All
+                  </button>
+                  <button class="filter-btn" data-filter="blocked" aria-pressed="false">
+                    Blocked
+                  </button>
+                  <button class="filter-btn" data-filter="no-update" aria-pressed="false">
+                    No update
+                  </button>
+                </div>
+
+                <div
+                  class="feed"
+                  id="feed-list"
+                  role="feed"
+                  aria-label="Standup entries"
+                  aria-live="polite"
+                  aria-busy="true"
+                >
+                  <p class="feed-loading" aria-live="polite">Loading standup entries…</p>
+                </div>
+              </div>
+
+              <aside class="dashboard-sidebar" aria-label="GitHub and team context">
+                <section class="insight-card" aria-labelledby="repo-pulse-heading">
+                  <div class="insight-card_header">
+                    <h2 class="insight-card_title" id="repo-pulse-heading">Repo pulse</h2>
+                    <p class="insight-card_meta">
+                      Snapshot of issues, PRs, and test health from mocked GitHub data.
+                    </p>
+                  </div>
+                  <div class="repo-pulse-grid" id="repo-pulse-grid"></div>
+                </section>
+
+                <section class="insight-card" aria-labelledby="issue-focus-heading">
+                  <div class="insight-card_header">
+                    <h2 class="insight-card_title" id="issue-focus-heading">Issues in focus</h2>
+                    <p class="insight-card_meta">
+                      Difficulty, deadlines, and owners surfaced directly in the dashboard.
+                    </p>
+                  </div>
+                  <div class="issue-list" id="issue-list"></div>
+                </section>
+
+                <section class="insight-card" aria-labelledby="workflow-health-heading">
+                  <div class="insight-card_header">
+                    <h2 class="insight-card_title" id="workflow-health-heading">Workflow health</h2>
+                    <p class="insight-card_meta">
+                      Recent CI runs and test results for the branches the team cares about.
+                    </p>
+                  </div>
+                  <div class="workflow-list" id="workflow-list"></div>
+                </section>
+              </aside>
+            </div>
+          </section>
+        </section>
+
+        <section class="app-view" data-view-panel="my-standup" aria-hidden="true">
+          <header class="page-header" aria-label="Standup page header and actions">
+            <div>
+              <h1 class="page-header_title">My standup</h1>
+              <p class="page-header_meta">
+                Capture yesterday, today, blockers, and availability in one quick update.
+              </p>
+            </div>
+            <button class="btn" data-open-view="team-feed" type="button">Back to feed</button>
+          </header>
+
+          <div class="standup-layout">
+            <section class="standup-card standup-card--form" aria-labelledby="standup-form-heading">
+              <div class="standup-card_header">
+                <h2 class="standup-card_title" id="standup-form-heading">Daily check-in</h2>
+                <p class="standup-card_meta">
+                  Short, async, and clear. This should read like a useful update to the rest of the
+                  team.
+                </p>
+              </div>
+
+              <form class="standup-form" id="standup-form">
+                <label class="standup-field">
+                  <span class="standup-label">Who's updating?</span>
+                  <select name="currentUser" id="current-user-select"></select>
+                </label>
+
+                <label class="standup-field">
+                  <span class="standup-label">What did you finish yesterday?</span>
+                  <textarea
+                    name="yesterday"
+                    rows="4"
+                    placeholder="Finished the responsive feed layout and reviewed pull request feedback."
+                  ></textarea>
+                </label>
+
+                <label class="standup-field">
+                  <span class="standup-label">What are you doing today?</span>
+                  <textarea
+                    name="today"
+                    rows="4"
+                    placeholder="Building the standup submission flow and wiring screen switching."
+                  ></textarea>
+                </label>
+
+                <label class="standup-field">
+                  <span class="standup-label">Any blockers?</span>
+                  <textarea
+                    name="blocker"
+                    rows="3"
+                    placeholder="Waiting on API credentials, design feedback, or nothing right now."
+                  ></textarea>
+                </label>
+
+                <div class="standup-grid">
+                  <fieldset class="standup-field standup-field--status">
+                    <legend class="standup-label">Availability</legend>
+                    <div class="availability-options">
+                      <label class="availability-pill">
+                        <input type="radio" name="availability" value="Available" checked />
+                        <span>Available</span>
+                      </label>
+                      <label class="availability-pill">
+                        <input type="radio" name="availability" value="Partial" />
+                        <span>Partial</span>
+                      </label>
+                      <label class="availability-pill">
+                        <input type="radio" name="availability" value="Unavailable" />
+                        <span>Unavailable</span>
+                      </label>
+                    </div>
+                  </fieldset>
+
+                  <div class="standup-field standup-field--stacked">
+                    <span class="standup-label">Quick options</span>
+                    <label class="standup-check">
+                      <input type="checkbox" name="includeGithub" checked />
+                      <span>Include recent GitHub activity</span>
+                    </label>
+                    <label class="standup-check">
+                      <input type="checkbox" name="notifyLead" />
+                      <span>Notify lead if blocker is present</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="standup-actions">
+                  <button class="btn btn--primary" type="submit">Save standup</button>
+                  <p class="standup-status" id="standup-status" aria-live="polite">
+                    Not submitted yet.
+                  </p>
+                </div>
+              </form>
+            </section>
+
+            <aside class="standup-sidebar" aria-label="Standup side panels">
+              <section class="standup-card" aria-labelledby="standup-preview-heading">
+                <div class="standup-card_header">
+                  <h2 class="standup-card_title" id="standup-preview-heading">Today’s preview</h2>
+                  <p class="standup-card_meta">
+                    This is the shape of the update the rest of the team would read.
+                  </p>
+                </div>
+
+                <div class="standup-preview" id="standup-preview">
+                  <p><strong>Yesterday:</strong> No update yet.</p>
+                  <p><strong>Today:</strong> No update yet.</p>
+                  <p><strong>Blocker:</strong> None.</p>
+                  <p><strong>Availability:</strong> Available</p>
+                  <p><strong>GitHub:</strong> GitHub activity will be attached.</p>
+                </div>
               </section>
 
-              <section class="insight-card" aria-labelledby="issue-focus-heading">
-                <div class="insight-card_header">
-                  <h2 class="insight-card_title" id="issue-focus-heading">Issues in focus</h2>
-                  <p class="insight-card_meta">Difficulty, deadlines, and owners surfaced directly in the dashboard.</p>
+              <section class="standup-card" aria-labelledby="standup-context-heading">
+                <div class="standup-card_header">
+                  <h2 class="standup-card_title" id="standup-context-heading">Quick context</h2>
+                  <p class="standup-card_meta">
+                    Placeholder side content until live GitHub and notification data is connected.
+                  </p>
                 </div>
-                <div class="issue-list" id="issue-list"></div>
-              </section>
 
-              <section class="insight-card" aria-labelledby="workflow-health-heading">
-                <div class="insight-card_header">
-                  <h2 class="insight-card_title" id="workflow-health-heading">Workflow health</h2>
-                  <p class="insight-card_meta">Recent CI runs and test results for the branches the team cares about.</p>
-                </div>
-                <div class="workflow-list" id="workflow-list"></div>
+                <ul class="context-list">
+                  <li>3 commits in the last 24 hours</li>
+                  <li>1 pull request waiting for review</li>
+                  <li>2 sprint tasks assigned to you</li>
+                </ul>
               </section>
             </aside>
           </div>
-
         </section>
-      </section>
 
-      <section class="app-view" data-view-panel="my-standup" aria-hidden="true">
-        <header class="page-header" aria-label="Standup page header and actions">
-          <div>
-            <h1 class="page-header_title">My standup</h1>
-            <p class="page-header_meta">Capture yesterday, today, blockers, and availability in one quick update.</p>
-          </div>
-          <button class="btn" data-open-view="team-feed" type="button">Back to feed</button>
-        </header>
-
-        <div class="standup-layout">
-          <section class="standup-card standup-card--form" aria-labelledby="standup-form-heading">
-            <div class="standup-card_header">
-              <h2 class="standup-card_title" id="standup-form-heading">Daily check-in</h2>
-              <p class="standup-card_meta">Short, async, and clear. This should read like a useful update to the rest of the team.</p>
-            </div>
-
-            <form class="standup-form" id="standup-form">
-              <label class="standup-field">
-                <span class="standup-label">Who's updating?</span>
-                <select name="currentUser" id="current-user-select"></select>
-              </label>
-
-              <label class="standup-field">
-                <span class="standup-label">What did you finish yesterday?</span>
-                <textarea name="yesterday" rows="4" placeholder="Finished the responsive feed layout and reviewed pull request feedback."></textarea>
-              </label>
-
-              <label class="standup-field">
-                <span class="standup-label">What are you doing today?</span>
-                <textarea name="today" rows="4" placeholder="Building the standup submission flow and wiring screen switching."></textarea>
-              </label>
-
-              <label class="standup-field">
-                <span class="standup-label">Any blockers?</span>
-                <textarea name="blocker" rows="3" placeholder="Waiting on API credentials, design feedback, or nothing right now."></textarea>
-              </label>
-
-              <div class="standup-grid">
-                <fieldset class="standup-field standup-field--status">
-                  <legend class="standup-label">Availability</legend>
-                  <div class="availability-options">
-                    <label class="availability-pill">
-                      <input type="radio" name="availability" value="Available" checked />
-                      <span>Available</span>
-                    </label>
-                    <label class="availability-pill">
-                      <input type="radio" name="availability" value="Partial" />
-                      <span>Partial</span>
-                    </label>
-                    <label class="availability-pill">
-                      <input type="radio" name="availability" value="Unavailable" />
-                      <span>Unavailable</span>
-                    </label>
-                  </div>
-                </fieldset>
-
-                <div class="standup-field standup-field--stacked">
-                  <span class="standup-label">Quick options</span>
-                  <label class="standup-check">
-                    <input type="checkbox" name="includeGithub" checked />
-                    <span>Include recent GitHub activity</span>
-                  </label>
-                  <label class="standup-check">
-                    <input type="checkbox" name="notifyLead" />
-                    <span>Notify lead if blocker is present</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="standup-actions">
-                <button class="btn btn--primary" type="submit">Save standup</button>
-                <p class="standup-status" id="standup-status" aria-live="polite">Not submitted yet.</p>
-              </div>
-            </form>
-          </section>
-
-          <aside class="standup-sidebar" aria-label="Standup side panels">
-            <section class="standup-card" aria-labelledby="standup-preview-heading">
-              <div class="standup-card_header">
-                <h2 class="standup-card_title" id="standup-preview-heading">Today’s preview</h2>
-                <p class="standup-card_meta">This is the shape of the update the rest of the team would read.</p>
-              </div>
-
-              <div class="standup-preview" id="standup-preview">
-                <p><strong>Yesterday:</strong> No update yet.</p>
-                <p><strong>Today:</strong> No update yet.</p>
-                <p><strong>Blocker:</strong> None.</p>
-                <p><strong>Availability:</strong> Available</p>
-                <p><strong>GitHub:</strong> GitHub activity will be attached.</p>
-              </div>
-            </section>
-
-            <section class="standup-card" aria-labelledby="standup-context-heading">
-              <div class="standup-card_header">
-                <h2 class="standup-card_title" id="standup-context-heading">Quick context</h2>
-                <p class="standup-card_meta">Placeholder side content until live GitHub and notification data is connected.</p>
-              </div>
-
-              <ul class="context-list">
-                <li>3 commits in the last 24 hours</li>
-                <li>1 pull request waiting for review</li>
-                <li>2 sprint tasks assigned to you</li>
-              </ul>
-            </section>
-          </aside>
-        </div>
-      </section>
-
-      <section class="app-view" data-view-panel="when-to-meet" aria-hidden="true">
-        <header class="page-header" aria-label="When to meet page header and actions">
-          <div>
-            <h1 class="page-header_title">When to meet</h1>
-            <p class="page-header_meta">Shared weekly availability for finding the best overlap without a back-and-forth thread.</p>
-          </div>
-          <button class="btn" data-open-view="team-feed" type="button">Back to feed</button>
-        </header>
-
-        <div class="meeting-layout">
-          <section class="meeting-card meeting-card--planner" aria-labelledby="meeting-planner-heading">
-            <div class="meeting-card_header">
-              <h2 class="meeting-card_title" id="meeting-planner-heading">Shared availability grid</h2>
-              <p class="meeting-card_meta">Click a time slot to cycle your status from available to busy to maybe.</p>
-            </div>
-
-            <label class="standup-field standup-field--compact">
-              <span class="standup-label">Viewing availability for</span>
-              <select id="meeting-user-select"></select>
-            </label>
-
-            <div class="meeting-grid-shell">
-              <div class="meeting-grid" id="meeting-grid" role="grid" aria-label="Team availability schedule"></div>
-            </div>
-
-            <p class="standup-status" id="meeting-status" aria-live="polite">Availability will sync with the backend once a team member is selected.</p>
-          </section>
-
-          <aside class="meeting-sidebar" aria-label="Meeting planning details">
-            <section class="meeting-card" aria-labelledby="meeting-overlap-heading">
-              <div class="meeting-card_header">
-                <h2 class="meeting-card_title" id="meeting-overlap-heading">Best overlap</h2>
-                <p class="meeting-card_meta">Sorted from strongest to weakest based on current team availability.</p>
-              </div>
-
-              <ol class="meeting-overlap-list" id="meeting-overlap-list"></ol>
-            </section>
-
-            <section class="meeting-card" aria-labelledby="meeting-legend-heading">
-              <div class="meeting-card_header">
-                <h2 class="meeting-card_title" id="meeting-legend-heading">Legend</h2>
-              </div>
-
-              <ul class="meeting-legend" role="list">
-                <li><span class="meeting-swatch meeting-swatch--available"></span>Available</li>
-                <li><span class="meeting-swatch meeting-swatch--maybe"></span>Maybe</li>
-                <li><span class="meeting-swatch meeting-swatch--busy"></span>Busy</li>
-                <li><span class="meeting-swatch meeting-swatch--overlap"></span>More teammates available</li>
-              </ul>
-            </section>
-
-            <section class="meeting-card" aria-labelledby="meeting-team-heading">
-              <div class="meeting-card_header">
-                <h2 class="meeting-card_title" id="meeting-team-heading">Current team</h2>
-                <p class="meeting-card_meta">Live team roster and saved availability for the selected week.</p>
-              </div>
-
-              <div class="meeting-roster" id="meeting-roster"></div>
-            </section>
-          </aside>
-        </div>
-      </section>
-
-      <section class="app-view" data-view-panel="ai-summary" aria-hidden="true">
-        <header class="page-header" aria-label="AI summary page header">
-          <div>
-            <h1 class="page-header_title">AI summary</h1>
-            <p class="page-header_meta">Daily summary for leads, meetings, and quick health checks.</p>
-          </div>
-        </header>
-
-        <div class="summary-layout">
-          <section class="summary-hero" aria-labelledby="summary-hero-heading">
-            <div class="summary-hero_copy">
-              <p class="summary-kicker">Lead briefing</p>
-              <h2 class="summary-hero_title" id="summary-hero-heading">Daily team synopsis</h2>
-              <p class="summary-hero_body" id="summary-body"></p>
-            </div>
-            <div class="summary-highlight-list" id="summary-highlights"></div>
-          </section>
-
-          <div class="summary-grid">
-            <section class="insight-card" aria-labelledby="summary-blockers-heading">
-              <div class="insight-card_header">
-                <h2 class="insight-card_title" id="summary-blockers-heading">Blockers to clear</h2>
-                <p class="insight-card_meta">Highest priority problems the lead should address today.</p>
-              </div>
-              <div class="priority-list" id="summary-blockers"></div>
-            </section>
-
-            <section class="insight-card" aria-labelledby="summary-actions-heading">
-              <div class="insight-card_header">
-                <h2 class="insight-card_title" id="summary-actions-heading">Recommended actions</h2>
-                <p class="insight-card_meta">Suggested follow-ups based on check-ins, issues, and CI state.</p>
-              </div>
-              <div class="priority-list" id="summary-actions"></div>
-            </section>
-
-            <section class="insight-card" aria-labelledby="summary-brief-heading">
-              <div class="insight-card_header">
-                <h2 class="insight-card_title" id="summary-brief-heading">TA meeting brief</h2>
-                <p class="insight-card_meta">One-screen talking points you can carry into a sprint review.</p>
-              </div>
-              <div class="meeting-brief" id="meeting-brief"></div>
-            </section>
-          </div>
-        </div>
-      </section>
-
-      <section class="app-view" data-view-panel="sprint-health" aria-hidden="true">
-        <header class="page-header" aria-label="Sprint health page header">
-          <div>
-            <h1 class="page-header_title">Sprint health</h1>
-            <p class="page-header_meta">Coverage, blockers, and momentum at the sprint level.</p>
-          </div>
-        </header>
-
-        <div class="health-grid">
-          <section class="health-hero" aria-labelledby="health-hero-heading">
+        <section class="app-view" data-view-panel="when-to-meet" aria-hidden="true">
+          <header class="page-header" aria-label="When to meet page header and actions">
             <div>
-              <p class="summary-kicker">Sprint status</p>
-              <h2 class="summary-hero_title" id="health-hero-heading">Momentum this week</h2>
-              <p class="summary-hero_body">A single view of check-in coverage, due-soon work, CI reliability, and where the team is slipping.</p>
+              <h1 class="page-header_title">When to meet</h1>
+              <p class="page-header_meta">
+                Shared weekly availability for finding the best overlap without a back-and-forth
+                thread.
+              </p>
             </div>
+            <button class="btn" data-open-view="team-feed" type="button">Back to feed</button>
+          </header>
 
-            <div class="health-metrics" id="health-metrics"></div>
-          </section>
+          <div class="meeting-layout">
+            <section
+              class="meeting-card meeting-card--planner"
+              aria-labelledby="meeting-planner-heading"
+            >
+              <div class="meeting-card_header">
+                <h2 class="meeting-card_title" id="meeting-planner-heading">
+                  Shared availability grid
+                </h2>
+                <p class="meeting-card_meta">
+                  Click a time slot to cycle your status from available to busy to maybe.
+                </p>
+              </div>
 
-          <section class="insight-card" aria-labelledby="deadline-risk-heading">
-            <div class="insight-card_header">
-              <h2 class="insight-card_title" id="deadline-risk-heading">Deadline risks</h2>
-              <p class="insight-card_meta">Issues that are both important and likely to create sprint churn if ignored.</p>
+              <label class="standup-field standup-field--compact">
+                <span class="standup-label">Viewing availability for</span>
+                <select id="meeting-user-select"></select>
+              </label>
+
+              <div class="meeting-grid-shell">
+                <div
+                  class="meeting-grid"
+                  id="meeting-grid"
+                  role="grid"
+                  aria-label="Team availability schedule"
+                ></div>
+              </div>
+
+              <p class="standup-status" id="meeting-status" aria-live="polite">
+                Availability will sync with the backend once a team member is selected.
+              </p>
+            </section>
+
+            <aside class="meeting-sidebar" aria-label="Meeting planning details">
+              <section class="meeting-card" aria-labelledby="meeting-overlap-heading">
+                <div class="meeting-card_header">
+                  <h2 class="meeting-card_title" id="meeting-overlap-heading">Best overlap</h2>
+                  <p class="meeting-card_meta">
+                    Sorted from strongest to weakest based on current team availability.
+                  </p>
+                </div>
+
+                <ol class="meeting-overlap-list" id="meeting-overlap-list"></ol>
+              </section>
+
+              <section class="meeting-card" aria-labelledby="meeting-legend-heading">
+                <div class="meeting-card_header">
+                  <h2 class="meeting-card_title" id="meeting-legend-heading">Legend</h2>
+                </div>
+
+                <ul class="meeting-legend" role="list">
+                  <li><span class="meeting-swatch meeting-swatch--available"></span>Available</li>
+                  <li><span class="meeting-swatch meeting-swatch--maybe"></span>Maybe</li>
+                  <li><span class="meeting-swatch meeting-swatch--busy"></span>Busy</li>
+                  <li>
+                    <span class="meeting-swatch meeting-swatch--overlap"></span>More teammates
+                    available
+                  </li>
+                </ul>
+              </section>
+
+              <section class="meeting-card" aria-labelledby="meeting-team-heading">
+                <div class="meeting-card_header">
+                  <h2 class="meeting-card_title" id="meeting-team-heading">Current team</h2>
+                  <p class="meeting-card_meta">
+                    Live team roster and saved availability for the selected week.
+                  </p>
+                </div>
+
+                <div class="meeting-roster" id="meeting-roster"></div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="app-view" data-view-panel="ai-summary" aria-hidden="true">
+          <header class="page-header" aria-label="AI summary page header">
+            <div>
+              <h1 class="page-header_title">AI summary</h1>
+              <p class="page-header_meta">
+                Daily summary for leads, meetings, and quick health checks.
+              </p>
             </div>
-            <div class="risk-list" id="deadline-risk-list"></div>
-          </section>
+          </header>
 
-          <section class="insight-card" aria-labelledby="workflow-trend-heading">
-            <div class="insight-card_header">
-              <h2 class="insight-card_title" id="workflow-trend-heading">CI trend</h2>
-              <p class="insight-card_meta">Recent workflow reliability and failing test totals from the latest runs.</p>
+          <div class="summary-layout">
+            <section class="summary-hero" aria-labelledby="summary-hero-heading">
+              <div class="summary-hero_copy">
+                <p class="summary-kicker">Lead briefing</p>
+                <h2 class="summary-hero_title" id="summary-hero-heading">Daily team synopsis</h2>
+                <p class="summary-hero_body" id="summary-body"></p>
+              </div>
+              <div class="summary-highlight-list" id="summary-highlights"></div>
+            </section>
+
+            <div class="summary-grid">
+              <section class="insight-card" aria-labelledby="summary-blockers-heading">
+                <div class="insight-card_header">
+                  <h2 class="insight-card_title" id="summary-blockers-heading">
+                    Blockers to clear
+                  </h2>
+                  <p class="insight-card_meta">
+                    Highest priority problems the lead should address today.
+                  </p>
+                </div>
+                <div class="priority-list" id="summary-blockers"></div>
+              </section>
+
+              <section class="insight-card" aria-labelledby="summary-actions-heading">
+                <div class="insight-card_header">
+                  <h2 class="insight-card_title" id="summary-actions-heading">
+                    Recommended actions
+                  </h2>
+                  <p class="insight-card_meta">
+                    Suggested follow-ups based on check-ins, issues, and CI state.
+                  </p>
+                </div>
+                <div class="priority-list" id="summary-actions"></div>
+              </section>
+
+              <section class="insight-card" aria-labelledby="summary-brief-heading">
+                <div class="insight-card_header">
+                  <h2 class="insight-card_title" id="summary-brief-heading">TA meeting brief</h2>
+                  <p class="insight-card_meta">
+                    One-screen talking points you can carry into a sprint review.
+                  </p>
+                </div>
+                <div class="meeting-brief" id="meeting-brief"></div>
+              </section>
             </div>
-            <div class="workflow-trend" id="workflow-trend"></div>
-          </section>
+          </div>
+        </section>
 
-          <section class="insight-card" aria-labelledby="issue-distribution-heading">
-            <div class="insight-card_header">
-              <h2 class="insight-card_title" id="issue-distribution-heading">Issue distribution</h2>
-              <p class="insight-card_meta">How work is split by difficulty, status, and ownership.</p>
+        <section class="app-view" data-view-panel="sprint-health" aria-hidden="true">
+          <header class="page-header" aria-label="Sprint health page header">
+            <div>
+              <h1 class="page-header_title">Sprint health</h1>
+              <p class="page-header_meta">Coverage, blockers, and momentum at the sprint level.</p>
             </div>
-            <div class="distribution-list" id="issue-distribution"></div>
-          </section>
-        </div>
-      </section>
+          </header>
 
-    </main>
-  </div><!-- /layout -->
+          <div class="health-grid">
+            <section class="health-hero" aria-labelledby="health-hero-heading">
+              <div>
+                <p class="summary-kicker">Sprint status</p>
+                <h2 class="summary-hero_title" id="health-hero-heading">Momentum this week</h2>
+                <p class="summary-hero_body">
+                  A single view of check-in coverage, due-soon work, CI reliability, and where the
+                  team is slipping.
+                </p>
+              </div>
 
-  <!--
+              <div class="health-metrics" id="health-metrics"></div>
+            </section>
+
+            <section class="insight-card" aria-labelledby="deadline-risk-heading">
+              <div class="insight-card_header">
+                <h2 class="insight-card_title" id="deadline-risk-heading">Deadline risks</h2>
+                <p class="insight-card_meta">
+                  Issues that are both important and likely to create sprint churn if ignored.
+                </p>
+              </div>
+              <div class="risk-list" id="deadline-risk-list"></div>
+            </section>
+
+            <section class="insight-card" aria-labelledby="workflow-trend-heading">
+              <div class="insight-card_header">
+                <h2 class="insight-card_title" id="workflow-trend-heading">CI trend</h2>
+                <p class="insight-card_meta">
+                  Recent workflow reliability and failing test totals from the latest runs.
+                </p>
+              </div>
+              <div class="workflow-trend" id="workflow-trend"></div>
+            </section>
+
+            <section class="insight-card" aria-labelledby="issue-distribution-heading">
+              <div class="insight-card_header">
+                <h2 class="insight-card_title" id="issue-distribution-heading">
+                  Issue distribution
+                </h2>
+                <p class="insight-card_meta">
+                  How work is split by difficulty, status, and ownership.
+                </p>
+              </div>
+              <div class="distribution-list" id="issue-distribution"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+    <!-- /layout -->
+
+    <!--
     ═══════════════════════════════════════════════════════════
     FEED ITEM TEMPLATE
     Parsed by the browser but never rendered.
@@ -599,35 +783,35 @@
     means one new object in the data array — no HTML changes needed.
     ═══════════════════════════════════════════════════════════
   -->
-  <template id="feed-item-template">
-    <article class="feed-item" data-status="">
-      <!--
+    <template id="feed-item-template">
+      <article class="feed-item" data-status="">
+        <!--
         Avatar: initials + color class are set by JS.
         aria-hidden because the name <h3> already identifies the person.
       -->
-      <div class="feed-item_avatar" aria-hidden="true"></div>
+        <div class="feed-item_avatar" aria-hidden="true"></div>
 
-      <div class="feed-item_body">
-        <div class="feed-item_header">
-          <h3 class="feed-item_name"></h3>
-          <!--
+        <div class="feed-item_body">
+          <div class="feed-item_header">
+            <h3 class="feed-item_name"></h3>
+            <!--
             Badge: JS adds the right class + aria-label.
             Removed entirely if status has no badge.
           -->
-          <span class="badge"></span>
-          <!--
+            <span class="badge"></span>
+            <!--
             Timestamp: datetime attr + aria-label both set by JS.
           -->
-          <time class="feed-item_time"></time>
+            <time class="feed-item_time"></time>
+          </div>
+          <!-- Today's update — always present -->
+          <p class="feed-item_entry entry-today"></p>
+          <!-- Yesterday's update — removed by JS if null -->
+          <p class="feed-item_entry feed-item_entry--yesterday entry-yesterday"></p>
         </div>
-        <!-- Today's update — always present -->
-        <p class="feed-item_entry entry-today"></p>
-        <!-- Yesterday's update — removed by JS if null -->
-        <p class="feed-item_entry feed-item_entry--yesterday entry-yesterday"></p>
-      </div>
-    </article>
-  </template>
+      </article>
+    </template>
 
-  <script src="main.js" defer></script>
-</body>
+    <script src="main.js" defer></script>
+  </body>
 </html>

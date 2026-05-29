@@ -82,28 +82,42 @@ function clampPercent(numerator, denominator) {
 
 function buildSummary(team, standups, activeMemberCount, issues, workflows) {
   const standupCount = standups.length;
-  const blockers = standups.filter(standup => standup.isBlocker);
-  const failingWorkflows = workflows.filter(workflow => workflow.status === 'failing');
-  const deadlineRisks = issues.filter(issue => issue.risk !== 'low');
+  const blockers = standups.filter((standup) => standup.isBlocker);
+  const failingWorkflows = workflows.filter((workflow) => workflow.status === 'failing');
+  const deadlineRisks = issues.filter((issue) => issue.risk !== 'low');
   const completionRate = clampPercent(standupCount, activeMemberCount);
 
   const body = `${standupCount} of ${activeMemberCount} teammates checked in for ${team.sprint_name}, ${blockers.length} blocker${blockers.length === 1 ? '' : 's'} need follow-up, and ${failingWorkflows.length} workflow${failingWorkflows.length === 1 ? '' : 's'} are currently failing.`;
 
   const blockerItems = [
-    ...blockers.slice(0, 2).map(standup => `${standup.name || 'A teammate'} is blocked on ${standup.blocker}.`),
-    ...failingWorkflows.slice(0, 1).map(workflow => `${workflow.name} is ${workflow.status}, which is increasing merge risk.`),
-    ...deadlineRisks.slice(0, 1).map(issue => `Issue #${issue.id} is carrying ${issue.risk} risk ahead of ${issue.deadline}.`),
+    ...blockers
+      .slice(0, 2)
+      .map((standup) => `${standup.name || 'A teammate'} is blocked on ${standup.blocker}.`),
+    ...failingWorkflows
+      .slice(0, 1)
+      .map((workflow) => `${workflow.name} is ${workflow.status}, which is increasing merge risk.`),
+    ...deadlineRisks
+      .slice(0, 1)
+      .map(
+        (issue) => `Issue #${issue.id} is carrying ${issue.risk} risk ahead of ${issue.deadline}.`
+      ),
   ].slice(0, 3);
 
   const actions = [];
   if (blockers.length) {
-    actions.push(`Resolve ${blockers[0].name || 'the current'} blocker first so the feed is no longer carrying a blocked status.`);
+    actions.push(
+      `Resolve ${blockers[0].name || 'the current'} blocker first so the feed is no longer carrying a blocked status.`
+    );
   }
   if (failingWorkflows.length) {
-    actions.push(`Address ${failingWorkflows[0].name} before merging more work into ${failingWorkflows[0].branch}.`);
+    actions.push(
+      `Address ${failingWorkflows[0].name} before merging more work into ${failingWorkflows[0].branch}.`
+    );
   }
   if (deadlineRisks.length) {
-    actions.push(`Review issue #${deadlineRisks[0].id} because it is both due soon and marked ${deadlineRisks[0].risk} risk.`);
+    actions.push(
+      `Review issue #${deadlineRisks[0].id} because it is both due soon and marked ${deadlineRisks[0].risk} risk.`
+    );
   }
   if (!actions.length) {
     actions.push('No urgent follow-up surfaced from the current sprint data.');
@@ -116,13 +130,25 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
       { value: String(blockers.length), label: 'Urgent blockers' },
       { value: String(failingWorkflows.length), label: 'Failing pipelines' },
     ],
-    blockers: blockerItems.length ? blockerItems : ['No blockers are currently flagged in standups or workflows.'],
+    blockers: blockerItems.length
+      ? blockerItems
+      : ['No blockers are currently flagged in standups or workflows.'],
     actions,
     brief: [
       { label: 'Frontend scope', value: 'Standups, feed, and availability are live' },
-      { label: 'Biggest risk', value: failingWorkflows[0] ? `${failingWorkflows[0].name} still failing` : 'No failing workflows' },
+      {
+        label: 'Biggest risk',
+        value: failingWorkflows[0]
+          ? `${failingWorkflows[0].name} still failing`
+          : 'No failing workflows',
+      },
       { label: 'Needs lead help', value: blockers[0]?.blocker || 'No blocker currently escalated' },
-      { label: 'Next handoff', value: deadlineRisks[0] ? `Review issue #${deadlineRisks[0].id}` : 'Continue sprint execution' },
+      {
+        label: 'Next handoff',
+        value: deadlineRisks[0]
+          ? `Review issue #${deadlineRisks[0].id}`
+          : 'Continue sprint execution',
+      },
     ],
   };
 }
@@ -136,7 +162,9 @@ export async function handleDashboard(env, url) {
       FROM teams
       WHERE id = ?
     `
-  ).bind(teamId).first();
+  )
+    .bind(teamId)
+    .first();
 
   if (!team) {
     return errorResponse('Team not found', 404);
@@ -148,7 +176,9 @@ export async function handleDashboard(env, url) {
       FROM team_members
       WHERE team_id = ? AND active = 1
     `
-  ).bind(teamId).first();
+  )
+    .bind(teamId)
+    .first();
 
   const latestStandup = await env.DB.prepare(
     `
@@ -158,7 +188,9 @@ export async function handleDashboard(env, url) {
       ORDER BY standup_date DESC
       LIMIT 1
     `
-  ).bind(teamId).first();
+  )
+    .bind(teamId)
+    .first();
 
   const selectedDate = getQueryParam(url, 'date', latestStandup?.standup_date || getTodayYmd());
   const dueSoonEndDate = addDaysYmd(selectedDate, 2);
@@ -192,7 +224,9 @@ export async function handleDashboard(env, url) {
       WHERE standups.team_id = ? AND standups.standup_date = ?
       ORDER BY standups.submitted_at DESC
     `
-  ).bind(teamId, selectedDate).all();
+  )
+    .bind(teamId, selectedDate)
+    .all();
 
   const standups = standupRows.map(mapStandupRow);
 
@@ -219,9 +253,11 @@ export async function handleDashboard(env, url) {
         github_issue_snapshots.deadline ASC,
         github_issue_snapshots.issue_number ASC
     `
-  ).bind(teamId).all();
+  )
+    .bind(teamId)
+    .all();
 
-  const issues = issueRows.map(issue => ({
+  const issues = issueRows.map((issue) => ({
     id: issue.issue_number,
     title: issue.title,
     status: issue.status,
@@ -247,9 +283,11 @@ export async function handleDashboard(env, url) {
       WHERE team_id = ?
       ORDER BY datetime(created_at) DESC
     `
-  ).bind(teamId).all();
+  )
+    .bind(teamId)
+    .all();
 
-  const workflows = workflowRows.map(workflow => ({
+  const workflows = workflowRows.map((workflow) => ({
     name: workflow.workflow_name,
     status: workflow.status,
     branch: workflow.branch,
@@ -260,15 +298,19 @@ export async function handleDashboard(env, url) {
   }));
 
   const activeMemberCount = Number(activeMembersResult?.active_count || 0);
-  const blockedCount = standups.filter(standup => standup.isBlocker).length;
-  const failingWorkflowCount = workflows.filter(workflow => workflow.status === 'failing').length;
-  const dueSoonCount = issues.filter(issue => {
-    return Boolean(issue.deadlineDate) && issue.deadlineDate >= selectedDate && issue.deadlineDate <= dueSoonEndDate;
+  const blockedCount = standups.filter((standup) => standup.isBlocker).length;
+  const failingWorkflowCount = workflows.filter((workflow) => workflow.status === 'failing').length;
+  const dueSoonCount = issues.filter((issue) => {
+    return (
+      Boolean(issue.deadlineDate) &&
+      issue.deadlineDate >= selectedDate &&
+      issue.deadlineDate <= dueSoonEndDate
+    );
   }).length;
-  const availableToday = standups.filter(standup => standup.availability === 'available').length;
+  const availableToday = standups.filter((standup) => standup.availability === 'available').length;
 
   const sprintCompletion = clampPercent(
-    issues.filter(issue => ['Review', 'Done'].includes(issue.status)).length,
+    issues.filter((issue) => ['Review', 'Done'].includes(issue.status)).length,
     issues.length || 1
   );
 
@@ -290,17 +332,29 @@ export async function handleDashboard(env, url) {
     sprintHealth: {
       metrics: [
         { label: 'Sprint completion', value: `${sprintCompletion}%` },
-        { label: 'Workflows passing', value: `${workflows.filter(workflow => workflow.status === 'passing').length}/${workflows.length || 0}` },
-        { label: 'Due this week', value: `${issues.filter(issue => issue.deadlineDate && issue.deadlineDate >= selectedDate && issue.deadlineDate <= addDaysYmd(selectedDate, 7)).length} issues` },
+        {
+          label: 'Workflows passing',
+          value: `${workflows.filter((workflow) => workflow.status === 'passing').length}/${workflows.length || 0}`,
+        },
+        {
+          label: 'Due this week',
+          value: `${issues.filter((issue) => issue.deadlineDate && issue.deadlineDate >= selectedDate && issue.deadlineDate <= addDaysYmd(selectedDate, 7)).length} issues`,
+        },
         { label: 'Standups filed', value: `${standups.length}/${activeMemberCount || 0}` },
       ],
-      deadlineRisks: issues.filter(issue => issue.risk !== 'low'),
+      deadlineRisks: issues.filter((issue) => issue.risk !== 'low'),
       workflowTrend: workflows,
       issueDistribution: [
-        { label: 'Hard issues', value: issues.filter(issue => issue.difficulty === 'Hard').length },
-        { label: 'In progress', value: issues.filter(issue => issue.status === 'In progress').length },
-        { label: 'Blocked', value: issues.filter(issue => issue.status === 'Blocked').length },
-        { label: 'In review', value: issues.filter(issue => issue.status === 'Review').length },
+        {
+          label: 'Hard issues',
+          value: issues.filter((issue) => issue.difficulty === 'Hard').length,
+        },
+        {
+          label: 'In progress',
+          value: issues.filter((issue) => issue.status === 'In progress').length,
+        },
+        { label: 'Blocked', value: issues.filter((issue) => issue.status === 'Blocked').length },
+        { label: 'In review', value: issues.filter((issue) => issue.status === 'Review').length },
       ],
     },
   });

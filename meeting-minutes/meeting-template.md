@@ -2,13 +2,13 @@
 
 ## Meeting Information
 
-| Field | Details |
-|-------|---------|
-| **Date/Time** | |
-| **Location/Link** | |
-| **Meeting Type** | |
-| **Host** | |
-| **Note-taker** | |
+| Field             | Details |
+| ----------------- | ------- |
+| **Date/Time**     |         |
+| **Location/Link** |         |
+| **Meeting Type**  |         |
+| **Host**          |         |
+| **Note-taker**    |         |
 
 ## Attendees
 
@@ -24,7 +24,7 @@
 - [ ] Zihan Zhang
 - [ ] Tangjian Shi
 
-*Note: Check off attendees present*
+_Note: Check off attendees present_
 
 ## Agenda
 
@@ -36,32 +36,32 @@
 ## Updates
 
 ### Topic 1
-- Key points:
-  - 
-  - 
+
+- ## Key points:
+  -
 
 ### Topic 2
-- Key points:
-  - 
-  - 
+
+- ## Key points:
+  -
 
 ## Discussion & Decisions
 
 | Decision | Owner | Rationale | Due Date |
-|----------|-------|-----------|----------|
-| | | | |
+| -------- | ----- | --------- | -------- |
+|          |       |           |          |
 
 ## Action Items
 
-| Task | Owner | Due Date | Status |
-|------|-------|----------|--------|
-| | | | Not Started |
+| Task | Owner | Due Date | Status      |
+| ---- | ----- | -------- | ----------- |
+|      |       |          | Not Started |
 
 ## Next Meeting
 
-- **Date/Time:** 
-- **Location/Link:** 
+- **Date/Time:**
+- **Location/Link:**
 
 ---
 
-*Last Updated: April 9, 2026*
+_Last Updated: April 9, 2026_

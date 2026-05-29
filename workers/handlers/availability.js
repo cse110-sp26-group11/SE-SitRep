@@ -15,7 +15,9 @@ async function ensureActiveTeamMember(env, teamId, userId) {
       FROM team_members
       WHERE team_id = ? AND user_id = ? AND active = 1
     `
-  ).bind(teamId, userId).first();
+  )
+    .bind(teamId, userId)
+    .first();
 
   return Boolean(member);
 }
@@ -47,7 +49,9 @@ async function fetchAvailabilityRows(env, teamId, weekStart) {
         AND team_members.active = 1
       ORDER BY availability_slots.day_index ASC, availability_slots.slot_index ASC, users.display_name ASC
     `
-  ).bind(teamId, weekStart).all();
+  )
+    .bind(teamId, weekStart)
+    .all();
 
   return results;
 }
@@ -59,7 +63,9 @@ async function fetchActiveMemberCount(env, teamId) {
       FROM team_members
       WHERE team_id = ? AND active = 1
     `
-  ).bind(teamId).first();
+  )
+    .bind(teamId)
+    .first();
 
   return row?.count || 0;
 }
@@ -103,15 +109,9 @@ export async function handleUpdateMyAvailability(request, env) {
     return errorResponse('Active team member not found', 404);
   }
 
-  const statements = payload.slots.map(slot => {
+  const statements = payload.slots.map((slot) => {
     const userKey = payload.userId.replace(/^user-/, '');
-    const id = [
-      'avail',
-      userKey,
-      payload.weekStart,
-      slot.dayIndex,
-      slot.slotIndex,
-    ].join('-');
+    const id = ['avail', userKey, payload.weekStart, slot.dayIndex, slot.slotIndex].join('-');
 
     return env.DB.prepare(
       `
@@ -146,7 +146,7 @@ export async function handleUpdateMyAvailability(request, env) {
   await env.DB.batch(statements);
 
   const rows = await fetchAvailabilityRows(env, payload.teamId, payload.weekStart);
-  const userSlots = rows.filter(row => row.user_id === payload.userId);
+  const userSlots = rows.filter((row) => row.user_id === payload.userId);
 
   return jsonResponse({
     teamId: payload.teamId,
@@ -171,7 +171,7 @@ export async function handleGetAvailabilityOverlap(env, url) {
 
   const slotsByTime = new Map();
 
-  rows.forEach(row => {
+  rows.forEach((row) => {
     const key = `${row.day_index}-${row.slot_index}`;
     const current = slotsByTime.get(key) || {
       teamId,
@@ -203,7 +203,7 @@ export async function handleGetAvailabilityOverlap(env, url) {
   });
 
   const overlap = [...slotsByTime.values()]
-    .map(slot => ({
+    .map((slot) => ({
       ...slot,
       busyCount: slot.busyCount + Math.max(totalMembers - slot.members.length, 0),
     }))

@@ -11,7 +11,9 @@ export async function handleTeam(env, url) {
       FROM teams
       WHERE id = ?
     `
-  ).bind(teamId).first();
+  )
+    .bind(teamId)
+    .first();
 
   if (!team) {
     return errorResponse('Team not found', 404);
@@ -34,7 +36,9 @@ export async function handleTeam(env, url) {
       WHERE team_members.team_id = ?
       ORDER BY team_members.is_lead DESC, users.display_name ASC
     `
-  ).bind(teamId).all();
+  )
+    .bind(teamId)
+    .all();
 
   return jsonResponse({
     team: {
@@ -46,7 +50,7 @@ export async function handleTeam(env, url) {
       createdAt: team.created_at,
       updatedAt: team.updated_at,
     },
-    members: members.map(member => ({
+    members: members.map((member) => ({
       id: member.id,
       displayName: member.display_name,
       initials: member.initials,

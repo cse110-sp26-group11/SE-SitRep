@@ -2,10 +2,7 @@ import { DEFAULT_TEAM_ID } from '../lib/config.js';
 import { getQueryParam, readJson } from '../lib/request.js';
 import { errorResponse, jsonResponse, validationError } from '../lib/responses.js';
 import { mapStandupRow } from '../lib/standup-mappers.js';
-import {
-  normalizeCreateStandupPayload,
-  normalizeUpdateStandupPayload,
-} from '../lib/validation.js';
+import { normalizeCreateStandupPayload, normalizeUpdateStandupPayload } from '../lib/validation.js';
 
 async function ensureActiveTeamMember(env, teamId, userId) {
   const member = await env.DB.prepare(
@@ -14,7 +11,9 @@ async function ensureActiveTeamMember(env, teamId, userId) {
       FROM team_members
       WHERE team_id = ? AND user_id = ? AND active = 1
     `
-  ).bind(teamId, userId).first();
+  )
+    .bind(teamId, userId)
+    .first();
 
   return Boolean(member);
 }
@@ -48,7 +47,9 @@ async function fetchStandupById(env, standupId) {
         AND team_members.user_id = standups.user_id
       WHERE standups.id = ?
     `
-  ).bind(standupId).first();
+  )
+    .bind(standupId)
+    .first();
 }
 
 export async function handleGetStandups(env, url) {
@@ -92,7 +93,9 @@ export async function handleGetStandups(env, url) {
       WHERE ${filters.join(' AND ')}
       ORDER BY standups.submitted_at DESC
     `
-  ).bind(...bindings).all();
+  )
+    .bind(...bindings)
+    .all();
 
   return jsonResponse({
     teamId,
@@ -121,7 +124,9 @@ export async function handleCreateStandup(request, env) {
       FROM standups
       WHERE team_id = ? AND user_id = ? AND standup_date = ?
     `
-  ).bind(payload.teamId, payload.userId, payload.standupDate).first();
+  )
+    .bind(payload.teamId, payload.userId, payload.standupDate)
+    .first();
 
   if (existing) {
     return errorResponse('Standup already exists for this user and date', 409);
@@ -146,19 +151,21 @@ export async function handleCreateStandup(request, env) {
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
-  ).bind(
-    id,
-    payload.teamId,
-    payload.userId,
-    payload.standupDate,
-    payload.yesterday,
-    payload.today,
-    payload.blocker,
-    payload.availability,
-    payload.includeGithub ? 1 : 0,
-    payload.notifyLead ? 1 : 0,
-    payload.githubActivitySummary
-  ).run();
+  )
+    .bind(
+      id,
+      payload.teamId,
+      payload.userId,
+      payload.standupDate,
+      payload.yesterday,
+      payload.today,
+      payload.blocker,
+      payload.availability,
+      payload.includeGithub ? 1 : 0,
+      payload.notifyLead ? 1 : 0,
+      payload.githubActivitySummary
+    )
+    .run();
 
   const standup = await fetchStandupById(env, id);
 
@@ -210,7 +217,9 @@ export async function handleUpdateStandup(request, env, standupId) {
       SET ${fields.join(', ')}
       WHERE id = ?
     `
-  ).bind(...bindings).run();
+  )
+    .bind(...bindings)
+    .run();
 
   const standup = await fetchStandupById(env, standupId);
 

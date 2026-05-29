@@ -17,7 +17,7 @@ jobs:
 
       - name: Run ESLint
         run: npx eslint "src/**/*.js" --no-error-on-unmatched-pattern
-      
+
       - name: Install CSS/HTML linters
         run: npm install stylelint stylelint-config-standard htmlhint
 

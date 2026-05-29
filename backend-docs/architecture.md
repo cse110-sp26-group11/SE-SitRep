@@ -66,7 +66,7 @@ migrations_dir = "d1/migrations"
 In Worker code, this is available as:
 
 ```js
-env.DB
+env.DB;
 ```
 
 ## Request Flow
