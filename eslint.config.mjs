@@ -1,9 +1,12 @@
 // eslint.config.mjs
+import { FlatCompat } from '@eslint/eslintrc'
 import standard from 'eslint-config-standard'
 import jsdoc from 'eslint-plugin-jsdoc'
 
+const compat = new FlatCompat()
+
 export default [
-  standard,
+  ...compat.config(standard),
   jsdoc.configs['flat/recommended'],
   {
     plugins: { jsdoc },

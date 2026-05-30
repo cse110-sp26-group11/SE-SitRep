@@ -106,6 +106,73 @@ curl 'http://localhost:8787/api/team?teamId=team-demo'
 500 unexpected backend error
 ```
 
+## GET /api/dashboard
+
+Returns the aggregated dashboard data used by repo pulse, issue focus,
+workflow health, AI summary, and sprint health.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+date   optional, YYYY-MM-DD; defaults to latest standup date for the team
+```
+
+### Request
+
+```sh
+curl http://localhost:8787/api/dashboard
+curl 'http://localhost:8787/api/dashboard?teamId=team-demo&date=2026-05-10'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "date": "2026-05-10",
+  "repoPulse": {
+    "openIssues": 4,
+    "blockedUpdates": 1,
+    "failingWorkflows": 1,
+    "dueSoon": 2,
+    "availableToday": 4,
+    "standupsFiled": 5,
+    "activeMembers": 5
+  },
+  "issues": [],
+  "workflows": [],
+  "summary": {
+    "body": "...",
+    "highlights": [],
+    "blockers": [],
+    "actions": [],
+    "brief": []
+  },
+  "sprintHealth": {
+    "metrics": [],
+    "deadlineRisks": [],
+    "workflowTrend": [],
+    "issueDistribution": []
+  }
+}
+```
+
+### Notes
+
+- `issues` are sourced from `github_issue_snapshots`.
+- `workflows` are sourced from `github_workflow_snapshots`.
+- `summary` is currently rule-based, built from standups, issues, and workflows.
+- `sprintHealth` aggregates issue risk, workflow status, and standup completion.
+
+### Status Codes
+
+```txt
+200 dashboard data returned, even if arrays are empty
+404 teamId does not exist
+500 unexpected backend error
+```
+
 ## GET /api/standups
 
 Returns standup entries joined with user/member metadata.

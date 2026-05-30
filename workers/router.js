@@ -12,6 +12,7 @@ import {
   handleGetStandups,
   handleUpdateStandup,
 } from './handlers/standups.js';
+import { handleDashboard } from './handlers/dashboard.js';
 import { handleTeam } from './handlers/team.js';
 import { handleGetWorkflows } from './handlers/workflows.js';
 import { getPathParts } from './lib/request.js';
