@@ -11,11 +11,11 @@ import {
   handleGetStandups,
   handleUpdateStandup
 } from './handlers/standups.js'
+import { handleDashboard } from './handlers/dashboard.js'
 import { handleTeam } from './handlers/team.js'
 import { getPathParts } from './lib/request.js'
 import { errorResponse } from './lib/responses.js'
 
-// CORS headers to add to all responses
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -24,19 +24,20 @@ const CORS_HEADERS = {
 }
 
 /**
- * Adds CORS headers to a response
- * @param {Response} response - The response object
- * @returns {Response} Response with CORS headers added
+ * Adds CORS headers to a response.
+ * @param {Response} response - Response from a route handler.
+ * @returns {Response} Response with CORS headers.
  */
 function addCorsHeaders (response) {
-  const newHeaders = new Headers(response.headers)
+  const headers = new Headers(response.headers)
   Object.entries(CORS_HEADERS).forEach(([key, value]) => {
-    newHeaders.set(key, value)
+    headers.set(key, value)
   })
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
-    headers: newHeaders
+    headers
   })
 }
 
@@ -50,7 +51,6 @@ export async function routeRequest (request, env) {
   const url = new URL(request.url)
   const pathParts = getPathParts(url)
 
-  // Handle CORS preflight OPTIONS request
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -66,6 +66,8 @@ export async function routeRequest (request, env) {
     response = handleConfig(env)
   } else if (request.method === 'GET' && url.pathname === '/api/team') {
     response = await handleTeam(env, url)
+  } else if (request.method === 'GET' && url.pathname === '/api/dashboard') {
+    response = await handleDashboard(env, url)
   } else if (request.method === 'POST' && url.pathname === '/api/auth/github') {
     response = await handleGithubAuth(request, env)
   } else if (pathParts[0] === 'api' && pathParts[1] === 'standups') {
@@ -92,6 +94,5 @@ export async function routeRequest (request, env) {
     response = errorResponse('Not found', 404)
   }
 
-  // Add CORS headers to every response
   return addCorsHeaders(response)
 }
