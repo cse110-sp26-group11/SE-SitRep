@@ -1,3 +1,4 @@
+import { handleGithubAuth } from './handlers/auth.js';
 import {
   handleGetAvailability,
   handleGetAvailabilityOverlap,
@@ -23,6 +24,10 @@ export async function routeRequest(request, env) {
 
   if (request.method === 'GET' && url.pathname === '/api/team') {
     return handleTeam(env, url);
+  }
+  
+  if (request.method === 'POST' && url.pathname === '/api/auth/github') {
+    return handleGithubAuth(request, env);
   }
 
   if (pathParts[0] === 'api' && pathParts[1] === 'standups') {
