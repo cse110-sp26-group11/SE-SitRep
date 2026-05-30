@@ -3,7 +3,8 @@
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "target": "es2022"
   },
   "include": ["src/**/*.js", "workers/**/*.js"]
