@@ -14,53 +14,75 @@ import { handleTeam } from './handlers/team.js';
 import { getPathParts } from './lib/request.js';
 import { errorResponse } from './lib/responses.js';
 
+// CORS headers to add to all responses
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+
+/**
+ * Adds CORS headers to a response
+ * @param {Response} response - The response object
+ * @returns {Response} Response with CORS headers added
+ */
+function addCorsHeaders(response) {
+  const newHeaders = new Headers(response.headers);
+  Object.entries(CORS_HEADERS).forEach(([key, value]) => {
+    newHeaders.set(key, value);
+  });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
+  });
+}
+
 export async function routeRequest(request, env) {
   const url = new URL(request.url);
   const pathParts = getPathParts(url);
 
+  // Handle CORS preflight OPTIONS request
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: CORS_HEADERS,
+    });
+  }
+
+  let response;
+
   if (request.method === 'GET' && url.pathname === '/api/health') {
-    return handleHealth(env);
-  }
-
-  if (request.method === 'GET' && url.pathname === '/api/team') {
-    return handleTeam(env, url);
-  }
-  
-  if (request.method === 'POST' && url.pathname === '/api/auth/github') {
-    return handleGithubAuth(request, env);
-  }
-
-  if (pathParts[0] === 'api' && pathParts[1] === 'standups') {
+    response = await handleHealth(env);
+  } else if (request.method === 'GET' && url.pathname === '/api/team') {
+    response = await handleTeam(env, url);
+  } else if (request.method === 'POST' && url.pathname === '/api/auth/github') {
+    response = await handleGithubAuth(request, env);
+  } else if (pathParts[0] === 'api' && pathParts[1] === 'standups') {
     if (request.method === 'GET' && pathParts.length === 2) {
-      return handleGetStandups(env, url);
+      response = await handleGetStandups(env, url);
+    } else if (request.method === 'POST' && pathParts.length === 2) {
+      response = await handleCreateStandup(request, env);
+    } else if (request.method === 'PUT' && pathParts.length === 3) {
+      response = await handleUpdateStandup(request, env, pathParts[2]);
+    } else {
+      response = errorResponse('Method not allowed', 405);
     }
-
-    if (request.method === 'POST' && pathParts.length === 2) {
-      return handleCreateStandup(request, env);
-    }
-
-    if (request.method === 'PUT' && pathParts.length === 3) {
-      return handleUpdateStandup(request, env, pathParts[2]);
-    }
-
-    return errorResponse('Method not allowed', 405);
-  }
-
-  if (pathParts[0] === 'api' && pathParts[1] === 'availability') {
+  } else if (pathParts[0] === 'api' && pathParts[1] === 'availability') {
     if (request.method === 'GET' && pathParts.length === 2) {
-      return handleGetAvailability(env, url);
+      response = await handleGetAvailability(env, url);
+    } else if (request.method === 'PUT' && pathParts.length === 3 && pathParts[2] === 'me') {
+      response = await handleUpdateMyAvailability(request, env);
+    } else if (request.method === 'GET' && pathParts.length === 3 && pathParts[2] === 'overlap') {
+      response = await handleGetAvailabilityOverlap(env, url);
+    } else {
+      response = errorResponse('Method not allowed', 405);
     }
-
-    if (request.method === 'PUT' && pathParts.length === 3 && pathParts[2] === 'me') {
-      return handleUpdateMyAvailability(request, env);
-    }
-
-    if (request.method === 'GET' && pathParts.length === 3 && pathParts[2] === 'overlap') {
-      return handleGetAvailabilityOverlap(env, url);
-    }
-
-    return errorResponse('Method not allowed', 405);
+  } else {
+    response = errorResponse('Not found', 404);
   }
 
-  return errorResponse('Not found', 404);
+  // Add CORS headers to every response
+  return addCorsHeaders(response);
 }

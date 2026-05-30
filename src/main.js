@@ -15,45 +15,53 @@
    1. GITHUB OAUTH AUTHENTICATION
    ══════════════════════════════════════════════════════════ */
 
-const API_BASE = 'http://localhost:8787';
-const GITHUB_CLIENT_ID = 'Ov23likol0wN6t1EA8vo';
+const GITHUB_CLIENT_ID = 'Ov23likol0wN6t1EA8vo'
+const CALLBACK_PATH = window.location.pathname.startsWith('/src/')
+  ? '/src/callback.html'
+  : '/callback.html'
 
 // Check if user is already authenticated
-const token = localStorage.getItem('github_token');
-const loginView = document.getElementById('login-view');
-const appShell = document.getElementById('app-shell');
+const token = localStorage.getItem('github_token')
+const loginView = document.getElementById('login-view')
+const appShell = document.getElementById('app-shell')
 
 if (!token) {
   // Not authenticated: show login page, hide main app
   if (loginView) {
-    loginView.style.display = 'flex';
-    loginView.style.flexDirection = 'column';
-    loginView.style.alignItems = 'center';
-    loginView.style.justifyContent = 'center';
-    loginView.style.minHeight = '100vh';
-    loginView.style.gap = '24px';
+    loginView.style.display = 'flex'
+    loginView.style.flexDirection = 'column'
+    loginView.style.alignItems = 'center'
+    loginView.style.justifyContent = 'center'
+    loginView.style.minHeight = '100vh'
+    loginView.style.gap = '24px'
   }
   if (appShell) {
-    appShell.style.display = 'none';
+    appShell.style.display = 'none'
   }
 } else {
-  // Already authenticated: hide login page
+  // Already authenticated: hide login page and show the main app
   if (loginView) {
-    loginView.style.display = 'none';
+    loginView.style.display = 'none'
+  }
+  if (appShell) {
+    appShell.style.display = 'block'
   }
 }
 
 // Wire up the login button click handler
-// TODO: change the callback URL to the live one
-const loginBtn = document.getElementById('github-login-btn');
+const loginBtn = document.getElementById('github-login-btn')
 if (loginBtn) {
   loginBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const authUrl = 'https://github.com/login/oauth/authorize'
-      + `?client_id=${GITHUB_CLIENT_ID}`
-      + '&redirect_uri=http://localhost:5500/src/callback.html';
-    window.location.href = authUrl;
-  });
+    e.preventDefault()
+    const redirectUri = `${window.location.origin}${CALLBACK_PATH}`
+    const state = crypto.randomUUID()
+    localStorage.setItem('github_oauth_state', state)
+    const authUrl = 'https://github.com/login/oauth/authorize' +
+      `?client_id=${GITHUB_CLIENT_ID}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&state=${encodeURIComponent(state)}`
+    window.location.href = authUrl
+  })
 }
 
 /* ══════════════════════════════════════════════════════════

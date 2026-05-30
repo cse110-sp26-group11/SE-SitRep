@@ -40,14 +40,21 @@
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:8787';
+    const API_BASE = window.location.hostname === 'localhost'
+      ? 'http://localhost:8787'
+      : window.location.origin;
 
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const expectedState = localStorage.getItem('github_oauth_state');
 
     if (!code) {
       document.body.innerHTML =
         '<h1 style="color:red;">Missing authorization code.</h1>';
+    } else if (!state || state !== expectedState) {
+      document.body.innerHTML =
+        '<h1 style="color:red;">Invalid OAuth state. Please try again.</h1>';
     } else {
       fetch(API_BASE + '/api/auth/github', {
         method: 'POST',
@@ -61,11 +68,20 @@
           return res.json();
         })
         .then((data) => {
-          localStorage.setItem('github_token', data.token);
+          const token = data.sessionToken || data.token;
+          if (!token) {
+            throw new Error('Missing session token');
+          }
+          localStorage.removeItem('github_oauth_state');
+          localStorage.setItem('github_token', token);
           localStorage.setItem('github_user', JSON.stringify(data.user));
-          window.location.href = '/src/index.html';
+          const indexPath = window.location.pathname.startsWith('/src/')
+            ? '/src/index.html'
+            : '/index.html';
+          window.location.href = indexPath;
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Login failed:', error);
           document.body.innerHTML =
             '<h1 style="color:red;">Login failed. Please try again.</h1>';
         });
