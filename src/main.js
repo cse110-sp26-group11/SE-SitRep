@@ -15,7 +15,9 @@
    1. GITHUB OAUTH AUTHENTICATION
    ══════════════════════════════════════════════════════════ */
 
-const GITHUB_CLIENT_ID = 'Ov23likol0wN6t1EA8vo'
+const API_BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost:8787'
+  : window.location.origin
 const CALLBACK_PATH = window.location.pathname.startsWith('/src/')
   ? '/src/callback.html'
   : '/callback.html'
@@ -50,17 +52,40 @@ if (!token) {
 
 // Wire up the login button click handler
 const loginBtn = document.getElementById('github-login-btn')
+
+/**
+ * Fetches public app configuration from the Worker.
+ * @returns {Promise<object>} Public configuration values.
+ */
+async function fetchAppConfig () {
+  const response = await fetch(`${API_BASE}/api/config`)
+
+  if (!response.ok) {
+    throw new Error('Could not load app configuration')
+  }
+
+  return response.json()
+}
+
 if (loginBtn) {
-  loginBtn.addEventListener('click', (e) => {
+  loginBtn.addEventListener('click', async (e) => {
     e.preventDefault()
-    const redirectUri = `${window.location.origin}${CALLBACK_PATH}`
-    const state = crypto.randomUUID()
-    localStorage.setItem('github_oauth_state', state)
-    const authUrl = 'https://github.com/login/oauth/authorize' +
-      `?client_id=${GITHUB_CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&state=${encodeURIComponent(state)}`
-    window.location.href = authUrl
+
+    try {
+      loginBtn.disabled = true
+      const config = await fetchAppConfig()
+      const redirectUri = `${window.location.origin}${CALLBACK_PATH}`
+      const state = crypto.randomUUID()
+      localStorage.setItem('github_oauth_state', state)
+      const authUrl = 'https://github.com/login/oauth/authorize' +
+        `?client_id=${config.githubClientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&state=${encodeURIComponent(state)}`
+      window.location.href = authUrl
+    } catch (error) {
+      console.error('GitHub login failed:', error)
+      loginBtn.disabled = false
+    }
   })
 }
 

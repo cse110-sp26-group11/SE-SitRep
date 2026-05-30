@@ -12,6 +12,7 @@
    GITHUB_CLIENT_ID=...
    GITHUB_CLIENT_SECRET=...
    ```
+   The client ID is public configuration. The client secret must stay server-side.
 
 3. Start the Cloudflare Worker:
    ```sh
