@@ -44,14 +44,14 @@ if (!token) {
 }
 
 // Wire up the login button click handler
+// TODO: change the callback URL to the live one
 const loginBtn = document.getElementById('github-login-btn');
 if (loginBtn) {
   loginBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const authUrl = 'https://github.com/login/oauth/authorize'
       + `?client_id=${GITHUB_CLIENT_ID}`
-      + '&redirect_uri=http://localhost:5500/src/callback.html'
-      + '&scope=user';
+      + '&redirect_uri=http://localhost:5500/src/callback.html';
     window.location.href = authUrl;
   });
 }
