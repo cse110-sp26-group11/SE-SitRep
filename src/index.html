@@ -9,7 +9,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tatOS — Team Feed</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="./styles/styles.css" />
 
   <!--
     Inline script runs before body renders so the correct theme class
@@ -33,7 +33,7 @@
 
     <div class="topbar_brand">
 
-      <!-- Hamburger: shown only on mobile via CSS -->
+      <!-- Hamburger Menu: shown only on mobile via CSS -->
       <button
         class="topbar_hamburger"
         id="sidebar-toggle"
@@ -41,6 +41,8 @@
         aria-expanded="false"
         aria-controls="sidebar"
       >
+
+      <!-- Hamburger Menu: shown only on mobile via CSS -->
         <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round">
@@ -50,6 +52,7 @@
         </svg>
       </button>
 
+      <!-- Topbar Logo svg and Name -->
       <a href="#main-content" class="topbar_brand-link" aria-label="tatOS — go to dashboard">
         <svg class="topbar_logo" aria-hidden="true" focusable="false"
              viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -63,6 +66,7 @@
       </a>
     </div>
 
+    <!-- Topbar Actions: Contains icons for theme, notifs, user, and settings -->
     <div class="topbar_actions" role="toolbar" aria-label="User actions">
 
       <!-- Theme switcher — toggles light and dark modes. -->
@@ -93,6 +97,7 @@
         </svg>
       </button>
 
+      <!-- Notifications Bell -->
       <button class="topbar_icon-btn" aria-label="Notifications" aria-haspopup="true">
         <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
@@ -102,10 +107,12 @@
         </svg>
       </button>
 
+      <!-- User profile picture and name -->
       <button class="topbar_pfp" aria-label="User menu for R" aria-haspopup="true">
         <span aria-hidden="true">R</span>
       </button>
 
+      <!-- Options menu 3 Vertical Dots -->
       <button class="topbar_icon-btn" aria-label="More options" aria-haspopup="true">
         <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
@@ -123,15 +130,17 @@
   <div class="sidebar-overlay" id="sidebar-overlay"
        role="presentation" aria-hidden="true"></div>
 
-  <!-- ── Layout ────────────────────────────────────────────────────── -->
+  <!-- ═══Layout  ══════════════════════════════════════════════-->
   <div class="layout">
 
-    <!-- ── Sidebar ───────────────────────────────────────────────── -->
+    <!-- ── Sidebar ──────────────────────────────────────────-->
     <nav class="sidebar" id="sidebar" aria-label="Main navigation">
 
+      <!-- Main section in sidebar: contains feed, new standup, when to meet -->
       <section class="sidebar_section" aria-labelledby="nav-heading-main">
         <h2 class="sidebar_label" id="nav-heading-main">Main</h2>
         <ul class="sidebar_nav" role="list">
+          <!-- Team Feed -->
           <li role="listitem">
             <a href="#" class="sidebar_link sidebar_link--active"
                data-view="team-feed" aria-current="page">
@@ -146,6 +155,7 @@
               Team feed
             </a>
           </li>
+          <!-- My Standup -->
           <li role="listitem">
             <a href="#" class="sidebar_link" data-view="my-standup">
               <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
@@ -157,6 +167,7 @@
               My standup
             </a>
           </li>
+          <!-- When To Meet -->
           <li role="listitem">
             <a href="#" class="sidebar_link" data-view="when-to-meet">
               <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
@@ -173,6 +184,7 @@
         </ul>
       </section>
 
+      <!-- Second sidebar section: Insights -->
       <section class="sidebar_section" aria-labelledby="nav-heading-insights">
         <h2 class="sidebar_label" id="nav-heading-insights">Insights</h2>
         <ul class="sidebar_nav" role="list">
@@ -203,10 +215,11 @@
 
     </nav>
 
-    <!-- ── Main content ──────────────────────────────────────────── -->
+    <!-- ══ Main content ══════════════════════════════════════════════ -->
     <main class="content" id="main-content" role="main"
           aria-label="tatOS application views">
 
+      <!-- ── Team Feed Page ──────────────────── -->
       <section class="app-view app-view--active" data-view-panel="team-feed" aria-hidden="false">
 
         <!-- Page header -->
@@ -274,6 +287,8 @@
         <section aria-labelledby="feed-heading">
           <h2 id="feed-heading" class="sr-only">Team standup entries</h2>
 
+          <!-- Container for dashboard layout: 2 columns
+                  standup feed | repo metrics -->
           <div class="dashboard-layout">
             <div class="dashboard-primary">
               <div class="filter-bar" role="group" aria-labelledby="filter-label">
@@ -295,6 +310,7 @@
               </div>
             </div>
 
+            <!-- Repo Metrics: Second Col-->
             <aside class="dashboard-sidebar" aria-label="GitHub and team context">
               <section class="insight-card" aria-labelledby="repo-pulse-heading">
                 <div class="insight-card_header">
@@ -325,6 +341,7 @@
         </section>
       </section>
 
+      <!-- ── My Standup Page (Submission Form) ────────────────────────────────────── -->
       <section class="app-view" data-view-panel="my-standup" aria-hidden="true">
         <header class="page-header" aria-label="Standup page header and actions">
           <div>
@@ -433,6 +450,7 @@
         </div>
       </section>
 
+      <!-- ── When To Meet Page ──────────────────── -->
       <section class="app-view" data-view-panel="when-to-meet" aria-hidden="true">
         <header class="page-header" aria-label="When to meet page header and actions">
           <div>
@@ -496,6 +514,7 @@
         </div>
       </section>
 
+      <!-- ── AI summary Page ──────────────────── -->
       <section class="app-view" data-view-panel="ai-summary" aria-hidden="true">
         <header class="page-header" aria-label="AI summary page header">
           <div>
@@ -542,6 +561,7 @@
         </div>
       </section>
 
+      <!-- ── Sprint Health Page ──────────────────── -->
       <section class="app-view" data-view-panel="sprint-health" aria-hidden="true">
         <header class="page-header" aria-label="Sprint health page header">
           <div>

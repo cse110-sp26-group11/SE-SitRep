@@ -1,0 +1,72 @@
+/* ══════════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════════ */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 150;
+}
+.sidebar-overlay.is-visible { display: block; }
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--color-sidebar-bg);
+  border-right: 1px solid var(--color-border);
+  padding: clamp(18px, 2vh, 28px) clamp(10px, 0.95vw, 18px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2vh, 24px);
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto;
+  z-index: 160;
+  transition: background .2s, border-color .2s, transform .25s ease;
+}
+
+.sidebar_section { display: flex; flex-direction: column; gap: 4px; }
+
+.sidebar_label {
+  font-size: clamp(9px, 0.75vw, 12px);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--color-chrome-muted);
+  padding: 0 clamp(6px, 0.6vw, 12px);
+  margin-bottom: 2px;
+}
+
+.sidebar_nav { display: flex; flex-direction: column; gap: 2px; }
+
+.sidebar_link {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.6vw, 10px);
+  padding: clamp(6px, 0.65vh, 10px) clamp(8px, 0.7vw, 12px);
+  border-radius: var(--radius-sm);
+  font-size: clamp(12px, 0.95vw, 15px);
+  font-weight: 600;
+  color: var(--color-chrome-muted);
+  border: 1px solid transparent;
+  transition: background .12s, color .12s, border-color .12s;
+  white-space: nowrap;
+}
+.sidebar_link svg {
+  width:  clamp(13px, 1.1vw, 18px);
+  height: clamp(13px, 1.1vw, 18px);
+}
+.sidebar_link:hover {
+  background: var(--color-chrome-hover);
+  color: var(--color-chrome-text);
+}
+.sidebar_link--active {
+  background: var(--color-active-bg);
+  border-color: color-mix(in srgb, var(--color-active-text) 22%, var(--color-border));
+  color: var(--color-active-text);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--color-active-text);
+}
