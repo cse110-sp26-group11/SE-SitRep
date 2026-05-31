@@ -9,6 +9,11 @@ export default [
   ...compat.config(standard),
   jsdoc.configs['flat/recommended'],
   {
+    languageOptions: {
+      globals: {
+        localStorage: 'readonly'
+      }
+    },
     plugins: { jsdoc },
     rules: {
       'jsdoc/require-jsdoc': ['error', {
