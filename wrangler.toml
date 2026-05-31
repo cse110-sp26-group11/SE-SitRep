@@ -1,7 +1,11 @@
 name = "se-sitrep"
+account_id = "bcad3d59d9958df0d7ebfd6048d87772"
 compatibility_date = "2026-05-24"
 
 main = "workers/index.js"
+
+[vars]
+GITHUB_CLIENT_ID = "Ov23liQ3h7WXkcgkz9F8"
 
 [assets]
 directory = "./src"
