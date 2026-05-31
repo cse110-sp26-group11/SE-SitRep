@@ -1,19 +1,90 @@
 /**
  * tatOS — main.js
  *
- * Three responsibilities:
- *  1. Theme switching (light / dark)
- *  2. Sidebar hamburger drawer and app views
- *  3. Feed rendering via <template> + backend data
- *  4. Standup form preview
- *  5. Shared availability planner
+ * Responsibilities:
+ *  1. GitHub OAuth authentication
+ *  2. Theme switching (light / dark)
+ *  3. Sidebar hamburger drawer and app views
+ *  4. Feed rendering via <template> + backend data
+ *  5. Standup form preview
+ *  6. Shared availability planner
  *     (swap mockFetch for a real fetch('/api/standups') when your backend is ready)
  */
 
 /* global localStorage */
 
 /* ══════════════════════════════════════════════════════════
-   1. THEME SWITCHER
+   1. GITHUB OAUTH AUTHENTICATION
+   ══════════════════════════════════════════════════════════ */
+
+const API_BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost:8787/api'
+  : '/api'
+const CALLBACK_PATH = window.location.pathname.startsWith('/src/')
+  ? '/src/callback.html'
+  : '/callback.html'
+const authToken = localStorage.getItem('github_token')
+const loginView = document.getElementById('login-view')
+const appShell = document.getElementById('app-shell')
+const loginBtn = document.getElementById('github-login-btn')
+
+if (!authToken) {
+  if (loginView) {
+    loginView.style.display = 'flex'
+    loginView.style.flexDirection = 'column'
+    loginView.style.alignItems = 'center'
+    loginView.style.justifyContent = 'center'
+    loginView.style.minHeight = '100vh'
+    loginView.style.gap = '24px'
+  }
+  if (appShell) {
+    appShell.style.display = 'none'
+  }
+} else {
+  if (loginView) {
+    loginView.style.display = 'none'
+  }
+  if (appShell) {
+    appShell.style.display = 'block'
+  }
+}
+
+/**
+ * Fetches public app configuration from the Worker.
+ * @returns {Promise<object>} Public configuration values.
+ */
+async function fetchAppConfig () {
+  const response = await fetch(`${API_BASE}/config`)
+
+  if (!response.ok) {
+    throw new Error('Could not load app configuration')
+  }
+
+  return response.json()
+}
+
+loginBtn?.addEventListener('click', async e => {
+  e.preventDefault()
+
+  try {
+    loginBtn.disabled = true
+    const config = await fetchAppConfig()
+    const redirectUri = `${window.location.origin}${CALLBACK_PATH}`
+    const state = crypto.randomUUID()
+    localStorage.setItem('github_oauth_state', state)
+    const authUrl = 'https://github.com/login/oauth/authorize' +
+      `?client_id=${config.githubClientId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&state=${encodeURIComponent(state)}`
+    window.location.href = authUrl
+  } catch (error) {
+    console.error('GitHub login failed:', error)
+    loginBtn.disabled = false
+  }
+})
+
+/* ══════════════════════════════════════════════════════════
+   2. THEME SWITCHER
    ══════════════════════════════════════════════════════════ */
 
 const THEMES = ['light', 'dark']
@@ -55,7 +126,7 @@ themeBtn?.addEventListener('click', () => {
 if (themeBtn) themeBtn.setAttribute('aria-label', NEXT_LABEL[currentTheme()])
 
 /* ══════════════════════════════════════════════════════════
-   2. SIDEBAR / HAMBURGER DRAWER
+   3. SIDEBAR / HAMBURGER DRAWER
    ══════════════════════════════════════════════════════════ */
 
 const toggleBtn = document.getElementById('sidebar-toggle')
@@ -85,7 +156,6 @@ const statBlockersValue = document.getElementById('stat-blockers-value')
 const statAvailabilityValue = document.getElementById('stat-availability-value')
 const meetingStatus = document.getElementById('meeting-status')
 
-const API_BASE = '/api'
 const DEFAULT_TEAM_ID = 'team-demo'
 const APP_STORAGE_CURRENT_USER_KEY = 'tatosCurrentUserId'
 
@@ -187,7 +257,7 @@ openViewButtons.forEach(button => {
 })
 
 /* ══════════════════════════════════════════════════════════
-   3. FEED — TEMPLATE RENDERING + BACKEND DATA
+   4. FEED — TEMPLATE RENDERING + BACKEND DATA
    ══════════════════════════════════════════════════════════ */
 
 /**
@@ -652,7 +722,7 @@ async function syncSelectedUserData () {
 }
 
 /* ══════════════════════════════════════════════════════════
-   4. STANDUP FORM — LOCAL PREVIEW + SAVE FEEDBACK
+   5. STANDUP FORM — LOCAL PREVIEW + SAVE FEEDBACK
    ══════════════════════════════════════════════════════════ */
 
 const standupForm = document.getElementById('standup-form')
