@@ -250,6 +250,245 @@ other member    -> null badge
 500 unexpected backend error
 ```
 
+## GET /api/dashboard
+
+Returns aggregate dashboard data for the Team Feed dashboard and repo context
+cards.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+date   required, YYYY-MM-DD
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/dashboard?teamId=team-demo&date=2026-05-10'
+```
+
+### Response Shape
+
+```json
+{
+  "team": {
+    "id": "team-demo",
+    "name": "SE SitRep Demo Team",
+    "repoOwner": "cse110-sp26-group11",
+    "repoName": "SE-SitRep",
+    "sprintName": "Sprint 2"
+  },
+  "teamId": "team-demo",
+  "date": "2026-05-10",
+  "metrics": {
+    "checkedIn": {
+      "label": "Checked in today",
+      "value": 5,
+      "total": 5,
+      "completionRate": 1,
+      "tone": "success"
+    },
+    "blockers": {
+      "label": "Active blockers",
+      "value": 1,
+      "tone": "warning"
+    },
+    "openIssues": {
+      "label": "Open issues",
+      "value": 4,
+      "tone": "neutral"
+    },
+    "failingWorkflows": {
+      "label": "Failing workflows",
+      "value": 1,
+      "tone": "danger"
+    },
+    "dueSoon": {
+      "label": "Due in 48h",
+      "value": 2,
+      "tone": "warning"
+    }
+  },
+  "repoPulse": [
+    { "label": "Open issues", "value": 4, "tone": "neutral" }
+  ],
+  "issues": [],
+  "workflows": []
+}
+```
+
+`issues` contains normalized GitHub issue snapshot rows. `workflows` contains
+normalized GitHub workflow snapshot rows.
+
+### Status Codes
+
+```txt
+200 query succeeded
+400 missing or invalid date
+500 unexpected backend error
+```
+
+## GET /api/issues
+
+Returns normalized GitHub issue snapshots for a team.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/issues?teamId=team-demo'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "issues": [
+    {
+      "id": "issue-demo-51",
+      "issueNumber": 51,
+      "title": "Workflow failures need a CI health card in sprint health",
+      "status": "Blocked",
+      "owner": "Arav Kumar",
+      "ownerUserId": "user-arav",
+      "difficulty": "Hard",
+      "deadline": "2026-05-23",
+      "risk": "high",
+      "labels": ["github-actions", "ci"],
+      "url": null,
+      "syncedAt": "2026-05-25 21:57:59"
+    }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded, even if issues is empty
+500 unexpected backend error
+```
+
+## GET /api/sprint-health
+
+Returns aggregate data for the Sprint Health view.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+date   required, YYYY-MM-DD
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/sprint-health?teamId=team-demo&date=2026-05-10'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "date": "2026-05-10",
+  "healthMetrics": [
+    {
+      "label": "Sprint completion",
+      "value": "100%",
+      "numericValue": 1
+    },
+    {
+      "label": "Workflows passing",
+      "value": "2/3",
+      "numericValue": 0.6666666666666666
+    }
+  ],
+  "deadlineRisks": [
+    {
+      "id": "issue-demo-51",
+      "issueNumber": 51,
+      "title": "Workflow failures need a CI health card in sprint health",
+      "owner": "Arav Kumar",
+      "ownerUserId": "user-arav",
+      "status": "Blocked",
+      "difficulty": "Hard",
+      "deadline": "2026-05-23",
+      "risk": "high",
+      "labels": ["github-actions", "ci"],
+      "url": null
+    }
+  ],
+  "workflowTrend": [],
+  "issueDistribution": [
+    { "label": "Hard issues", "value": 1 },
+    { "label": "In progress", "value": 1 },
+    { "label": "Blocked", "value": 1 },
+    { "label": "In review", "value": 1 }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded
+400 missing or invalid date
+500 unexpected backend error
+```
+
+## GET /api/workflows
+
+Returns normalized GitHub workflow snapshots for a team.
+
+### Query Params
+
+```txt
+teamId optional, defaults to team-demo
+```
+
+### Request
+
+```sh
+curl 'http://localhost:8787/api/workflows?teamId=team-demo'
+```
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "workflows": [
+    {
+      "id": "workflow-demo-pr",
+      "name": "Pull request validation",
+      "branch": "main",
+      "status": "failing",
+      "durationSeconds": 192,
+      "passedTests": 41,
+      "failedTests": 2,
+      "url": null,
+      "createdAt": "2026-05-10T11:17:00Z",
+      "syncedAt": "2026-05-25 21:57:59"
+    }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded, even if workflows is empty
+500 unexpected backend error
+```
+
 ## POST /api/standups
 
 Creates one standup for a team member on a specific date.

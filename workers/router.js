@@ -3,24 +3,27 @@ import { handleConfig } from './handlers/config.js'
 import {
   handleGetAvailability,
   handleGetAvailabilityOverlap,
-  handleUpdateMyAvailability
-} from './handlers/availability.js'
-import { handleHealth } from './handlers/health.js'
+  handleUpdateMyAvailability,
+} from './handlers/availability.js';
+import { handleHealth } from './handlers/health.js';
+import { handleGetIssues } from './handlers/issues.js';
+import { handleGetSprintHealth } from './handlers/sprint-health.js';
 import {
   handleCreateStandup,
   handleGetStandups,
-  handleUpdateStandup
-} from './handlers/standups.js'
-import { handleDashboard } from './handlers/dashboard.js'
-import { handleTeam } from './handlers/team.js'
-import { getPathParts } from './lib/request.js'
-import { errorResponse } from './lib/responses.js'
+  handleUpdateStandup,
+} from './handlers/standups.js';
+import { handleDashboard } from './handlers/dashboard.js';
+import { handleTeam } from './handlers/team.js';
+import { handleGetWorkflows } from './handlers/workflows.js';
+import { getPathParts } from './lib/request.js';
+import { errorResponse } from './lib/responses.js';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Max-Age': '86400'
+  'Access-Control-Max-Age': '86400',
 }
 
 /**
@@ -68,6 +71,12 @@ export async function routeRequest (request, env) {
     response = await handleTeam(env, url)
   } else if (request.method === 'GET' && url.pathname === '/api/dashboard') {
     response = await handleDashboard(env, url)
+  } else if (request.method === 'GET' && url.pathname === '/api/issues') {
+    response = await handleGetIssues(env, url)
+  } else if (request.method === 'GET' && url.pathname === '/api/workflows') {
+    response = await handleGetWorkflows(env, url)
+  } else if (request.method === 'GET' && url.pathname === '/api/sprint-health') {
+    response = await handleGetSprintHealth(env, url)
   } else if (request.method === 'POST' && url.pathname === '/api/auth/github') {
     response = await handleGithubAuth(request, env)
   } else if (pathParts[0] === 'api' && pathParts[1] === 'standups') {
