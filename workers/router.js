@@ -3,27 +3,34 @@ import { handleConfig } from './handlers/config.js'
 import {
   handleGetAvailability,
   handleGetAvailabilityOverlap,
-  handleUpdateMyAvailability,
-} from './handlers/availability.js';
-import { handleHealth } from './handlers/health.js';
-import { handleGetIssues } from './handlers/issues.js';
-import { handleGetSprintHealth } from './handlers/sprint-health.js';
+  handleUpdateMyAvailability
+} from './handlers/availability.js'
+import { handleHealth } from './handlers/health.js'
+import { handleGetIssues } from './handlers/issues.js'
+import { handleGetSprintHealth } from './handlers/sprint-health.js'
 import {
   handleCreateStandup,
   handleGetStandups,
-  handleUpdateStandup,
-} from './handlers/standups.js';
-import { handleDashboard } from './handlers/dashboard.js';
-import { handleTeam } from './handlers/team.js';
-import { handleGetWorkflows } from './handlers/workflows.js';
-import { getPathParts } from './lib/request.js';
-import { errorResponse } from './lib/responses.js';
+  handleUpdateStandup
+} from './handlers/standups.js'
+import { handleDashboard } from './handlers/dashboard.js'
+import { handleTeam } from './handlers/team.js'
+import {
+  handleCreateTeam,
+  handleGetTeams,
+  handleJoinTeam,
+  handleSyncGithubTeam,
+  handleUpdateTeamMember
+} from './handlers/teams.js'
+import { handleGetWorkflows } from './handlers/workflows.js'
+import { getPathParts } from './lib/request.js'
+import { errorResponse } from './lib/responses.js'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Max-Age': '86400',
+  'Access-Control-Max-Age': '86400'
 }
 
 /**
@@ -67,6 +74,10 @@ export async function routeRequest (request, env) {
     response = await handleHealth(env)
   } else if (request.method === 'GET' && url.pathname === '/api/config') {
     response = handleConfig(env)
+  } else if (request.method === 'GET' && url.pathname === '/api/teams') {
+    response = await handleGetTeams(env, url)
+  } else if (request.method === 'POST' && url.pathname === '/api/teams') {
+    response = await handleCreateTeam(request, env)
   } else if (request.method === 'GET' && url.pathname === '/api/team') {
     response = await handleTeam(env, url)
   } else if (request.method === 'GET' && url.pathname === '/api/dashboard') {
@@ -79,6 +90,20 @@ export async function routeRequest (request, env) {
     response = await handleGetSprintHealth(env, url)
   } else if (request.method === 'POST' && url.pathname === '/api/auth/github') {
     response = await handleGithubAuth(request, env)
+  } else if (pathParts[0] === 'api' && pathParts[1] === 'teams') {
+    if (request.method === 'POST' && pathParts.length === 4 && pathParts[3] === 'join') {
+      response = await handleJoinTeam(request, env, pathParts[2])
+    } else if (
+      request.method === 'PUT' &&
+      pathParts.length === 5 &&
+      pathParts[3] === 'members'
+    ) {
+      response = await handleUpdateTeamMember(request, env, pathParts[2], pathParts[4])
+    } else if (request.method === 'POST' && pathParts.length === 4 && pathParts[3] === 'sync-github') {
+      response = await handleSyncGithubTeam(request, env, pathParts[2])
+    } else {
+      response = errorResponse('Method not allowed', 405)
+    }
   } else if (pathParts[0] === 'api' && pathParts[1] === 'standups') {
     if (request.method === 'GET' && pathParts.length === 2) {
       response = await handleGetStandups(env, url)

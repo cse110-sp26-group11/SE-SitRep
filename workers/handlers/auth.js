@@ -1,77 +1,6 @@
 import { jsonResponse, errorResponse } from '../lib/responses.js'
 import { DEFAULT_TEAM_ID } from '../lib/config.js'
-
-/**
- * Builds two-letter initials for avatar/profile UI.
- * @param {string} displayName - User display name.
- * @param {string} username - GitHub username.
- * @returns {string} Uppercase initials.
- */
-function buildInitials (displayName, username) {
-  const nameParts = displayName
-    .split(/\s+/)
-    .map(part => part.trim())
-    .filter(Boolean)
-
-  if (nameParts.length >= 2) {
-    return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
-  }
-
-  return (displayName || username).slice(0, 2).toUpperCase()
-}
-
-/**
- * Creates or updates the app user tied to a GitHub identity.
- * @param {object} env - Worker environment bindings.
- * @param {object} githubUser - GitHub user API response.
- * @returns {Promise<object>} Saved app user profile.
- */
-async function saveGithubUser (env, githubUser) {
-  const username = githubUser.login
-  const displayName = githubUser.name || username
-  const initials = buildInitials(displayName, username)
-  const userId = `user-github-${githubUser.id}`
-  const avatarColorKey = initials.toLowerCase()
-
-  await env.DB.prepare(`
-    INSERT INTO users (id, display_name, initials, github_username, avatar_color_key)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(github_username) DO UPDATE SET
-      display_name = excluded.display_name,
-      initials = excluded.initials,
-      avatar_color_key = excluded.avatar_color_key,
-      updated_at = CURRENT_TIMESTAMP
-  `).bind(userId, displayName, initials, username, avatarColorKey).run()
-
-  const savedUser = await env.DB.prepare(`
-    SELECT id, display_name, initials, github_username, avatar_color_key
-    FROM users
-    WHERE github_username = ?
-  `).bind(username).first()
-
-  const team = await env.DB.prepare(`
-    SELECT id
-    FROM teams
-    WHERE id = ?
-  `).bind(DEFAULT_TEAM_ID).first()
-
-  if (team) {
-    await env.DB.prepare(`
-      INSERT INTO team_members (team_id, user_id, role, is_lead, active)
-      VALUES (?, ?, 'member', 0, 1)
-      ON CONFLICT(team_id, user_id) DO UPDATE SET
-        active = 1
-    `).bind(DEFAULT_TEAM_ID, savedUser.id).run()
-  }
-
-  return {
-    id: savedUser.id,
-    displayName: savedUser.display_name,
-    initials: savedUser.initials,
-    githubUsername: savedUser.github_username,
-    avatarColorKey: savedUser.avatar_color_key
-  }
-}
+import { upsertGithubUser, upsertTeamMember } from '../lib/team-membership.js'
 
 /**
  * Exchange authorization code for GitHub access token
@@ -176,7 +105,32 @@ export async function handleGithubAuth (request, env) {
     const userData = await fetchGitHubUser(tokenData.access_token)
 
     // Link this GitHub identity to an app user before issuing the session.
-    const appUser = await saveGithubUser(env, userData)
+    const appUser = await upsertGithubUser(env, userData)
+
+    const team = await env.DB.prepare(`
+      SELECT id
+      FROM teams
+      WHERE id = ?
+    `).bind(DEFAULT_TEAM_ID).first()
+
+    if (team) {
+      await upsertTeamMember(env, DEFAULT_TEAM_ID, appUser.id)
+    }
+
+    const { results: teams } = await env.DB.prepare(`
+      SELECT
+        teams.id,
+        teams.name,
+        teams.repo_owner,
+        teams.repo_name,
+        teams.sprint_name,
+        team_members.role,
+        team_members.is_lead
+      FROM team_members
+      JOIN teams ON teams.id = team_members.team_id
+      WHERE team_members.user_id = ? AND team_members.active = 1
+      ORDER BY teams.name ASC
+    `).bind(appUser.id).all()
 
     // Create session token
     const sessionToken = createSessionToken(userData, appUser)
@@ -196,6 +150,15 @@ export async function handleGithubAuth (request, env) {
         githubUsername: appUser.githubUsername,
         avatarColorKey: appUser.avatarColorKey
       },
+      teams: teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        repoOwner: team.repo_owner,
+        repoName: team.repo_name,
+        sprintName: team.sprint_name,
+        role: team.role,
+        isLead: Boolean(team.is_lead)
+      })),
       token: sessionToken,
       sessionToken
     })
