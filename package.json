@@ -21,12 +21,23 @@
     "db:seed:local": "wrangler d1 execute se-sitrep --local --file=./d1/seeds/demo.sql",
     "db:seed:remote": "wrangler d1 execute se-sitrep --remote --file=./d1/seeds/demo.sql",
     "db:console:local": "wrangler d1 execute se-sitrep --local --command=\"SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;\"",
+<<<<<<< HEAD
     "lint": "eslint .",
     "test": "vitest run",
     "test:backend": "vitest run workers",
     "test:integration": "vitest run integration"
+=======
+    "test": "playwright test",
+    "test:smoke": "playwright test smoke.spec.js",
+    "test:api": "playwright test example.spec.js",
+    "test:dashboard": "playwright test dashboard.spec.js",
+    "test:standups": "playwright test standups.spec.js",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug"
+>>>>>>> d9a8df9 (created E2E tests with documentation, should be reviewed and expanded upon)
   },
   "devDependencies": {
+    "@cloudflare/workerd-windows-64": "^1.20260601.1",
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
     "eslint": "^8.57.1",
