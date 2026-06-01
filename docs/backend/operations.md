@@ -81,6 +81,23 @@ Deploy when ready:
 npx wrangler deploy
 ```
 
+## GitHub Repository Sync Token
+
+`POST /api/teams/:teamId/sync-github` can sync public repositories without an
+extra token, subject to GitHub's unauthenticated API rate limits.
+
+For private repositories or higher rate limits, store a GitHub token as a
+Cloudflare Worker secret:
+
+```sh
+npx wrangler secret put GITHUB_ACCESS_TOKEN
+```
+
+Use the least privileged token available. A fine-grained GitHub token should be
+limited to the repository being synced and should only grant read access needed
+for repository metadata, contributors, and issues. Do not commit this token to
+the repository or place it in `wrangler.toml`.
+
 ## Free-Plan Guardrails
 
 This project is intended to stay compatible with Cloudflare's free plan.
@@ -103,5 +120,4 @@ Before production use, add:
 - Environment-specific config notes.
 - Remote API smoke tests after deploy.
 - Migration rollback guidance.
-- GitHub token storage policy.
 - Monitoring and error logging expectations.
