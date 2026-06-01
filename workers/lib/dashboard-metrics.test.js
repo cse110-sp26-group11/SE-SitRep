@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 import {
   buildMetrics,
   getDueSoonCount,
   getFailingWorkflowCount,
-  getOpenIssueCount,
-} from './dashboard-metrics.js';
+  getOpenIssueCount
+} from './dashboard-metrics.js'
 
 describe('dashboard metric calculations', () => {
   it('counts issues due within 48 hours and ignores past or later deadlines', () => {
@@ -14,11 +14,11 @@ describe('dashboard metric calculations', () => {
       { deadline: '2026-05-12' },
       { deadline: '2026-05-13' },
       { deadline: '2026-05-09' },
-      { deadline: null },
-    ];
+      { deadline: null }
+    ]
 
-    expect(getDueSoonCount(issues, '2026-05-10')).toBe(3);
-  });
+    expect(getDueSoonCount(issues, '2026-05-10')).toBe(3)
+  })
 
   it('counts open issues while treating closed and done as not open', () => {
     const issues = [
@@ -26,22 +26,22 @@ describe('dashboard metric calculations', () => {
       { status: 'In progress' },
       { status: 'Review' },
       { status: 'Closed' },
-      { status: 'done' },
-    ];
+      { status: 'done' }
+    ]
 
-    expect(getOpenIssueCount(issues)).toBe(3);
-  });
+    expect(getOpenIssueCount(issues)).toBe(3)
+  })
 
   it('counts failing workflows only', () => {
     const workflows = [
       { status: 'passing' },
       { status: 'failing' },
       { status: 'running' },
-      { status: 'failing' },
-    ];
+      { status: 'failing' }
+    ]
 
-    expect(getFailingWorkflowCount(workflows)).toBe(2);
-  });
+    expect(getFailingWorkflowCount(workflows)).toBe(2)
+  })
 
   it('builds dashboard metric objects with expected tones and completion rate', () => {
     expect(buildMetrics({
@@ -50,32 +50,32 @@ describe('dashboard metric calculations', () => {
       blockerCount: 1,
       openIssueCount: 3,
       failingWorkflowCount: 1,
-      dueSoonCount: 2,
+      dueSoonCount: 2
     })).toMatchObject({
       checkedIn: {
         value: 4,
         total: 5,
         completionRate: 0.8,
-        tone: 'warning',
+        tone: 'warning'
       },
       blockers: {
         value: 1,
-        tone: 'warning',
+        tone: 'warning'
       },
       openIssues: {
         value: 3,
-        tone: 'neutral',
+        tone: 'neutral'
       },
       failingWorkflows: {
         value: 1,
-        tone: 'danger',
+        tone: 'danger'
       },
       dueSoon: {
         value: 2,
-        tone: 'warning',
-      },
-    });
-  });
+        tone: 'warning'
+      }
+    })
+  })
 
   it('handles zero active members without dividing by zero', () => {
     expect(buildMetrics({
@@ -84,16 +84,16 @@ describe('dashboard metric calculations', () => {
       blockerCount: 0,
       openIssueCount: 0,
       failingWorkflowCount: 0,
-      dueSoonCount: 0,
+      dueSoonCount: 0
     })).toMatchObject({
       checkedIn: {
         completionRate: 0,
-        tone: 'success',
+        tone: 'success'
       },
       blockers: { tone: 'success' },
       openIssues: { tone: 'success' },
       failingWorkflows: { tone: 'success' },
-      dueSoon: { tone: 'success' },
-    });
-  });
-});
+      dueSoon: { tone: 'success' }
+    })
+  })
+})

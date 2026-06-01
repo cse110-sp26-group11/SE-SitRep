@@ -1,4 +1,4 @@
-export function mapAvailabilityRow(row) {
+export function mapAvailabilityRow (row) {
   return {
     id: row.id,
     teamId: row.team_id,
@@ -14,18 +14,18 @@ export function mapAvailabilityRow(row) {
       displayName: row.display_name,
       initials: row.initials,
       githubUsername: row.github_username,
-      avatarColorKey: row.avatar_color_key,
-    },
-  };
+      avatarColorKey: row.avatar_color_key
+    }
+  }
 }
 
-export function getAvailabilityWeight(status) {
-  if (status === 'available') return 1;
-  if (status === 'maybe') return 0.5;
-  return 0;
+export function getAvailabilityWeight (status) {
+  if (status === 'available') return 1
+  if (status === 'maybe') return 0.5
+  return 0
 }
 
-export function mapOverlapSlot(slot) {
+export function mapOverlapSlot (slot) {
   return {
     teamId: slot.teamId,
     weekStart: slot.weekStart,
@@ -37,6 +37,6 @@ export function mapOverlapSlot(slot) {
     maybeCount: slot.maybeCount,
     busyCount: slot.busyCount,
     totalMembers: slot.totalMembers,
-    members: slot.members,
-  };
+    members: slot.members
+  }
 }
