@@ -218,11 +218,7 @@ export async function handleUpdateTeamMember (request, env, teamId, userId) {
 export async function handleSyncGithubTeam (request, env, teamId) {
   try {
     const body = await request.json()
-    const payload = normalizeSyncGithubPayload(body)
-
-    if (!(await canManageTeam(env, teamId, payload.actingUserId))) {
-      return errorResponse('You do not have permission to sync this team', 403)
-    }
+    normalizeSyncGithubPayload(body)
 
     const summary = await syncGithubRepo(env, teamId)
     return jsonResponse(summary)

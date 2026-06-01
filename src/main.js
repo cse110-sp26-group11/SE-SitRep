@@ -301,15 +301,6 @@ function setTeamStatus (message) {
 }
 
 /**
- * Returns whether a team membership can manage repo sync and roles.
- * @param {object} team Team membership object.
- * @returns {boolean} Whether management actions are allowed.
- */
-function canManageCurrentTeam (team) {
-  return Boolean(team?.isLead || team?.role === 'owner' || team?.role === 'lead')
-}
-
-/**
  * Finds the signed-in GitHub user's app id.
  * @returns {string} App user id if available.
  */
@@ -389,16 +380,14 @@ function renderTeamList () {
     })
     actions.appendChild(selectButton)
 
-    if (canManageCurrentTeam(team)) {
-      const syncButton = document.createElement('button')
-      syncButton.className = 'btn'
-      syncButton.type = 'button'
-      syncButton.textContent = 'Sync GitHub'
-      syncButton.addEventListener('click', async () => {
-        await syncGithubTeam(team.id)
-      })
-      actions.appendChild(syncButton)
-    }
+    const syncButton = document.createElement('button')
+    syncButton.className = 'btn'
+    syncButton.type = 'button'
+    syncButton.textContent = 'Sync GitHub'
+    syncButton.addEventListener('click', async () => {
+      await syncGithubTeam(team.id)
+    })
+    actions.appendChild(syncButton)
 
     row.append(copy, actions)
     teamList.appendChild(row)

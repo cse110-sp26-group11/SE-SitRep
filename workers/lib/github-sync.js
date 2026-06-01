@@ -70,6 +70,38 @@ async function fetchContributors (env, owner, repo) {
 }
 
 /**
+ * Fetches a GitHub user's public profile so display names are available.
+ * @param {object} env Worker environment bindings.
+ * @param {string} login GitHub username.
+ * @returns {Promise<object>} GitHub user profile.
+ */
+async function fetchGithubUser (env, login) {
+  return fetchGithubPage(env, `/users/${encodeURIComponent(login)}`)
+}
+
+/**
+ * Saves a GitHub user after hydrating profile fields not present in repo lists.
+ * @param {object} env Worker environment bindings.
+ * @param {Map<string, object>} syncedUsersByLogin User cache by GitHub login.
+ * @param {object} githubUser Partial GitHub user object.
+ * @param {string} teamId Team id.
+ * @returns {Promise<object>} Saved app user profile.
+ */
+async function syncGithubUser (env, syncedUsersByLogin, githubUser, teamId) {
+  if (syncedUsersByLogin.has(githubUser.login)) {
+    return syncedUsersByLogin.get(githubUser.login)
+  }
+
+  const detailedUser = githubUser.name === undefined
+    ? await fetchGithubUser(env, githubUser.login)
+    : githubUser
+  const user = await upsertGithubUser(env, detailedUser)
+  await upsertTeamMember(env, teamId, user.id)
+  syncedUsersByLogin.set(user.githubUsername, user)
+  return user
+}
+
+/**
  * Maps issue labels into dashboard risk.
  * @param {object[]} labels GitHub issue labels.
  * @returns {string} Risk label.
@@ -135,18 +167,12 @@ export async function syncGithubRepo (env, teamId) {
   const syncedUsersByLogin = new Map()
 
   for (const contributor of contributors) {
-    const user = await upsertGithubUser(env, contributor)
-    await upsertTeamMember(env, teamId, user.id)
-    syncedUsersByLogin.set(user.githubUsername, user)
+    await syncGithubUser(env, syncedUsersByLogin, contributor, teamId)
   }
 
   for (const issue of issues) {
     for (const assignee of issue.assignees || []) {
-      if (!syncedUsersByLogin.has(assignee.login)) {
-        const user = await upsertGithubUser(env, assignee)
-        await upsertTeamMember(env, teamId, user.id)
-        syncedUsersByLogin.set(user.githubUsername, user)
-      }
+      await syncGithubUser(env, syncedUsersByLogin, assignee, teamId)
     }
 
     const primaryAssignee = issue.assignees?.[0]
