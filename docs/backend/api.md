@@ -106,6 +106,250 @@ curl 'http://localhost:8787/api/team?teamId=team-demo'
 500 unexpected backend error
 ```
 
+## GET /api/teams
+
+Returns teams. When `userId` is provided, returns only teams that user belongs
+to and includes that user's membership fields.
+
+### Query Params
+
+```txt
+userId optional, filters teams by active user membership
+```
+
+### Request
+
+```sh
+curl http://localhost:8787/api/teams
+curl 'http://localhost:8787/api/teams?userId=user-github-123456'
+```
+
+### Response Shape
+
+```json
+{
+  "teams": [
+    {
+      "id": "team-demo",
+      "name": "SE SitRep Demo Team",
+      "repoOwner": "cse110-sp26-group11",
+      "repoName": "SE-SitRep",
+      "sprintName": "Sprint 2",
+      "role": "member",
+      "isLead": false,
+      "active": true,
+      "createdAt": "2026-05-25 02:27:11",
+      "updatedAt": "2026-05-25 02:27:11"
+    }
+  ]
+}
+```
+
+### Status Codes
+
+```txt
+200 query succeeded, even if teams is empty
+500 unexpected backend error
+```
+
+## POST /api/teams
+
+Creates a team. When `currentUserId` is provided, that user is added as
+`owner` and `isLead: true`.
+
+### Request
+
+```sh
+curl -X POST http://localhost:8787/api/teams \
+  -H 'content-type: application/json' \
+  --data '{
+    "name":"Team Eleven",
+    "repoOwner":"cse110-sp26-group11",
+    "repoName":"SE-SitRep",
+    "sprintName":"Sprint 4",
+    "currentUserId":"user-github-123456"
+  }'
+```
+
+### Request Body
+
+```txt
+name          required string
+repoOwner     optional string, GitHub repository owner/org
+repoName      optional string, GitHub repository name
+sprintName    optional string
+currentUserId optional user id to assign as owner
+```
+
+### Response Shape
+
+```json
+{
+  "team": {
+    "id": "team-eleven-a1b2c3d4",
+    "name": "Team Eleven",
+    "repoOwner": "cse110-sp26-group11",
+    "repoName": "SE-SitRep",
+    "sprintName": "Sprint 4"
+  }
+}
+```
+
+### Status Codes
+
+```txt
+201 team created
+400 invalid request body
+500 unexpected backend error
+```
+
+## POST /api/teams/:teamId/join
+
+Adds a user to an existing team as a `member`.
+
+### Request
+
+```sh
+curl -X POST http://localhost:8787/api/teams/team-demo/join \
+  -H 'content-type: application/json' \
+  --data '{"userId":"user-github-123456"}'
+```
+
+### Request Body
+
+```txt
+userId required user id
+```
+
+`role` is intentionally ignored for self-join requests. Join always creates a
+`member` membership. Owners/leads can promote members with the member update
+endpoint.
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "userId": "user-github-123456",
+  "role": "member"
+}
+```
+
+### Status Codes
+
+```txt
+200 joined or reactivated membership
+400 invalid request body
+404 teamId does not exist
+500 unexpected backend error
+```
+
+## PUT /api/teams/:teamId/members/:userId
+
+Updates a team member's role, lead flag, or active state. The acting user must
+be an owner, lead, or have `isLead: true` for the team.
+
+### Request
+
+```sh
+curl -X PUT http://localhost:8787/api/teams/team-demo/members/user-github-123456 \
+  -H 'content-type: application/json' \
+  --data '{"actingUserId":"user-github-owner","role":"lead","isLead":true}'
+```
+
+### Request Body
+
+```txt
+actingUserId required user id performing the change
+role         optional, one of owner, lead, member
+isLead       optional boolean
+active       optional boolean
+```
+
+At least one of `role`, `isLead`, or `active` is required.
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "userId": "user-github-123456",
+  "role": "lead",
+  "isLead": true,
+  "active": true
+}
+```
+
+### Status Codes
+
+```txt
+200 member updated
+400 invalid request body
+403 acting user cannot manage this team
+404 member does not exist on this team
+500 unexpected backend error
+```
+
+## POST /api/teams/:teamId/sync-github
+
+Imports GitHub repository contributors and open issues into the team. The team
+must have `repoOwner` and `repoName` configured.
+
+### Request
+
+```sh
+curl -X POST http://localhost:8787/api/teams/team-demo/sync-github \
+  -H 'content-type: application/json' \
+  --data '{"actingUserId":"user-github-123456"}'
+```
+
+### Request Body
+
+```txt
+actingUserId required user id requesting the sync
+```
+
+Any team member can trigger GitHub sync. `actingUserId` is still required so the
+request can be tied to a signed-in app user, but it is not restricted to owners
+or leads.
+
+### Sync Behavior
+
+- Fetches contributors from `GET /repos/{owner}/{repo}/contributors`.
+- Fetches open issues from `GET /repos/{owner}/{repo}/issues`.
+- Excludes pull requests from issue snapshots.
+- Fetches each synced GitHub user's public profile so `displayName` uses their
+  listed GitHub name when present, falling back to username.
+- Upserts synced users into `users`.
+- Adds synced contributors and assignees as team members.
+- Upserts open issues into `github_issue_snapshots`.
+- Uses the first assignee as `owner_user_id` when available.
+- Maps labels such as `blocked`, `in-progress`, `high`, and `medium` into
+  dashboard status/risk fields.
+
+For private repositories or higher rate limits, configure `GITHUB_ACCESS_TOKEN`
+as a Worker secret.
+
+### Response Shape
+
+```json
+{
+  "teamId": "team-demo",
+  "repo": "cse110-sp26-group11/SE-SitRep",
+  "usersSynced": 5,
+  "issuesSynced": 12
+}
+```
+
+### Status Codes
+
+```txt
+200 sync completed
+400 invalid request body, missing repo config, or GitHub API error
+404 teamId does not exist
+500 unexpected backend error
+```
+
 ## GET /api/dashboard
 
 Returns the aggregated dashboard data used by repo pulse, issue focus,

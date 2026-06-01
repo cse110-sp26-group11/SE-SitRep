@@ -4,41 +4,38 @@
  * into a single JSON response for the frontend dashboard.
  */
 
-import { DEFAULT_TEAM_ID } from '../lib/config.js';
-import { getQueryParam } from '../lib/request.js';
-import { errorResponse, jsonResponse } from '../lib/responses.js';
-import { mapStandupRow } from '../lib/standup-mappers.js';
+import { DEFAULT_TEAM_ID } from '../lib/config.js'
+import { getQueryParam } from '../lib/request.js'
+import { errorResponse, jsonResponse } from '../lib/responses.js'
+import { mapStandupRow } from '../lib/standup-mappers.js'
 
 /**
  * Converts a Date object into YYYY-MM-DD format.
- *
  * @param {Date} date - Date instance to format.
  * @returns {string} Date string formatted as YYYY-MM-DD.
  */
-function formatDateYmd(date) {
-  return date.toISOString().slice(0, 10);
+function formatDateYmd (date) {
+  return date.toISOString().slice(0, 10)
 }
 
 /**
  * Gets today's date in YYYY-MM-DD format.
- *
  * @returns {string} Current date formatted as YYYY-MM-DD.
  */
-function getTodayYmd() {
-  return formatDateYmd(new Date());
+function getTodayYmd () {
+  return formatDateYmd(new Date())
 }
 
 /**
  * Adds a number of days to a YYYY-MM-DD date string.
- *
  * @param {string} ymd - Base date in YYYY-MM-DD format.
  * @param {number} days - Number of days to add.
  * @returns {string} Updated date in YYYY-MM-DD format.
  */
-function addDaysYmd(ymd, days) {
-  const date = new Date(`${ymd}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return formatDateYmd(date);
+function addDaysYmd (ymd, days) {
+  const date = new Date(`${ymd}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + days)
+  return formatDateYmd(date)
 }
 
 /**
@@ -46,19 +43,18 @@ function addDaysYmd(ymd, days) {
  *
  * Example:
  * "2026-05-29" -> "May 29"
- *
  * @param {string|null|undefined} ymd - Date string in YYYY-MM-DD format.
  * @returns {string} Human-readable date string.
  */
-function formatDisplayDate(ymd) {
+function formatDisplayDate (ymd) {
   if (!ymd) {
-    return 'No date';
+    return 'No date'
   }
 
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
-    day: 'numeric',
-  }).format(new Date(`${ymd}T00:00:00Z`));
+    day: 'numeric'
+  }).format(new Date(`${ymd}T00:00:00Z`))
 }
 
 /**
@@ -69,34 +65,33 @@ function formatDisplayDate(ymd) {
  * - "15m ago"
  * - "3h ago"
  * - "2d ago"
- *
  * @param {string|null|undefined} timestamp - ISO timestamp or SQL datetime string.
  * @returns {string} Relative time label.
  */
-function formatRelativeTime(timestamp) {
+function formatRelativeTime (timestamp) {
   if (!timestamp) {
-    return 'just now';
+    return 'just now'
   }
 
-  const then = new Date(timestamp.includes('T') ? timestamp : `${timestamp.replace(' ', 'T')}Z`);
-  const diffMinutes = Math.max(0, Math.round((Date.now() - then.getTime()) / 60000));
+  const then = new Date(timestamp.includes('T') ? timestamp : `${timestamp.replace(' ', 'T')}Z`)
+  const diffMinutes = Math.max(0, Math.round((Date.now() - then.getTime()) / 60000))
 
   if (diffMinutes < 1) {
-    return 'just now';
+    return 'just now'
   }
 
   if (diffMinutes < 60) {
-    return `${diffMinutes}m ago`;
+    return `${diffMinutes}m ago`
   }
 
-  const diffHours = Math.round(diffMinutes / 60);
+  const diffHours = Math.round(diffMinutes / 60)
 
   if (diffHours < 24) {
-    return `${diffHours}h ago`;
+    return `${diffHours}h ago`
   }
 
-  const diffDays = Math.round(diffHours / 24);
-  return `${diffDays}d ago`;
+  const diffDays = Math.round(diffHours / 24)
+  return `${diffDays}d ago`
 }
 
 /**
@@ -104,51 +99,48 @@ function formatRelativeTime(timestamp) {
  *
  * Example:
  * 125 -> "2m 05s"
- *
  * @param {number|null|undefined} durationSeconds - Workflow duration in seconds.
  * @returns {string} Formatted duration string.
  */
-function formatDuration(durationSeconds) {
+function formatDuration (durationSeconds) {
   if (!durationSeconds && durationSeconds !== 0) {
-    return 'Unknown';
+    return 'Unknown'
   }
 
-  const minutes = Math.floor(durationSeconds / 60);
-  const seconds = durationSeconds % 60;
+  const minutes = Math.floor(durationSeconds / 60)
+  const seconds = durationSeconds % 60
 
-  return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+  return `${minutes}m ${String(seconds).padStart(2, '0')}s`
 }
 
 /**
  * Safely parses a JSON-encoded labels array.
  *
  * Returns an empty array if parsing fails or the value is invalid.
- *
  * @param {string|null|undefined} labelsJson - JSON string containing labels.
  * @returns {string[]} Parsed labels array.
  */
-function parseLabels(labelsJson) {
+function parseLabels (labelsJson) {
   try {
-    const parsed = JSON.parse(labelsJson || '[]');
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(labelsJson || '[]')
+    return Array.isArray(parsed) ? parsed : []
   } catch {
-    return [];
+    return []
   }
 }
 
 /**
  * Calculates a percentage and clamps the result between 0 and 100.
- *
  * @param {number} numerator - Current value.
  * @param {number} denominator - Maximum value.
  * @returns {number} Rounded percentage value.
  */
-function clampPercent(numerator, denominator) {
+function clampPercent (numerator, denominator) {
   if (!denominator) {
-    return 0;
+    return 0
   }
 
-  return Math.max(0, Math.min(100, Math.round((numerator / denominator) * 100)));
+  return Math.max(0, Math.min(100, Math.round((numerator / denominator) * 100)))
 }
 
 /**
@@ -160,35 +152,34 @@ function clampPercent(numerator, denominator) {
  * - Blocker summaries
  * - Suggested actions
  * - Sprint briefing cards
- *
- * @param {Object} team - Team metadata.
- * @param {Array<Object>} standups - Processed standup entries.
+ * @param {object} team - Team metadata.
+ * @param {Array<object>} standups - Processed standup entries.
  * @param {number} activeMemberCount - Number of active team members.
- * @param {Array<Object>} issues - GitHub issue snapshot data.
- * @param {Array<Object>} workflows - GitHub workflow snapshot data.
- * @returns {Object} Structured dashboard summary object.
+ * @param {Array<object>} issues - GitHub issue snapshot data.
+ * @param {Array<object>} workflows - GitHub workflow snapshot data.
+ * @returns {object} Structured dashboard summary object.
  */
-function buildSummary(team, standups, activeMemberCount, issues, workflows) {
-  const standupCount = standups.length;
+function buildSummary (team, standups, activeMemberCount, issues, workflows) {
+  const standupCount = standups.length
 
-  const blockers = standups.filter(standup => standup.isBlocker);
+  const blockers = standups.filter(standup => standup.isBlocker)
 
   const failingWorkflows = workflows.filter(
     workflow => workflow.status === 'failing'
-  );
+  )
 
-  const deadlineRisks = issues.filter(issue => issue.risk !== 'low');
+  const deadlineRisks = issues.filter(issue => issue.risk !== 'low')
 
   const completionRate = clampPercent(
     standupCount,
     activeMemberCount
-  );
+  )
 
   const body =
     `${standupCount} of ${activeMemberCount} teammates checked in for ` +
     `${team.sprint_name}, ${blockers.length} blocker${blockers.length === 1 ? '' : 's'} ` +
     `need follow-up, and ${failingWorkflows.length} workflow${failingWorkflows.length === 1 ? '' : 's'} ` +
-    `are currently failing.`;
+    'are currently failing.'
 
   const blockerItems = [
     ...blockers
@@ -210,33 +201,33 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
       .map(
         issue =>
           `Issue #${issue.id} is carrying ${issue.risk} risk ahead of ${issue.deadline}.`
-      ),
-  ].slice(0, 3);
+      )
+  ].slice(0, 3)
 
-  const actions = [];
+  const actions = []
 
   if (blockers.length) {
     actions.push(
       `Resolve ${blockers[0].name || 'the current'} blocker first so the feed is no longer carrying a blocked status.`
-    );
+    )
   }
 
   if (failingWorkflows.length) {
     actions.push(
       `Address ${failingWorkflows[0].name} before merging more work into ${failingWorkflows[0].branch}.`
-    );
+    )
   }
 
   if (deadlineRisks.length) {
     actions.push(
       `Review issue #${deadlineRisks[0].id} because it is both due soon and marked ${deadlineRisks[0].risk} risk.`
-    );
+    )
   }
 
   if (!actions.length) {
     actions.push(
       'No urgent follow-up surfaced from the current sprint data.'
-    );
+    )
   }
 
   return {
@@ -245,16 +236,16 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
     highlights: [
       {
         value: `${completionRate}%`,
-        label: 'Check-in completion',
+        label: 'Check-in completion'
       },
       {
         value: String(blockers.length),
-        label: 'Urgent blockers',
+        label: 'Urgent blockers'
       },
       {
         value: String(failingWorkflows.length),
-        label: 'Failing pipelines',
-      },
+        label: 'Failing pipelines'
+      }
     ],
 
     blockers: blockerItems.length
@@ -266,26 +257,26 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
     brief: [
       {
         label: 'Frontend scope',
-        value: 'Standups, feed, and availability are live',
+        value: 'Standups, feed, and availability are live'
       },
       {
         label: 'Biggest risk',
         value: failingWorkflows[0]
           ? `${failingWorkflows[0].name} still failing`
-          : 'No failing workflows',
+          : 'No failing workflows'
       },
       {
         label: 'Needs lead help',
-        value: blockers[0]?.blocker || 'No blocker currently escalated',
+        value: blockers[0]?.blocker || 'No blocker currently escalated'
       },
       {
         label: 'Next handoff',
         value: deadlineRisks[0]
           ? `Review issue #${deadlineRisks[0].id}`
-          : 'Continue sprint execution',
-      },
-    ],
-  };
+          : 'Continue sprint execution'
+      }
+    ]
+  }
 }
 
 /**
@@ -300,15 +291,14 @@ function buildSummary(team, standups, activeMemberCount, issues, workflows) {
  * Query Parameters:
  * - teamId: Team identifier
  * - date: Standup date in YYYY-MM-DD format
- *
  * @async
- * @param {Object} env - Cloudflare Worker environment bindings.
- * @param {D1Database} env.DB - Cloudflare D1 database instance.
+ * @param {object} env - Cloudflare Worker environment bindings.
+ * @param {object} env.DB - Cloudflare D1 database instance.
  * @param {URL} url - Incoming request URL.
  * @returns {Promise<Response>} JSON API response.
  */
-export async function handleDashboard(env, url) {
-  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID);
+export async function handleDashboard (env, url) {
+  const teamId = getQueryParam(url, 'teamId', DEFAULT_TEAM_ID)
 
   const team = await env.DB.prepare(
     `
@@ -316,10 +306,10 @@ export async function handleDashboard(env, url) {
       FROM teams
       WHERE id = ?
     `
-  ).bind(teamId).first();
+  ).bind(teamId).first()
 
   if (!team) {
-    return errorResponse('Team not found', 404);
+    return errorResponse('Team not found', 404)
   }
 
   const activeMembersResult = await env.DB.prepare(
@@ -328,7 +318,7 @@ export async function handleDashboard(env, url) {
       FROM team_members
       WHERE team_id = ? AND active = 1
     `
-  ).bind(teamId).first();
+  ).bind(teamId).first()
 
   const latestStandup = await env.DB.prepare(
     `
@@ -338,15 +328,15 @@ export async function handleDashboard(env, url) {
       ORDER BY standup_date DESC
       LIMIT 1
     `
-  ).bind(teamId).first();
+  ).bind(teamId).first()
 
   const selectedDate = getQueryParam(
     url,
     'date',
     latestStandup?.standup_date || getTodayYmd()
-  );
+  )
 
-  const dueSoonEndDate = addDaysYmd(selectedDate, 2);
+  const dueSoonEndDate = addDaysYmd(selectedDate, 2)
 
   /**
    * Load standups for the selected sprint date.
@@ -380,9 +370,9 @@ export async function handleDashboard(env, url) {
       WHERE standups.team_id = ? AND standups.standup_date = ?
       ORDER BY standups.submitted_at DESC
     `
-  ).bind(teamId, selectedDate).all();
+  ).bind(teamId, selectedDate).all()
 
-  const standups = standupRows.map(mapStandupRow);
+  const standups = standupRows.map(mapStandupRow)
 
   /**
    * Load GitHub issue snapshot data.
@@ -410,7 +400,7 @@ export async function handleDashboard(env, url) {
         github_issue_snapshots.deadline ASC,
         github_issue_snapshots.issue_number ASC
     `
-  ).bind(teamId).all();
+  ).bind(teamId).all()
 
   const issues = issueRows.map(issue => ({
     id: issue.issue_number,
@@ -421,8 +411,8 @@ export async function handleDashboard(env, url) {
     deadline: formatDisplayDate(issue.deadline),
     deadlineDate: issue.deadline,
     labels: parseLabels(issue.labels_json),
-    risk: issue.risk || 'low',
-  }));
+    risk: issue.risk || 'low'
+  }))
 
   /**
    * Load GitHub workflow snapshot data.
@@ -441,7 +431,7 @@ export async function handleDashboard(env, url) {
       WHERE team_id = ?
       ORDER BY datetime(created_at) DESC
     `
-  ).bind(teamId).all();
+  ).bind(teamId).all()
 
   const workflows = workflowRows.map(workflow => ({
     name: workflow.workflow_name,
@@ -450,42 +440,42 @@ export async function handleDashboard(env, url) {
     timeAgo: formatRelativeTime(workflow.created_at),
     duration: formatDuration(workflow.duration_seconds),
     passedTests: workflow.passed_tests,
-    failedTests: workflow.failed_tests,
-  }));
+    failedTests: workflow.failed_tests
+  }))
 
   /**
    * Derived sprint metrics.
    */
   const activeMemberCount = Number(
     activeMembersResult?.active_count || 0
-  );
+  )
 
   const blockedCount = standups.filter(
     standup => standup.isBlocker
-  ).length;
+  ).length
 
   const failingWorkflowCount = workflows.filter(
     workflow => workflow.status === 'failing'
-  ).length;
+  ).length
 
   const dueSoonCount = issues.filter(issue => {
     return (
       Boolean(issue.deadlineDate) &&
       issue.deadlineDate >= selectedDate &&
       issue.deadlineDate <= dueSoonEndDate
-    );
-  }).length;
+    )
+  }).length
 
   const availableToday = standups.filter(
     standup => standup.availability === 'available'
-  ).length;
+  ).length
 
   const sprintCompletion = clampPercent(
     issues.filter(issue =>
       ['Review', 'Done'].includes(issue.status)
     ).length,
     issues.length || 1
-  );
+  )
 
   /**
    * Return dashboard response payload.
@@ -501,7 +491,7 @@ export async function handleDashboard(env, url) {
       dueSoon: dueSoonCount,
       availableToday,
       standupsFiled: standups.length,
-      activeMembers: activeMemberCount,
+      activeMembers: activeMemberCount
     },
 
     issues,
@@ -520,11 +510,11 @@ export async function handleDashboard(env, url) {
       metrics: [
         {
           label: 'Sprint completion',
-          value: `${sprintCompletion}%`,
+          value: `${sprintCompletion}%`
         },
         {
           label: 'Workflows passing',
-          value: `${workflows.filter(workflow => workflow.status === 'passing').length}/${workflows.length || 0}`,
+          value: `${workflows.filter(workflow => workflow.status === 'passing').length}/${workflows.length || 0}`
         },
         {
           label: 'Due this week',
@@ -532,12 +522,12 @@ export async function handleDashboard(env, url) {
             issue.deadlineDate &&
             issue.deadlineDate >= selectedDate &&
             issue.deadlineDate <= addDaysYmd(selectedDate, 7)
-          ).length} issues`,
+          ).length} issues`
         },
         {
           label: 'Standups filed',
-          value: `${standups.length}/${activeMemberCount || 0}`,
-        },
+          value: `${standups.length}/${activeMemberCount || 0}`
+        }
       ],
 
       deadlineRisks: issues.filter(
@@ -551,27 +541,27 @@ export async function handleDashboard(env, url) {
           label: 'Hard issues',
           value: issues.filter(
             issue => issue.difficulty === 'Hard'
-          ).length,
+          ).length
         },
         {
           label: 'In progress',
           value: issues.filter(
             issue => issue.status === 'In progress'
-          ).length,
+          ).length
         },
         {
           label: 'Blocked',
           value: issues.filter(
             issue => issue.status === 'Blocked'
-          ).length,
+          ).length
         },
         {
           label: 'In review',
           value: issues.filter(
             issue => issue.status === 'Review'
-          ).length,
-        },
-      ],
-    },
-  });
+          ).length
+        }
+      ]
+    }
+  })
 }

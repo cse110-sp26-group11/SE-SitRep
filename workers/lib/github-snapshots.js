@@ -1,4 +1,4 @@
-export async function fetchIssueRows(env, teamId) {
+export async function fetchIssueRows (env, teamId) {
   const { results } = await env.DB.prepare(
     `
       SELECT
@@ -27,12 +27,12 @@ export async function fetchIssueRows(env, teamId) {
         github_issue_snapshots.deadline ASC,
         github_issue_snapshots.issue_number ASC
     `
-  ).bind(teamId).all();
+  ).bind(teamId).all()
 
-  return results;
+  return results
 }
 
-export async function fetchWorkflowRows(env, teamId) {
+export async function fetchWorkflowRows (env, teamId) {
   const { results } = await env.DB.prepare(
     `
       SELECT
@@ -50,7 +50,7 @@ export async function fetchWorkflowRows(env, teamId) {
       WHERE team_id = ?
       ORDER BY created_at DESC
     `
-  ).bind(teamId).all();
+  ).bind(teamId).all()
 
-  return results;
+  return results
 }

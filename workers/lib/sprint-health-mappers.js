@@ -1,4 +1,4 @@
-export function mapDeadlineRisk(issue) {
+export function mapDeadlineRisk (issue) {
   return {
     id: issue.id,
     issueNumber: issue.issueNumber,
@@ -10,11 +10,11 @@ export function mapDeadlineRisk(issue) {
     deadline: issue.deadline,
     risk: issue.risk,
     labels: issue.labels,
-    url: issue.url,
-  };
+    url: issue.url
+  }
 }
 
-export function mapWorkflowTrend(workflow) {
+export function mapWorkflowTrend (workflow) {
   return {
     id: workflow.id,
     name: workflow.name,
@@ -24,15 +24,15 @@ export function mapWorkflowTrend(workflow) {
     passedTests: workflow.passedTests,
     failedTests: workflow.failedTests,
     url: workflow.url,
-    createdAt: workflow.createdAt,
-  };
+    createdAt: workflow.createdAt
+  }
 }
 
-export function mapIssueDistribution(distribution) {
+export function mapIssueDistribution (distribution) {
   return [
     { label: 'Hard issues', value: distribution.hardIssues },
     { label: 'In progress', value: distribution.inProgress },
     { label: 'Blocked', value: distribution.blocked },
-    { label: 'In review', value: distribution.inReview },
-  ];
+    { label: 'In review', value: distribution.inReview }
+  ]
 }
