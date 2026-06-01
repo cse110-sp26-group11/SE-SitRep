@@ -150,6 +150,10 @@ const issueDistribution = document.getElementById('issue-distribution')
 const teamFeedMeta = document.getElementById('team-feed-meta')
 const currentUserSelect = document.getElementById('current-user-select')
 const meetingUserSelect = document.getElementById('meeting-user-select')
+const meetingDaysInput = document.getElementById('meeting-days-input')
+const meetingStartTimeSelect = document.getElementById('meeting-start-time-select')
+const meetingEndTimeSelect = document.getElementById('meeting-end-time-select')
+const meetingTimeError = document.getElementById('meeting-time-error')
 const teamList = document.getElementById('team-list')
 const createTeamForm = document.getElementById('create-team-form')
 const joinTeamForm = document.getElementById('join-team-form')
@@ -163,6 +167,9 @@ const meetingStatus = document.getElementById('meeting-status')
 
 const APP_STORAGE_CURRENT_USER_KEY = 'tatosCurrentUserId'
 const APP_STORAGE_CURRENT_TEAM_KEY = 'tatosCurrentTeamId'
+const APP_STORAGE_MEETING_DAYS_KEY = 'tatosMeetingDays'
+const APP_STORAGE_MEETING_START_KEY = 'tatosMeetingStart'
+const APP_STORAGE_MEETING_END_KEY = 'tatosMeetingEnd'
 
 const appState = {
   teamId: localStorage.getItem(APP_STORAGE_CURRENT_TEAM_KEY) || '',
@@ -918,14 +925,18 @@ const meetingGrid = document.getElementById('meeting-grid')
 const meetingRoster = document.getElementById('meeting-roster')
 const meetingOverlapList = document.getElementById('meeting-overlap-list')
 
-const MEETING_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const MEETING_DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-const MEETING_SLOTS = Array.from({ length: 17 }, (_, index) => {
+const ALL_MEETING_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+let MEETING_DAYS = JSON.parse(localStorage.getItem(APP_STORAGE_MEETING_DAYS_KEY) || 'null') || ALL_MEETING_DAYS.slice(0, 5)
+const MEETING_DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const DEFAULT_MEETING_SLOTS = Array.from({ length: 17 }, (_, index) => {
   const hour = index + 6
   const normalizedHour = ((hour + 11) % 12) + 1
   const period = hour < 12 ? 'AM' : 'PM'
   return `${normalizedHour} ${period}`
 })
+let meetingStartIndex = Number(localStorage.getItem(APP_STORAGE_MEETING_START_KEY) || 0)
+let meetingEndIndex = Number(localStorage.getItem(APP_STORAGE_MEETING_END_KEY) || DEFAULT_MEETING_SLOTS.length - 1)
+let MEETING_SLOTS = DEFAULT_MEETING_SLOTS.slice(meetingStartIndex, meetingEndIndex + 1)
 let myMeetingAvailability = {}
 
 /**
@@ -950,6 +961,35 @@ function slotKey (dayIndex, slotIndex) {
   return `${dayIndex}-${slotIndex}`
 }
 
+function setMeetingOptionsFromInput () {
+  const days = [...meetingDaysInput.querySelectorAll('input:checked')].map(input => input.value)
+  const selectedStartIndex = Number(meetingStartTimeSelect.value)
+  const selectedEndIndex = Number(meetingEndTimeSelect.value)
+  if (selectedStartIndex > selectedEndIndex) {
+    meetingTimeError.hidden = false
+    meetingGrid.closest('.meeting-grid-shell').hidden = true
+    return
+  }
+  meetingTimeError.hidden = true
+  meetingGrid.closest('.meeting-grid-shell').hidden = false
+  meetingStartIndex = selectedStartIndex
+  meetingEndIndex = selectedEndIndex
+  MEETING_DAYS = days.length ? days : ALL_MEETING_DAYS.slice(0, 5)
+  MEETING_SLOTS = DEFAULT_MEETING_SLOTS.slice(meetingStartIndex, meetingEndIndex + 1)
+  localStorage.setItem(APP_STORAGE_MEETING_DAYS_KEY, JSON.stringify(MEETING_DAYS))
+  localStorage.setItem(APP_STORAGE_MEETING_START_KEY, String(meetingStartIndex))
+  localStorage.setItem(APP_STORAGE_MEETING_END_KEY, String(meetingEndIndex))
+  renderMeetingPlanner()
+}
+
+function getMeetingDayIndex (day) {
+  return ALL_MEETING_DAYS.indexOf(day)
+}
+
+function getMeetingSlotIndex (slot) {
+  return DEFAULT_MEETING_SLOTS.indexOf(slot)
+}
+
 /**
  * Groups availability rows for the selected user into a grid lookup.
  * @param {object[]} rows Backend availability rows.
@@ -957,9 +997,11 @@ function slotKey (dayIndex, slotIndex) {
  * @returns {object} Availability keyed by day-slot.
  */
 function buildAvailabilityLookup (rows, userId) {
+  const dayIndexes = MEETING_DAYS.map(getMeetingDayIndex)
+  const slotIndexes = MEETING_SLOTS.map(getMeetingSlotIndex)
   return Object.fromEntries(
     rows
-      .filter(row => row.userId === userId && row.dayIndex < MEETING_DAYS.length && row.slotIndex < MEETING_SLOTS.length)
+      .filter(row => row.userId === userId && dayIndexes.includes(row.dayIndex) && slotIndexes.includes(row.slotIndex))
       .map(row => [slotKey(row.dayIndex, row.slotIndex), row.status])
   )
 }
@@ -982,7 +1024,7 @@ function getAvailabilityPayloadSlots () {
     return {
       dayIndex,
       slotIndex,
-      slotLabel: MEETING_SLOTS[slotIndex],
+      slotLabel: DEFAULT_MEETING_SLOTS[slotIndex],
       status
     }
   })
@@ -1072,13 +1114,11 @@ async function saveMeetingAvailability () {
 /**
  * Finds the next status when a meeting cell is toggled.
  * @param {string} currentStatus Current cell status.
- * @param {boolean} hasSavedStatus Whether the cell has an explicit saved value.
  * @returns {string} Next cell status.
  */
-function getNextMeetingStatus (currentStatus, hasSavedStatus) {
-  if (!hasSavedStatus) return 'available'
-  if (currentStatus === 'available') return 'busy'
-  if (currentStatus === 'busy') return 'maybe'
+function getNextMeetingStatus (currentStatus) {
+  if (currentStatus === 'available') return 'maybe'
+  if (currentStatus === 'maybe') return 'busy'
   return 'available'
 }
 
@@ -1146,6 +1186,7 @@ function renderMeetingGrid () {
   const overlapMap = getOverlapMap()
 
   meetingGrid.innerHTML = ''
+  meetingGrid.style.gridTemplateColumns = `minmax(72px, 90px) repeat(${MEETING_DAYS.length}, minmax(92px, 1fr))`
 
   const spacer = document.createElement('div')
   spacer.className = 'meeting-grid_corner'
@@ -1159,13 +1200,15 @@ function renderMeetingGrid () {
     meetingGrid.appendChild(header)
   })
 
-  MEETING_SLOTS.forEach((slotLabel, slotIndex) => {
+  MEETING_SLOTS.forEach(slotLabel => {
+    const slotIndex = getMeetingSlotIndex(slotLabel)
     const timeLabel = document.createElement('div')
     timeLabel.className = 'meeting-grid_time'
     timeLabel.textContent = slotLabel
     meetingGrid.appendChild(timeLabel)
 
-    MEETING_DAYS.forEach((day, dayIndex) => {
+    MEETING_DAYS.forEach(day => {
+      const dayIndex = getMeetingDayIndex(day)
       const key = slotKey(dayIndex, slotIndex)
       const myStatus = myMeetingAvailability[key] || 'busy'
       const score = getOverlapScore(dayIndex, slotIndex)
@@ -1180,7 +1223,7 @@ function renderMeetingGrid () {
       button.dataset.overlap = String(overlapBucket)
       button.setAttribute(
         'aria-label',
-        `${MEETING_DAY_LABELS[dayIndex]} ${slotLabel}. Your status: ${myStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}. ${overlap?.availableCount || 0} teammates available.`
+        `${MEETING_DAY_LABELS[dayIndex] || day} ${slotLabel}. Your status: ${myStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}. ${overlap?.availableCount || 0} teammates available.`
       )
       button.innerHTML = `
         <span class="meeting-cell_status">${myStatus === 'busy' ? 'Busy' : myStatus === 'maybe' ? 'Maybe' : 'Free'}</span>
@@ -1202,16 +1245,13 @@ function renderMeetingPlanner () {
   renderMeetingRoster()
 }
 
-meetingGrid?.addEventListener('click', async event => {
-  const cell = event.target.closest('.meeting-cell')
-  if (!cell) return
-
+function paintMeetingCell (cell, status) {
   const key = slotKey(Number(cell.dataset.dayIndex), Number(cell.dataset.slotIndex))
-  const hasSavedStatus = Object.prototype.hasOwnProperty.call(myMeetingAvailability, key)
-  const currentStatus = hasSavedStatus ? myMeetingAvailability[key] : 'busy'
-  myMeetingAvailability[key] = getNextMeetingStatus(currentStatus, hasSavedStatus)
-  renderMeetingPlanner()
+  myMeetingAvailability[key] = status
+}
 
+async function savePaintedMeetingAvailability () {
+  renderMeetingPlanner()
   try {
     await saveMeetingAvailability()
   } catch (error) {
@@ -1221,7 +1261,40 @@ meetingGrid?.addEventListener('click', async event => {
     }
     await loadAvailabilityData().catch(() => {})
   }
+}
+
+meetingGrid?.addEventListener('click', async event => {
+  const cell = event.target.closest('.meeting-cell')
+  if (!cell) return
+
+  const key = slotKey(Number(cell.dataset.dayIndex), Number(cell.dataset.slotIndex))
+  paintMeetingCell(cell, getNextMeetingStatus(myMeetingAvailability[key] || 'busy'))
+  await savePaintedMeetingAvailability()
 })
+
+meetingDaysInput.innerHTML = ALL_MEETING_DAYS.map(day => `
+  <label class="meeting-day-option">
+    <input type="checkbox" value="${day}" />
+    <span>${day}</span>
+  </label>
+`).join('')
+DEFAULT_MEETING_SLOTS.forEach((slot, index) => {
+  const startOption = document.createElement('option')
+  const endOption = document.createElement('option')
+  startOption.value = endOption.value = String(index)
+  startOption.textContent = endOption.textContent = slot
+  startOption.selected = index === meetingStartIndex
+  endOption.selected = index === meetingEndIndex
+  meetingStartTimeSelect.add(startOption)
+  meetingEndTimeSelect.add(endOption)
+})
+MEETING_DAYS.forEach(day => {
+  const input = meetingDaysInput.querySelector(`input[value="${day}"]`)
+  if (input) input.checked = true
+})
+meetingDaysInput?.addEventListener('change', setMeetingOptionsFromInput)
+meetingStartTimeSelect?.addEventListener('change', setMeetingOptionsFromInput)
+meetingEndTimeSelect?.addEventListener('change', setMeetingOptionsFromInput)
 
 /**
  * Renders the local standup preview from the form values.

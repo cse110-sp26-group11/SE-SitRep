@@ -559,13 +559,28 @@
           <section class="meeting-card meeting-card--planner" aria-labelledby="meeting-planner-heading">
             <div class="meeting-card_header">
               <h2 class="meeting-card_title" id="meeting-planner-heading">Shared availability grid</h2>
-              <p class="meeting-card_meta">Click a time slot to cycle your status from available to busy to maybe.</p>
+              <p class="meeting-card_meta">Click a time slot to cycle your status from busy to free to maybe.</p>
             </div>
 
-            <label class="standup-field standup-field--compact">
-              <span class="standup-label">Viewing availability for</span>
-              <select id="meeting-user-select"></select>
-            </label>
+            <div class="meeting-controls">
+              <label class="standup-field standup-field--compact">
+                <span class="standup-label">Viewing availability for</span>
+                <select id="meeting-user-select"></select>
+              </label>
+              <div class="standup-field standup-field--compact">
+                <span class="standup-label">Days</span>
+                <div class="meeting-day-options" id="meeting-days-input"></div>
+              </div>
+              <label class="standup-field standup-field--compact">
+                <span class="standup-label">From</span>
+                <select id="meeting-start-time-select"></select>
+              </label>
+              <label class="standup-field standup-field--compact">
+                <span class="standup-label">To</span>
+                <select id="meeting-end-time-select"></select>
+              </label>
+              <p class="meeting-time-error" id="meeting-time-error" hidden>Please select valid times.</p>
+            </div>
 
             <div class="meeting-grid-shell">
               <div class="meeting-grid" id="meeting-grid" role="grid" aria-label="Team availability schedule"></div>
