@@ -516,11 +516,17 @@ body {
   .standup-grid,
   .meeting-layout,
   .dashboard-layout,
+  .teams-layout,
+  .team-form-grid,
   .summary-hero,
   .summary-grid,
   .health-grid,
   .health-hero {
     grid-template-columns: 1fr;
+  }
+
+  .teams-layout > .standup-card:first-child {
+    grid-row: auto;
   }
 
   .meeting-grid {

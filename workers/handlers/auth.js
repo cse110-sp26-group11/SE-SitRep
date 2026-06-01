@@ -1,4 +1,5 @@
 import { jsonResponse, errorResponse } from '../lib/responses.js'
+import { upsertGithubUser } from '../lib/team-membership.js'
 
 /**
  * Exchange authorization code for GitHub access token
@@ -51,11 +52,13 @@ async function fetchGitHubUser (accessToken) {
 /**
  * Create a session token (you can implement JWT or simple session)
  * @param {object} user - GitHub user data
+ * @param {object} appUser - Saved app user profile.
  * @returns {string} Session token
  */
-function createSessionToken (user) {
+function createSessionToken (user, appUser) {
   // Simple session creation - in production, use proper JWT signing
   const sessionData = {
+    userId: appUser.id,
     githubId: user.id,
     username: user.login,
     email: user.email,
@@ -85,7 +88,7 @@ export async function handleGithubAuth (request, env) {
     }
 
     // Validate environment variables
-    if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET) {
+    if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.DB) {
       console.error('GitHub OAuth credentials not configured')
       return errorResponse('OAuth configuration error', 500)
     }
@@ -100,19 +103,51 @@ export async function handleGithubAuth (request, env) {
     // Fetch user info from GitHub
     const userData = await fetchGitHubUser(tokenData.access_token)
 
+    // Link this GitHub identity to an app user before issuing the session.
+    const appUser = await upsertGithubUser(env, userData)
+
+    const { results: teams } = await env.DB.prepare(`
+      SELECT
+        teams.id,
+        teams.name,
+        teams.repo_owner,
+        teams.repo_name,
+        teams.sprint_name,
+        team_members.role,
+        team_members.is_lead
+      FROM team_members
+      JOIN teams ON teams.id = team_members.team_id
+      WHERE team_members.user_id = ? AND team_members.active = 1
+      ORDER BY teams.name ASC
+    `).bind(appUser.id).all()
+
     // Create session token
-    const sessionToken = createSessionToken(userData)
+    const sessionToken = createSessionToken(userData, appUser)
 
     // Return success response with user data and session token
     return jsonResponse({
       success: true,
       user: {
+        id: appUser.id,
         githubId: userData.id,
         username: userData.login,
         name: userData.name || userData.login,
         email: userData.email,
-        avatarUrl: userData.avatar_url
+        avatarUrl: userData.avatar_url,
+        displayName: appUser.displayName,
+        initials: appUser.initials,
+        githubUsername: appUser.githubUsername,
+        avatarColorKey: appUser.avatarColorKey
       },
+      teams: teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        repoOwner: team.repo_owner,
+        repoName: team.repo_name,
+        sprintName: team.sprint_name,
+        role: team.role,
+        isLead: Boolean(team.is_lead)
+      })),
       token: sessionToken,
       sessionToken
     })

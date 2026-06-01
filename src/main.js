@@ -150,18 +150,24 @@ const issueDistribution = document.getElementById('issue-distribution')
 const teamFeedMeta = document.getElementById('team-feed-meta')
 const currentUserSelect = document.getElementById('current-user-select')
 const meetingUserSelect = document.getElementById('meeting-user-select')
+const teamList = document.getElementById('team-list')
+const createTeamForm = document.getElementById('create-team-form')
+const joinTeamForm = document.getElementById('join-team-form')
+const teamStatus = document.getElementById('team-status')
+const topbarProfileButton = document.querySelector('.topbar_pfp')
 const topbarProfileInitial = document.querySelector('.topbar_pfp span')
 const statCheckinsValue = document.getElementById('stat-checkins-value')
 const statBlockersValue = document.getElementById('stat-blockers-value')
 const statAvailabilityValue = document.getElementById('stat-availability-value')
 const meetingStatus = document.getElementById('meeting-status')
 
-const DEFAULT_TEAM_ID = 'team-demo'
 const APP_STORAGE_CURRENT_USER_KEY = 'tatosCurrentUserId'
+const APP_STORAGE_CURRENT_TEAM_KEY = 'tatosCurrentTeamId'
 
 const appState = {
-  teamId: DEFAULT_TEAM_ID,
+  teamId: localStorage.getItem(APP_STORAGE_CURRENT_TEAM_KEY) || '',
   team: null,
+  teams: [],
   members: [],
   currentUserId: '',
   standups: [],
@@ -281,6 +287,154 @@ async function apiRequest (path, options) {
   }
 
   return payload
+}
+
+/**
+ * Updates the Teams view status message.
+ * @param {string} message Status text.
+ * @returns {void}
+ */
+function setTeamStatus (message) {
+  if (teamStatus) {
+    teamStatus.textContent = message
+  }
+}
+
+/**
+ * Finds the signed-in GitHub user's app id.
+ * @returns {string} App user id if available.
+ */
+function getAuthenticatedUserId () {
+  return getAuthenticatedGithubUser()?.id || ''
+}
+
+/**
+ * Loads teams for the signed-in user and selects an active team.
+ * @returns {Promise<void>} Resolves after team memberships are loaded.
+ */
+async function loadUserTeams () {
+  const userId = getAuthenticatedUserId()
+  if (!userId) {
+    appState.teams = []
+    appState.teamId = ''
+    renderTeamList()
+    return
+  }
+
+  const payload = await apiRequest(`/teams?userId=${encodeURIComponent(userId)}`)
+  appState.teams = payload.teams || []
+
+  const storedTeamId = localStorage.getItem(APP_STORAGE_CURRENT_TEAM_KEY)
+  const selectedTeam = appState.teams.find(team => team.id === storedTeamId) ||
+    appState.teams.find(team => team.id === appState.teamId) ||
+    appState.teams[0]
+
+  appState.teamId = selectedTeam?.id || ''
+  if (appState.teamId) {
+    localStorage.setItem(APP_STORAGE_CURRENT_TEAM_KEY, appState.teamId)
+  }
+
+  renderTeamList()
+}
+
+/**
+ * Renders the signed-in user's teams.
+ * @returns {void}
+ */
+function renderTeamList () {
+  if (!teamList) return
+
+  teamList.innerHTML = ''
+
+  if (!appState.teams.length) {
+    const empty = document.createElement('p')
+    empty.className = 'standup-status'
+    empty.textContent = 'No teams yet. Create a team or join one with a team id.'
+    teamList.appendChild(empty)
+    return
+  }
+
+  appState.teams.forEach(team => {
+    const row = document.createElement('article')
+    row.className = `team-row${team.id === appState.teamId ? ' team-row--active' : ''}`
+
+    const copy = document.createElement('div')
+    const title = document.createElement('h3')
+    title.className = 'team-row_title'
+    title.textContent = team.name
+    const meta = document.createElement('p')
+    meta.className = 'team-row_meta'
+    const repo = team.repoOwner && team.repoName ? `${team.repoOwner}/${team.repoName}` : 'No repo connected'
+    meta.textContent = `${team.id} · ${team.role || 'member'} · ${repo}`
+    copy.append(title, meta)
+
+    const actions = document.createElement('div')
+    actions.className = 'team-row_actions'
+
+    const selectButton = document.createElement('button')
+    selectButton.className = team.id === appState.teamId ? 'btn btn--primary' : 'btn'
+    selectButton.type = 'button'
+    selectButton.textContent = team.id === appState.teamId ? 'Active' : 'Use team'
+    selectButton.addEventListener('click', async () => {
+      await switchActiveTeam(team.id)
+    })
+    actions.appendChild(selectButton)
+
+    const syncButton = document.createElement('button')
+    syncButton.className = 'btn'
+    syncButton.type = 'button'
+    syncButton.textContent = 'Sync GitHub'
+    syncButton.addEventListener('click', async () => {
+      await syncGithubTeam(team.id)
+    })
+    actions.appendChild(syncButton)
+
+    row.append(copy, actions)
+    teamList.appendChild(row)
+  })
+}
+
+/**
+ * Switches the active dashboard team.
+ * @param {string} teamId Team id.
+ * @returns {Promise<void>} Resolves after dashboard data reloads.
+ */
+async function switchActiveTeam (teamId) {
+  appState.teamId = teamId
+  localStorage.setItem(APP_STORAGE_CURRENT_TEAM_KEY, teamId)
+  renderTeamList()
+  setTeamStatus('Loading team workspace...')
+
+  await loadTeamData()
+  await loadFeed()
+  await syncSelectedUserData()
+  setTeamStatus('Team workspace loaded.')
+}
+
+/**
+ * Syncs GitHub contributors and issues for a team.
+ * @param {string} teamId Team id.
+ * @returns {Promise<void>} Resolves after sync and reload.
+ */
+async function syncGithubTeam (teamId) {
+  const actingUserId = getAuthenticatedUserId()
+  if (!actingUserId) return
+
+  setTeamStatus('Syncing GitHub repository...')
+  try {
+    const result = await apiRequest(`/teams/${encodeURIComponent(teamId)}/sync-github`, {
+      method: 'POST',
+      body: JSON.stringify({ actingUserId })
+    })
+    await loadUserTeams()
+    if (teamId === appState.teamId) {
+      await loadTeamData()
+      await loadFeed(appState.selectedFeedDate)
+    }
+    setTeamStatus(`Synced ${result.usersSynced} users and ${result.issuesSynced} issues from ${result.repo}.`)
+  } catch (error) {
+    setTeamStatus(`Could not sync GitHub: ${error.message}`)
+  }
 }
 
 /**
@@ -411,6 +565,33 @@ function restoreCurrentUserId () {
 }
 
 /**
+ * Reads the authenticated GitHub user saved by the OAuth callback.
+ * @returns {object|null} Stored GitHub user profile, if valid.
+ */
+function getAuthenticatedGithubUser () {
+  try {
+    const storedUser = localStorage.getItem('github_user')
+    return storedUser ? JSON.parse(storedUser) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Finds the team member linked to the authenticated GitHub account.
+ * @returns {object|undefined} Matching active member, if present.
+ */
+function getAuthenticatedTeamMember () {
+  const githubUser = getAuthenticatedGithubUser()
+  if (!githubUser) return undefined
+
+  const githubUsername = githubUser.githubUsername || githubUser.username
+  return getActiveMembers().find(member => {
+    return member.id === githubUser.id || member.githubUsername === githubUsername
+  })
+}
+
+/**
  * Returns only active members from the loaded team response.
  * @returns {object[]} Active team members.
  */
@@ -461,6 +642,10 @@ function updateCurrentUserUI () {
 
   if (topbarProfileInitial) {
     topbarProfileInitial.textContent = member.initials || member.displayName.slice(0, 1).toUpperCase()
+  }
+
+  if (topbarProfileButton) {
+    topbarProfileButton.setAttribute('aria-label', `User menu for ${member.displayName}`)
   }
 
   syncUserSelects()
@@ -702,9 +887,10 @@ async function loadTeamData () {
 
   const storedUserId = restoreCurrentUserId()
   const activeMembers = getActiveMembers()
-  appState.currentUserId = activeMembers.some(member => member.id === storedUserId)
+  const authenticatedMember = getAuthenticatedTeamMember()
+  appState.currentUserId = authenticatedMember?.id || (activeMembers.some(member => member.id === storedUserId)
     ? storedUserId
-    : activeMembers[0]?.id || ''
+    : activeMembers[0]?.id || '')
 
   renderCurrentUserOptions()
   updateCurrentUserUI()
@@ -1395,6 +1581,78 @@ meetingUserSelect?.addEventListener('change', async event => {
   await syncSelectedUserData()
 })
 
+createTeamForm?.addEventListener('submit', async event => {
+  event.preventDefault()
+
+  const currentUserId = getAuthenticatedUserId()
+  if (!currentUserId) {
+    setTeamStatus('Sign in with GitHub before creating a team.')
+    return
+  }
+
+  const formData = new FormData(createTeamForm)
+  const name = readField(formData, 'name', '')
+  if (!name) {
+    setTeamStatus('Add a team name before creating a team.')
+    return
+  }
+
+  setTeamStatus('Creating team...')
+  try {
+    const payload = await apiRequest('/teams', {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        repoOwner: readField(formData, 'repoOwner', ''),
+        repoName: readField(formData, 'repoName', ''),
+        sprintName: readField(formData, 'sprintName', ''),
+        currentUserId
+      })
+    })
+
+    createTeamForm.reset()
+    await loadUserTeams()
+    await switchActiveTeam(payload.team.id)
+    setActiveView('teams')
+    setTeamStatus(`Created ${payload.team.name}.`)
+  } catch (error) {
+    setTeamStatus(`Could not create team: ${error.message}`)
+  }
+})
+
+joinTeamForm?.addEventListener('submit', async event => {
+  event.preventDefault()
+
+  const currentUserId = getAuthenticatedUserId()
+  if (!currentUserId) {
+    setTeamStatus('Sign in with GitHub before joining a team.')
+    return
+  }
+
+  const formData = new FormData(joinTeamForm)
+  const teamId = readField(formData, 'teamId', '')
+  if (!teamId) {
+    setTeamStatus('Paste a team id before joining.')
+    return
+  }
+
+  setTeamStatus('Joining team...')
+  try {
+    await apiRequest(`/teams/${encodeURIComponent(teamId)}/join`, {
+      method: 'POST',
+      body: JSON.stringify({ userId: currentUserId })
+    })
+
+    joinTeamForm.reset()
+    await loadUserTeams()
+    await switchActiveTeam(teamId)
+    setActiveView('teams')
+    setTeamStatus('Joined team.')
+  } catch (error) {
+    setTeamStatus(`Could not join team: ${error.message}`)
+  }
+})
+
 /**
  * Filter bar — called after feed items are rendered.
  * @returns {void}
@@ -1442,6 +1700,14 @@ function wireUpFilters () {
 async function initializeApp () {
   try {
     appState.availabilityWeekStart = getWeekStartYmd(new Date())
+    await loadUserTeams()
+
+    if (!appState.teamId) {
+      setActiveView('teams')
+      setTeamStatus('Create a team or join one to start using the dashboard.')
+      return
+    }
+
     await loadTeamData()
     await loadFeed()
     await syncSelectedUserData()
