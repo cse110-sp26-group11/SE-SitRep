@@ -81,7 +81,8 @@
 }
 
 .standup-field textarea,
-.standup-field select {
+.standup-field select,
+.standup-field input {
   width: 100%;
   resize: vertical;
   padding: 12px 14px;
@@ -97,8 +98,12 @@
   min-height: 104px;
 }
 
-.standup-field select {
+.standup-field select,
+.standup-field input {
   min-height: 48px;
+}
+
+.standup-field select {
   resize: none;
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%), linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%);
@@ -112,12 +117,14 @@
   border-color: color-mix(in srgb, var(--color-text-muted) 22%, var(--color-border));
 }
 
-.standup-field textarea::placeholder {
+.standup-field textarea::placeholder,
+.standup-field input::placeholder {
   color: var(--color-text-muted);
 }
 
 .standup-field textarea:focus-visible,
 .standup-field select:focus-visible,
+.standup-field :where(input:focus-visible),
 .availability-pill :where(input:focus-visible + span),
 .standup-check :where(input:focus-visible + span),
 .btn:focus-visible,
@@ -130,7 +137,8 @@
 }
 
 .standup-field textarea:focus-visible,
-.standup-field select:focus-visible {
+.standup-field select:focus-visible,
+.standup-field :where(input:focus-visible) {
   border-color: color-mix(in srgb, var(--color-active-text) 42%, var(--color-border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-active-bg) 55%, transparent);
 }
@@ -199,6 +207,63 @@
 
 .standup-status {
   font-size: clamp(11.5px, 0.9vw, 14px);
+}
+
+.teams-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+  gap: clamp(14px, 1.5vw, 24px);
+  align-items: start;
+}
+
+.teams-layout > .standup-card:first-child {
+  grid-row: span 2;
+}
+
+.team-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1vw, 18px);
+}
+
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.team-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 82%, var(--color-bg));
+}
+
+.team-row--active {
+  border-color: var(--color-active-text);
+  background: var(--color-active-bg);
+}
+
+.team-row_title {
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.team-row_meta {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: clamp(11.5px, 0.9vw, 14px);
+}
+
+.team-row_actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .standup-preview {

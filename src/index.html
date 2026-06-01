@@ -194,6 +194,19 @@
               When to meet
             </a>
           </li>
+          <li role="listitem">
+            <a href="#" class="sidebar_link" data-view="teams">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Teams
+            </a>
+          </li>
         </ul>
       </section>
 
@@ -352,6 +365,75 @@
           </div>
 
         </section>
+      </section>
+
+      <!-- ── Teams Page ──────────────────── -->
+      <section class="app-view" data-view-panel="teams" aria-hidden="true">
+        <header class="page-header" aria-label="Teams page header">
+          <div>
+            <h1 class="page-header_title">Teams</h1>
+            <p class="page-header_meta">Create a team, join an existing team, and connect a GitHub repo.</p>
+          </div>
+          <button class="btn" data-open-view="team-feed" type="button">Back to feed</button>
+        </header>
+
+        <div class="teams-layout">
+          <section class="standup-card" aria-labelledby="my-teams-heading">
+            <div class="standup-card_header">
+              <h2 class="standup-card_title" id="my-teams-heading">My teams</h2>
+              <p class="standup-card_meta">Choose which team powers the dashboard, standups, and meeting planner.</p>
+            </div>
+            <div class="team-list" id="team-list"></div>
+          </section>
+
+          <section class="standup-card" aria-labelledby="create-team-heading">
+            <div class="standup-card_header">
+              <h2 class="standup-card_title" id="create-team-heading">Create team</h2>
+              <p class="standup-card_meta">Owners can sync members and issues from the connected GitHub repository.</p>
+            </div>
+            <form class="standup-form" id="create-team-form">
+              <label class="standup-field">
+                <span class="standup-label">Team name</span>
+                <input name="name" autocomplete="organization" required />
+              </label>
+              <div class="team-form-grid">
+                <label class="standup-field">
+                  <span class="standup-label">Repo owner</span>
+                  <input name="repoOwner" autocomplete="off" placeholder="cse110-sp26-group11" />
+                </label>
+                <label class="standup-field">
+                  <span class="standup-label">Repo name</span>
+                  <input name="repoName" autocomplete="off" placeholder="SE-SitRep" />
+                </label>
+              </div>
+              <label class="standup-field">
+                <span class="standup-label">Sprint name</span>
+                <input name="sprintName" autocomplete="off" placeholder="Sprint 4" />
+              </label>
+              <div class="standup-actions">
+                <button class="btn btn--primary" type="submit">Create team</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="standup-card" aria-labelledby="join-team-heading">
+            <div class="standup-card_header">
+              <h2 class="standup-card_title" id="join-team-heading">Join team</h2>
+              <p class="standup-card_meta">Paste a team id from someone who already created the team.</p>
+            </div>
+            <form class="standup-form" id="join-team-form">
+              <label class="standup-field">
+                <span class="standup-label">Team id</span>
+                <input name="teamId" autocomplete="off" required />
+              </label>
+              <div class="standup-actions">
+                <button class="btn btn--primary" type="submit">Join team</button>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <p class="standup-status" id="team-status" aria-live="polite"></p>
       </section>
 
       <!-- ── My Standup Page (Submission Form) ────────────────────────────────────── -->

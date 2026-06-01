@@ -1,6 +1,5 @@
 import { jsonResponse, errorResponse } from '../lib/responses.js'
-import { DEFAULT_TEAM_ID } from '../lib/config.js'
-import { upsertGithubUser, upsertTeamMember } from '../lib/team-membership.js'
+import { upsertGithubUser } from '../lib/team-membership.js'
 
 /**
  * Exchange authorization code for GitHub access token
@@ -106,16 +105,6 @@ export async function handleGithubAuth (request, env) {
 
     // Link this GitHub identity to an app user before issuing the session.
     const appUser = await upsertGithubUser(env, userData)
-
-    const team = await env.DB.prepare(`
-      SELECT id
-      FROM teams
-      WHERE id = ?
-    `).bind(DEFAULT_TEAM_ID).first()
-
-    if (team) {
-      await upsertTeamMember(env, DEFAULT_TEAM_ID, appUser.id)
-    }
 
     const { results: teams } = await env.DB.prepare(`
       SELECT
