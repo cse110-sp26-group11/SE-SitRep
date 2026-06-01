@@ -150,6 +150,7 @@ const issueDistribution = document.getElementById('issue-distribution')
 const teamFeedMeta = document.getElementById('team-feed-meta')
 const currentUserSelect = document.getElementById('current-user-select')
 const meetingUserSelect = document.getElementById('meeting-user-select')
+const topbarProfileButton = document.querySelector('.topbar_pfp')
 const topbarProfileInitial = document.querySelector('.topbar_pfp span')
 const statCheckinsValue = document.getElementById('stat-checkins-value')
 const statBlockersValue = document.getElementById('stat-blockers-value')
@@ -411,6 +412,33 @@ function restoreCurrentUserId () {
 }
 
 /**
+ * Reads the authenticated GitHub user saved by the OAuth callback.
+ * @returns {object|null} Stored GitHub user profile, if valid.
+ */
+function getAuthenticatedGithubUser () {
+  try {
+    const storedUser = localStorage.getItem('github_user')
+    return storedUser ? JSON.parse(storedUser) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Finds the team member linked to the authenticated GitHub account.
+ * @returns {object|undefined} Matching active member, if present.
+ */
+function getAuthenticatedTeamMember () {
+  const githubUser = getAuthenticatedGithubUser()
+  if (!githubUser) return undefined
+
+  const githubUsername = githubUser.githubUsername || githubUser.username
+  return getActiveMembers().find(member => {
+    return member.id === githubUser.id || member.githubUsername === githubUsername
+  })
+}
+
+/**
  * Returns only active members from the loaded team response.
  * @returns {object[]} Active team members.
  */
@@ -461,6 +489,10 @@ function updateCurrentUserUI () {
 
   if (topbarProfileInitial) {
     topbarProfileInitial.textContent = member.initials || member.displayName.slice(0, 1).toUpperCase()
+  }
+
+  if (topbarProfileButton) {
+    topbarProfileButton.setAttribute('aria-label', `User menu for ${member.displayName}`)
   }
 
   syncUserSelects()
@@ -702,9 +734,10 @@ async function loadTeamData () {
 
   const storedUserId = restoreCurrentUserId()
   const activeMembers = getActiveMembers()
-  appState.currentUserId = activeMembers.some(member => member.id === storedUserId)
+  const authenticatedMember = getAuthenticatedTeamMember()
+  appState.currentUserId = authenticatedMember?.id || (activeMembers.some(member => member.id === storedUserId)
     ? storedUserId
-    : activeMembers[0]?.id || ''
+    : activeMembers[0]?.id || '')
 
   renderCurrentUserOptions()
   updateCurrentUserUI()

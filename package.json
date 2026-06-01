@@ -20,7 +20,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply se-sitrep --remote",
     "db:seed:local": "wrangler d1 execute se-sitrep --local --file=./d1/seeds/demo.sql",
     "db:seed:remote": "wrangler d1 execute se-sitrep --remote --file=./d1/seeds/demo.sql",
-    "db:console:local": "wrangler d1 execute se-sitrep --local --command=\"SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;\"",
+    "db:console:local": "wrangler d1 eecute se-sitrep --local --command=\"SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;\"",
     "test": "vitest run"
   },
   "devDependencies": {
