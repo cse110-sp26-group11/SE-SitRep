@@ -22,7 +22,8 @@
     "db:seed:remote": "wrangler d1 execute se-sitrep --remote --file=./d1/seeds/demo.sql",
     "db:console:local": "wrangler d1 execute se-sitrep --local --command=\"SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;\"",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:backend": "vitest run workers"
   },
   "devDependencies": {
     "vitest": "^4.1.7",
