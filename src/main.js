@@ -115,6 +115,8 @@ function applyTheme (theme) {
   if (themeBtn) {
     themeBtn.setAttribute('aria-label', NEXT_LABEL[theme])
   }
+
+  syncProfileMenuThemeState()
 }
 
 themeBtn?.addEventListener('click', () => {
@@ -158,8 +160,13 @@ const teamList = document.getElementById('team-list')
 const createTeamForm = document.getElementById('create-team-form')
 const joinTeamForm = document.getElementById('join-team-form')
 const teamStatus = document.getElementById('team-status')
-const topbarProfileButton = document.querySelector('.topbar_pfp')
+const topbarProfileButton = document.getElementById('profile-menu-button')
 const topbarProfileInitial = document.querySelector('.topbar_pfp span')
+const profileMenu = document.getElementById('profile-menu')
+const profileMenuName = document.getElementById('profile-menu-name')
+const profileMenuMeta = document.getElementById('profile-menu-meta')
+const profileThemeButtons = document.querySelectorAll('[data-theme-choice]')
+const profileLogoutButton = document.getElementById('profile-logout-btn')
 const statCheckinsValue = document.getElementById('stat-checkins-value')
 const statBlockersValue = document.getElementById('stat-blockers-value')
 const statAvailabilityValue = document.getElementById('stat-availability-value')
@@ -177,6 +184,7 @@ const appState = {
   teams: [],
   members: [],
   currentUserId: '',
+  meetingViewerUserId: '',
   standups: [],
   selectedFeedDate: '',
   availabilityWeekStart: '',
@@ -192,6 +200,81 @@ const appState = {
 }
 
 let filtersWired = false
+
+function getSessionToken () {
+  return localStorage.getItem('github_token') || ''
+}
+
+function clearAuthenticatedSession () {
+  localStorage.removeItem('github_token')
+  localStorage.removeItem('github_user')
+  localStorage.removeItem('github_oauth_state')
+  localStorage.removeItem(APP_STORAGE_CURRENT_USER_KEY)
+  localStorage.removeItem(APP_STORAGE_CURRENT_TEAM_KEY)
+}
+
+function getAuthenticatedDisplayProfile () {
+  const githubUser = getAuthenticatedGithubUser()
+  const teamMember = getAuthenticatedTeamMember() || getMemberById(appState.currentUserId)
+  const displayName = teamMember?.displayName || githubUser?.displayName || githubUser?.name || githubUser?.username || 'Signed-in user'
+  const username = teamMember?.githubUsername || githubUser?.githubUsername || githubUser?.username || ''
+
+  return {
+    displayName,
+    username,
+    initials: teamMember?.initials || githubUser?.initials || displayName.slice(0, 1).toUpperCase()
+  }
+}
+
+function syncProfileMenuThemeState () {
+  profileThemeButtons.forEach(button => {
+    const isActive = button.dataset.themeChoice === currentTheme()
+    button.setAttribute('aria-pressed', String(isActive))
+  })
+}
+
+function updateProfileMenuUI () {
+  const profile = getAuthenticatedDisplayProfile()
+
+  if (topbarProfileInitial) {
+    topbarProfileInitial.textContent = profile.initials
+  }
+
+  if (topbarProfileButton) {
+    topbarProfileButton.setAttribute('aria-label', `User menu for ${profile.displayName}`)
+  }
+
+  if (profileMenuName) {
+    profileMenuName.textContent = profile.displayName
+  }
+
+  if (profileMenuMeta) {
+    profileMenuMeta.textContent = profile.username ? `@${profile.username}` : 'GitHub account'
+  }
+
+  syncProfileMenuThemeState()
+}
+
+function closeProfileMenu ({ returnFocus = false } = {}) {
+  if (!profileMenu) return
+  profileMenu.hidden = true
+  topbarProfileButton?.setAttribute('aria-expanded', 'false')
+  if (returnFocus) {
+    topbarProfileButton?.focus()
+  }
+}
+
+function toggleProfileMenu () {
+  if (!profileMenu) return
+  if (!profileMenu.hidden) {
+    closeProfileMenu()
+    return
+  }
+
+  updateProfileMenuUI()
+  profileMenu.hidden = false
+  topbarProfileButton?.setAttribute('aria-expanded', 'true')
+}
 
 /**
  * Opens the mobile sidebar drawer.
@@ -226,6 +309,38 @@ document.addEventListener('keydown', e => {
     closeSidebar()
     toggleBtn.focus()
   }
+
+  if (e.key === 'Escape' && profileMenu && !profileMenu.hidden) {
+    closeProfileMenu({ returnFocus: true })
+  }
+})
+
+topbarProfileButton?.addEventListener('click', event => {
+  event.stopPropagation()
+  toggleProfileMenu()
+})
+
+profileMenu?.addEventListener('click', event => {
+  event.stopPropagation()
+})
+
+document.addEventListener('click', event => {
+  if (!profileMenu || profileMenu.hidden) return
+
+  if (!profileMenu.contains(event.target) && !topbarProfileButton?.contains(event.target)) {
+    closeProfileMenu()
+  }
+})
+
+profileThemeButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    applyTheme(button.dataset.themeChoice)
+  })
+})
+
+profileLogoutButton?.addEventListener('click', () => {
+  clearAuthenticatedSession()
+  window.location.reload()
 })
 
 /**
@@ -280,9 +395,11 @@ openViewButtons.forEach(button => {
  * @returns {Promise<object>} Parsed JSON response.
  */
 async function apiRequest (path, options) {
+  const sessionToken = getSessionToken()
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
       'content-type': 'application/json',
+      ...(sessionToken ? { authorization: `Bearer ${sessionToken}` } : {}),
       ...(options?.headers || {})
     },
     ...options
@@ -621,7 +738,7 @@ function getMemberById (userId) {
  */
 function syncUserSelects () {
   if (currentUserSelect) currentUserSelect.value = appState.currentUserId
-  if (meetingUserSelect) meetingUserSelect.value = appState.currentUserId
+  if (meetingUserSelect) meetingUserSelect.value = appState.meetingViewerUserId
 }
 
 /**
@@ -630,13 +747,53 @@ function syncUserSelects () {
  */
 function renderCurrentUserOptions () {
   const activeMembers = getActiveMembers()
-  const optionMarkup = activeMembers.map(member => {
-    return `<option value="${member.id}">${member.displayName}</option>`
-  }).join('')
+  const authenticatedMember = getAuthenticatedTeamMember()
 
-  if (currentUserSelect) currentUserSelect.innerHTML = optionMarkup
-  if (meetingUserSelect) meetingUserSelect.innerHTML = optionMarkup
+  if (currentUserSelect) {
+    if (authenticatedMember && activeMembers.some(member => member.id === authenticatedMember.id)) {
+      currentUserSelect.innerHTML = `<option value="${authenticatedMember.id}">${authenticatedMember.displayName} (You)</option>`
+    } else {
+      currentUserSelect.innerHTML = '<option value="">Join this team to submit your own updates</option>'
+    }
+    currentUserSelect.disabled = true
+  }
+
+  if (meetingUserSelect) {
+    meetingUserSelect.innerHTML = activeMembers.map(member => {
+      const suffix = member.id === appState.currentUserId ? ' (You)' : ''
+      return `<option value="${member.id}">${member.displayName}${suffix}</option>`
+    }).join('')
+    meetingUserSelect.disabled = !activeMembers.length
+  }
+
   syncUserSelects()
+}
+
+function syncStandupEditingState () {
+  if (!standupForm) return
+
+  const canEdit = Boolean(appState.currentUserId)
+  ;[...standupForm.elements].forEach(element => {
+    if (!element || !('disabled' in element)) return
+    if (element === currentUserSelect) {
+      element.disabled = true
+      return
+    }
+
+    element.disabled = !canEdit
+  })
+
+  if (standupStatus && !canEdit) {
+    standupStatus.textContent = 'Your GitHub account is not an active member of this team yet, so you can view updates but not submit one here.'
+  }
+}
+
+function getMeetingViewerMember () {
+  return getMemberById(appState.meetingViewerUserId)
+}
+
+function canEditMeetingAvailability () {
+  return Boolean(appState.currentUserId) && appState.meetingViewerUserId === appState.currentUserId
 }
 
 /**
@@ -644,18 +801,9 @@ function renderCurrentUserOptions () {
  * @returns {void}
  */
 function updateCurrentUserUI () {
-  const member = getMemberById(appState.currentUserId)
-  if (!member) return
-
-  if (topbarProfileInitial) {
-    topbarProfileInitial.textContent = member.initials || member.displayName.slice(0, 1).toUpperCase()
-  }
-
-  if (topbarProfileButton) {
-    topbarProfileButton.setAttribute('aria-label', `User menu for ${member.displayName}`)
-  }
-
+  updateProfileMenuUI()
   syncUserSelects()
+  syncStandupEditingState()
 }
 
 /**
@@ -892,12 +1040,14 @@ async function loadTeamData () {
   appState.team = payload.team || null
   appState.members = payload.members || []
 
-  const storedUserId = restoreCurrentUserId()
   const activeMembers = getActiveMembers()
   const authenticatedMember = getAuthenticatedTeamMember()
-  appState.currentUserId = authenticatedMember?.id || (activeMembers.some(member => member.id === storedUserId)
-    ? storedUserId
-    : activeMembers[0]?.id || '')
+  appState.currentUserId = activeMembers.some(member => member.id === authenticatedMember?.id)
+    ? authenticatedMember.id
+    : ''
+  appState.meetingViewerUserId = activeMembers.some(member => member.id === appState.meetingViewerUserId)
+    ? appState.meetingViewerUserId
+    : appState.currentUserId || activeMembers[0]?.id || ''
 
   renderCurrentUserOptions()
   updateCurrentUserUI()
@@ -908,6 +1058,11 @@ async function loadTeamData () {
  * @returns {Promise<void>} Resolves after dependent views are refreshed.
  */
 async function syncSelectedUserData () {
+  const activeMembers = getActiveMembers()
+  if (!activeMembers.some(member => member.id === appState.meetingViewerUserId)) {
+    appState.meetingViewerUserId = appState.currentUserId || activeMembers[0]?.id || ''
+  }
+
   updateCurrentUserUI()
   persistCurrentUserId(appState.currentUserId)
   applyStandupToForm(findStandupForUserDate(appState.currentUserId, getTodayYmd()))
@@ -1060,7 +1215,7 @@ function getOverlapBucket (score) {
  * @returns {Promise<void>} Resolves after state and UI refresh.
  */
 async function loadAvailabilityData () {
-  if (!appState.currentUserId) return
+  if (!appState.teamId) return
 
   if (meetingStatus) {
     meetingStatus.textContent = `Loading availability for ${formatLongDate(appState.availabilityWeekStart)} week…`
@@ -1078,10 +1233,23 @@ async function loadAvailabilityData () {
 
   appState.availabilityRows = availabilityPayload.slots || []
   appState.overlapSlots = overlapPayload.overlap || []
-  myMeetingAvailability = buildAvailabilityLookup(appState.availabilityRows, appState.currentUserId)
+  myMeetingAvailability = appState.currentUserId
+    ? buildAvailabilityLookup(appState.availabilityRows, appState.currentUserId)
+    : {}
 
   if (meetingStatus) {
-    meetingStatus.textContent = `Availability synced for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+    const viewer = getMeetingViewerMember()
+    if (!appState.currentUserId) {
+      meetingStatus.textContent = viewer
+        ? `Viewing ${viewer.displayName}'s availability for the week of ${formatLongDate(appState.availabilityWeekStart)}. Join this team to edit your own availability.`
+        : `Availability synced for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+    } else if (canEditMeetingAvailability()) {
+      meetingStatus.textContent = `Editing your availability for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+    } else {
+      meetingStatus.textContent = viewer
+        ? `Viewing ${viewer.displayName}'s availability. Switch back to yourself to edit.`
+        : `Availability synced for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+    }
   }
 
   renderMeetingPlanner()
@@ -1122,6 +1290,36 @@ function getNextMeetingStatus (currentStatus) {
   return 'available'
 }
 
+function getMeetingViewerAvailability () {
+  if (!appState.meetingViewerUserId) return {}
+  return buildAvailabilityLookup(appState.availabilityRows, appState.meetingViewerUserId)
+}
+
+function buildMeetingMemberStatusSummary (overlap) {
+  const activeMembers = getActiveMembers()
+  const membersById = new Map((overlap?.members || []).map(member => [member.id, member]))
+  const yes = []
+  const maybe = []
+  const no = []
+
+  activeMembers.forEach(member => {
+    const status = membersById.get(member.id)?.status || 'busy'
+    if (status === 'available') {
+      yes.push(member.displayName)
+    } else if (status === 'maybe') {
+      maybe.push(member.displayName)
+    } else {
+      no.push(member.displayName)
+    }
+  })
+
+  return [
+    `Yes: ${yes.length ? yes.join(', ') : 'Nobody yet'}`,
+    `Maybe: ${maybe.length ? maybe.join(', ') : 'Nobody yet'}`,
+    `No: ${no.length ? no.join(', ') : 'Nobody yet'}`
+  ].join('\n')
+}
+
 /**
  * Renders the highest-scoring meeting slots.
  * @returns {void}
@@ -1134,6 +1332,7 @@ function renderMeetingOverlap () {
   appState.overlapSlots.slice(0, 5).forEach(slot => {
     const item = document.createElement('li')
     item.className = 'meeting-overlap-item'
+    item.title = buildMeetingMemberStatusSummary(slot)
     item.innerHTML = `
       <div>
         <strong>${MEETING_DAY_LABELS[slot.dayIndex]} · ${slot.slotLabel}</strong>
@@ -1163,12 +1362,13 @@ function renderMeetingRoster () {
     const availableCount = memberRows.filter(row => row.status === 'available').length
     const maybeCount = memberRows.filter(row => row.status === 'maybe').length
     const isCurrentUser = member.id === appState.currentUserId
+    const isViewer = member.id === appState.meetingViewerUserId
     const item = document.createElement('div')
-    item.className = 'meeting-roster-item'
+    item.className = `meeting-roster-item${isViewer ? ' meeting-roster-item--viewer' : ''}${isCurrentUser ? ' meeting-roster-item--editor' : ''}`
     item.innerHTML = `
       <div class="meeting-roster-avatar">${member.initials}</div>
       <div>
-        <strong>${member.displayName}${isCurrentUser ? ' (You)' : ''}</strong>
+        <strong>${member.displayName}${isCurrentUser ? ' (You)' : ''}${isViewer && !isCurrentUser ? ' (Viewing)' : ''}</strong>
         <p>${availableCount} available · ${maybeCount} maybe</p>
       </div>
     `
@@ -1184,6 +1384,8 @@ function renderMeetingGrid () {
   if (!meetingGrid) return
 
   const overlapMap = getOverlapMap()
+  const viewerAvailability = getMeetingViewerAvailability()
+  const viewerMember = getMeetingViewerMember()
 
   meetingGrid.innerHTML = ''
   meetingGrid.style.gridTemplateColumns = `minmax(72px, 90px) repeat(${MEETING_DAYS.length}, minmax(92px, 1fr))`
@@ -1211,6 +1413,7 @@ function renderMeetingGrid () {
       const dayIndex = getMeetingDayIndex(day)
       const key = slotKey(dayIndex, slotIndex)
       const myStatus = myMeetingAvailability[key] || 'busy'
+      const viewerStatus = viewerAvailability[key] || 'busy'
       const score = getOverlapScore(dayIndex, slotIndex)
       const overlapBucket = getOverlapBucket(score)
       const overlap = overlapMap.get(key)
@@ -1221,12 +1424,14 @@ function renderMeetingGrid () {
       button.dataset.slotIndex = String(slotIndex)
       button.dataset.selfStatus = myStatus
       button.dataset.overlap = String(overlapBucket)
+      button.disabled = !canEditMeetingAvailability()
+      button.title = buildMeetingMemberStatusSummary(overlap)
       button.setAttribute(
         'aria-label',
-        `${MEETING_DAY_LABELS[dayIndex] || day} ${slotLabel}. Your status: ${myStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}. ${overlap?.availableCount || 0} teammates available.`
+        `${MEETING_DAY_LABELS[dayIndex] || day} ${slotLabel}. ${viewerMember ? `${viewerMember.displayName}'s status` : 'Selected teammate status'}: ${viewerStatus}. Your status: ${myStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}. ${overlap?.availableCount || 0} teammates available.`
       )
       button.innerHTML = `
-        <span class="meeting-cell_status">${myStatus === 'busy' ? 'Busy' : myStatus === 'maybe' ? 'Maybe' : 'Free'}</span>
+        <span class="meeting-cell_status">${viewerStatus === 'busy' ? 'Busy' : viewerStatus === 'maybe' ? 'Maybe' : 'Free'}</span>
         <span class="meeting-cell_score">${score.toFixed(score % 1 === 0 ? 0 : 1)}</span>
       `
       meetingGrid.appendChild(button)
@@ -1266,6 +1471,23 @@ async function savePaintedMeetingAvailability () {
 meetingGrid?.addEventListener('click', async event => {
   const cell = event.target.closest('.meeting-cell')
   if (!cell) return
+
+  if (!appState.currentUserId) {
+    if (meetingStatus) {
+      meetingStatus.textContent = 'Join this team with your GitHub account before saving your own availability.'
+    }
+    return
+  }
+
+  if (!canEditMeetingAvailability()) {
+    if (meetingStatus) {
+      const viewer = getMeetingViewerMember()
+      meetingStatus.textContent = viewer
+        ? `You are viewing ${viewer.displayName}. Switch back to yourself to edit availability.`
+        : 'Switch back to yourself to edit availability.'
+    }
+    return
+  }
 
   const key = slotKey(Number(cell.dataset.dayIndex), Number(cell.dataset.slotIndex))
   paintMeetingCell(cell, getNextMeetingStatus(myMeetingAvailability[key] || 'busy'))
@@ -1576,7 +1798,7 @@ if (standupForm) {
 
     if (!appState.currentUserId) {
       if (standupStatus) {
-        standupStatus.textContent = 'Pick a team member before saving a standup.'
+        standupStatus.textContent = 'Your GitHub account must be an active team member before you can save your own standup.'
       }
       return
     }
@@ -1649,9 +1871,24 @@ currentUserSelect?.addEventListener('change', async event => {
   await syncSelectedUserData()
 })
 
-meetingUserSelect?.addEventListener('change', async event => {
-  appState.currentUserId = event.target.value
-  await syncSelectedUserData()
+meetingUserSelect?.addEventListener('change', event => {
+  appState.meetingViewerUserId = event.target.value
+  renderMeetingPlanner()
+
+  if (meetingStatus) {
+    const viewer = getMeetingViewerMember()
+    if (!appState.currentUserId) {
+      meetingStatus.textContent = viewer
+        ? `Viewing ${viewer.displayName}'s availability. Join this team to edit your own availability.`
+        : 'Viewing team availability.'
+    } else if (canEditMeetingAvailability()) {
+      meetingStatus.textContent = `Editing your availability for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+    } else {
+      meetingStatus.textContent = viewer
+        ? `Viewing ${viewer.displayName}'s availability. Switch back to yourself to edit.`
+        : 'Viewing team availability.'
+    }
+  }
 })
 
 createTeamForm?.addEventListener('submit', async event => {
@@ -1772,6 +2009,7 @@ function wireUpFilters () {
  */
 async function initializeApp () {
   try {
+    updateProfileMenuUI()
     appState.availabilityWeekStart = getWeekStartYmd(new Date())
     await loadUserTeams()
 

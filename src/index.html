@@ -121,9 +121,33 @@
       </button>
 
       <!-- User profile picture and name -->
-      <button class="topbar_pfp" aria-label="User menu for R" aria-haspopup="true">
+      <button
+        class="topbar_pfp"
+        id="profile-menu-button"
+        aria-label="Open user menu"
+        aria-haspopup="menu"
+        aria-controls="profile-menu"
+        aria-expanded="false"
+      >
         <span aria-hidden="true">R</span>
       </button>
+
+      <section class="profile-menu" id="profile-menu" aria-label="Profile menu" hidden>
+        <div class="profile-menu_identity">
+          <p class="profile-menu_name" id="profile-menu-name">Signed-in user</p>
+          <p class="profile-menu_meta" id="profile-menu-meta">GitHub account</p>
+        </div>
+
+        <div class="profile-menu_section" aria-label="Appearance settings">
+          <p class="profile-menu_heading">Settings</p>
+          <div class="profile-theme-toggle" role="group" aria-label="Theme selection">
+            <button class="profile-theme-btn" type="button" data-theme-choice="light" aria-pressed="true">Light</button>
+            <button class="profile-theme-btn" type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
+          </div>
+        </div>
+
+        <button class="profile-menu_action" id="profile-logout-btn" type="button">Log out</button>
+      </section>
 
       <!-- Options menu 3 Vertical Dots -->
       <button class="topbar_icon-btn" aria-label="More options" aria-haspopup="true">
@@ -455,7 +479,7 @@
 
             <form class="standup-form" id="standup-form">
               <label class="standup-field">
-                <span class="standup-label">Who's updating?</span>
+                <span class="standup-label">Signed in as</span>
                 <select name="currentUser" id="current-user-select"></select>
               </label>
 
@@ -559,12 +583,12 @@
           <section class="meeting-card meeting-card--planner" aria-labelledby="meeting-planner-heading">
             <div class="meeting-card_header">
               <h2 class="meeting-card_title" id="meeting-planner-heading">Shared availability grid</h2>
-              <p class="meeting-card_meta">Click a time slot to cycle your status from busy to free to maybe.</p>
+              <p class="meeting-card_meta">Click a time slot to cycle your own status from busy to free to maybe, or switch the viewer to inspect a teammate.</p>
             </div>
 
             <div class="meeting-controls">
               <label class="standup-field standup-field--compact">
-                <span class="standup-label">Viewing availability for</span>
+                <span class="standup-label">Viewing teammate</span>
                 <select id="meeting-user-select"></select>
               </label>
               <div class="standup-field standup-field--compact">

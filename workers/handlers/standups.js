@@ -1,5 +1,5 @@
 import { DEFAULT_TEAM_ID } from '../lib/config.js'
-import { getQueryParam, readJson } from '../lib/request.js'
+import { getAuthenticatedSession, getQueryParam, readJson } from '../lib/request.js'
 import { errorResponse, jsonResponse, validationError } from '../lib/responses.js'
 import { mapStandupRow } from '../lib/standup-mappers.js'
 import {
@@ -110,6 +110,15 @@ export async function handleCreateStandup (request, env) {
     return validationError(error.message)
   }
 
+  const session = getAuthenticatedSession(request)
+  if (!session?.userId) {
+    return errorResponse('Authentication required', 401)
+  }
+
+  if (payload.userId !== session.userId) {
+    return errorResponse('You can only create your own standup', 403)
+  }
+
   const isMember = await ensureActiveTeamMember(env, payload.teamId, payload.userId)
   if (!isMember) {
     return errorResponse('Active team member not found', 404)
@@ -181,6 +190,15 @@ export async function handleUpdateStandup (request, env, standupId) {
     payload = normalizeUpdateStandupPayload(await readJson(request))
   } catch (error) {
     return validationError(error.message)
+  }
+
+  const session = getAuthenticatedSession(request)
+  if (!session?.userId) {
+    return errorResponse('Authentication required', 401)
+  }
+
+  if (existing.user_id !== session.userId) {
+    return errorResponse('You can only update your own standup', 403)
   }
 
   const fields = []
