@@ -151,7 +151,6 @@ const workflowTrend = document.getElementById('workflow-trend')
 const issueDistribution = document.getElementById('issue-distribution')
 const teamFeedMeta = document.getElementById('team-feed-meta')
 const currentUserSelect = document.getElementById('current-user-select')
-const meetingUserSelect = document.getElementById('meeting-user-select')
 const meetingDaysInput = document.getElementById('meeting-days-input')
 const meetingStartTimeSelect = document.getElementById('meeting-start-time-select')
 const meetingEndTimeSelect = document.getElementById('meeting-end-time-select')
@@ -165,7 +164,6 @@ const topbarProfileInitial = document.querySelector('.topbar_pfp span')
 const profileMenu = document.getElementById('profile-menu')
 const profileMenuName = document.getElementById('profile-menu-name')
 const profileMenuMeta = document.getElementById('profile-menu-meta')
-const profileThemeButtons = document.querySelectorAll('[data-theme-choice]')
 const profileLogoutButton = document.getElementById('profile-logout-btn')
 const statCheckinsValue = document.getElementById('stat-checkins-value')
 const statBlockersValue = document.getElementById('stat-blockers-value')
@@ -226,13 +224,6 @@ function getAuthenticatedDisplayProfile () {
   }
 }
 
-function syncProfileMenuThemeState () {
-  profileThemeButtons.forEach(button => {
-    const isActive = button.dataset.themeChoice === currentTheme()
-    button.setAttribute('aria-pressed', String(isActive))
-  })
-}
-
 function updateProfileMenuUI () {
   const profile = getAuthenticatedDisplayProfile()
 
@@ -241,7 +232,7 @@ function updateProfileMenuUI () {
   }
 
   if (topbarProfileButton) {
-    topbarProfileButton.setAttribute('aria-label', `User menu for ${profile.displayName}`)
+    topbarProfileButton.setAttribute('aria-label', `Open settings menu for ${profile.displayName}`)
   }
 
   if (profileMenuName) {
@@ -251,8 +242,6 @@ function updateProfileMenuUI () {
   if (profileMenuMeta) {
     profileMenuMeta.textContent = profile.username ? `@${profile.username}` : 'GitHub account'
   }
-
-  syncProfileMenuThemeState()
 }
 
 function closeProfileMenu ({ returnFocus = false } = {}) {
@@ -330,12 +319,6 @@ document.addEventListener('click', event => {
   if (!profileMenu.contains(event.target) && !topbarProfileButton?.contains(event.target)) {
     closeProfileMenu()
   }
-})
-
-profileThemeButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    applyTheme(button.dataset.themeChoice)
-  })
 })
 
 profileLogoutButton?.addEventListener('click', () => {
@@ -738,7 +721,6 @@ function getMemberById (userId) {
  */
 function syncUserSelects () {
   if (currentUserSelect) currentUserSelect.value = appState.currentUserId
-  if (meetingUserSelect) meetingUserSelect.value = appState.meetingViewerUserId
 }
 
 /**
@@ -756,14 +738,6 @@ function renderCurrentUserOptions () {
       currentUserSelect.innerHTML = '<option value="">Join this team to submit your own updates</option>'
     }
     currentUserSelect.disabled = true
-  }
-
-  if (meetingUserSelect) {
-    meetingUserSelect.innerHTML = activeMembers.map(member => {
-      const suffix = member.id === appState.currentUserId ? ' (You)' : ''
-      return `<option value="${member.id}">${member.displayName}${suffix}</option>`
-    }).join('')
-    meetingUserSelect.disabled = !activeMembers.length
   }
 
   syncUserSelects()
@@ -1045,9 +1019,7 @@ async function loadTeamData () {
   appState.currentUserId = activeMembers.some(member => member.id === authenticatedMember?.id)
     ? authenticatedMember.id
     : ''
-  appState.meetingViewerUserId = activeMembers.some(member => member.id === appState.meetingViewerUserId)
-    ? appState.meetingViewerUserId
-    : appState.currentUserId || activeMembers[0]?.id || ''
+  appState.meetingViewerUserId = appState.currentUserId
 
   renderCurrentUserOptions()
   updateCurrentUserUI()
@@ -1058,10 +1030,7 @@ async function loadTeamData () {
  * @returns {Promise<void>} Resolves after dependent views are refreshed.
  */
 async function syncSelectedUserData () {
-  const activeMembers = getActiveMembers()
-  if (!activeMembers.some(member => member.id === appState.meetingViewerUserId)) {
-    appState.meetingViewerUserId = appState.currentUserId || activeMembers[0]?.id || ''
-  }
+  appState.meetingViewerUserId = appState.currentUserId
 
   updateCurrentUserUI()
   persistCurrentUserId(appState.currentUserId)
@@ -1238,17 +1207,10 @@ async function loadAvailabilityData () {
     : {}
 
   if (meetingStatus) {
-    const viewer = getMeetingViewerMember()
     if (!appState.currentUserId) {
-      meetingStatus.textContent = viewer
-        ? `Viewing ${viewer.displayName}'s availability for the week of ${formatLongDate(appState.availabilityWeekStart)}. Join this team to edit your own availability.`
-        : `Availability synced for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
-    } else if (canEditMeetingAvailability()) {
-      meetingStatus.textContent = `Editing your availability for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+      meetingStatus.textContent = `Join this team to save availability for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
     } else {
-      meetingStatus.textContent = viewer
-        ? `Viewing ${viewer.displayName}'s availability. Switch back to yourself to edit.`
-        : `Availability synced for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
+      meetingStatus.textContent = `Editing your availability for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
     }
   }
 
@@ -1362,13 +1324,12 @@ function renderMeetingRoster () {
     const availableCount = memberRows.filter(row => row.status === 'available').length
     const maybeCount = memberRows.filter(row => row.status === 'maybe').length
     const isCurrentUser = member.id === appState.currentUserId
-    const isViewer = member.id === appState.meetingViewerUserId
     const item = document.createElement('div')
-    item.className = `meeting-roster-item${isViewer ? ' meeting-roster-item--viewer' : ''}${isCurrentUser ? ' meeting-roster-item--editor' : ''}`
+    item.className = `meeting-roster-item${isCurrentUser ? ' meeting-roster-item--editor' : ''}`
     item.innerHTML = `
       <div class="meeting-roster-avatar">${member.initials}</div>
       <div>
-        <strong>${member.displayName}${isCurrentUser ? ' (You)' : ''}${isViewer && !isCurrentUser ? ' (Viewing)' : ''}</strong>
+        <strong>${member.displayName}${isCurrentUser ? ' (You)' : ''}</strong>
         <p>${availableCount} available · ${maybeCount} maybe</p>
       </div>
     `
@@ -1424,11 +1385,11 @@ function renderMeetingGrid () {
       button.dataset.slotIndex = String(slotIndex)
       button.dataset.selfStatus = myStatus
       button.dataset.overlap = String(overlapBucket)
-      button.disabled = !canEditMeetingAvailability()
+      button.disabled = !appState.currentUserId
       button.title = buildMeetingMemberStatusSummary(overlap)
       button.setAttribute(
         'aria-label',
-        `${MEETING_DAY_LABELS[dayIndex] || day} ${slotLabel}. ${viewerMember ? `${viewerMember.displayName}'s status` : 'Selected teammate status'}: ${viewerStatus}. Your status: ${myStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}. ${overlap?.availableCount || 0} teammates available.`
+        `${MEETING_DAY_LABELS[dayIndex] || day} ${slotLabel}. ${viewerMember ? `${viewerMember.displayName}'s status` : 'Your status'}: ${viewerStatus}. Team score: ${score.toFixed(score % 1 === 0 ? 0 : 1)}. ${overlap?.availableCount || 0} teammates available.`
       )
       button.innerHTML = `
         <span class="meeting-cell_status">${viewerStatus === 'busy' ? 'Busy' : viewerStatus === 'maybe' ? 'Maybe' : 'Free'}</span>
@@ -1475,16 +1436,6 @@ meetingGrid?.addEventListener('click', async event => {
   if (!appState.currentUserId) {
     if (meetingStatus) {
       meetingStatus.textContent = 'Join this team with your GitHub account before saving your own availability.'
-    }
-    return
-  }
-
-  if (!canEditMeetingAvailability()) {
-    if (meetingStatus) {
-      const viewer = getMeetingViewerMember()
-      meetingStatus.textContent = viewer
-        ? `You are viewing ${viewer.displayName}. Switch back to yourself to edit availability.`
-        : 'Switch back to yourself to edit availability.'
     }
     return
   }
@@ -1871,26 +1822,6 @@ currentUserSelect?.addEventListener('change', async event => {
   await syncSelectedUserData()
 })
 
-meetingUserSelect?.addEventListener('change', event => {
-  appState.meetingViewerUserId = event.target.value
-  renderMeetingPlanner()
-
-  if (meetingStatus) {
-    const viewer = getMeetingViewerMember()
-    if (!appState.currentUserId) {
-      meetingStatus.textContent = viewer
-        ? `Viewing ${viewer.displayName}'s availability. Join this team to edit your own availability.`
-        : 'Viewing team availability.'
-    } else if (canEditMeetingAvailability()) {
-      meetingStatus.textContent = `Editing your availability for the week of ${formatLongDate(appState.availabilityWeekStart)}.`
-    } else {
-      meetingStatus.textContent = viewer
-        ? `Viewing ${viewer.displayName}'s availability. Switch back to yourself to edit.`
-        : 'Viewing team availability.'
-    }
-  }
-})
-
 createTeamForm?.addEventListener('submit', async event => {
   event.preventDefault()
 
@@ -2010,6 +1941,7 @@ function wireUpFilters () {
 async function initializeApp () {
   try {
     updateProfileMenuUI()
+    closeProfileMenu()
     appState.availabilityWeekStart = getWeekStartYmd(new Date())
     await loadUserTeams()
 

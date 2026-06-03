@@ -114,6 +114,10 @@
   z-index: 220;
 }
 
+.profile-menu[hidden] {
+  display: none;
+}
+
 .profile-menu_identity,
 .profile-menu_section {
   display: flex;
@@ -138,13 +142,6 @@
   letter-spacing: 0.04em;
 }
 
-.profile-theme-toggle {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.profile-theme-btn,
 .profile-menu_action {
   display: inline-flex;
   align-items: center;
@@ -158,13 +155,6 @@
   transition: border-color .12s, background .12s, color .12s;
 }
 
-.profile-theme-btn[aria-pressed="true"] {
-  border-color: var(--color-active-text);
-  background: var(--color-active-bg);
-  color: var(--color-active-text);
-}
-
-.profile-menu_action:hover,
-.profile-theme-btn:hover {
+.profile-menu_action:hover {
   border-color: color-mix(in srgb, var(--color-text-muted) 24%, var(--color-border));
 }
