@@ -115,8 +115,6 @@ function applyTheme (theme) {
   if (themeBtn) {
     themeBtn.setAttribute('aria-label', NEXT_LABEL[theme])
   }
-
-  syncProfileMenuThemeState()
 }
 
 themeBtn?.addEventListener('click', () => {
@@ -664,14 +662,6 @@ function persistCurrentUserId (userId) {
 }
 
 /**
- * Restores the previously selected team member id.
- * @returns {string} Stored user id, if any.
- */
-function restoreCurrentUserId () {
-  return localStorage.getItem(APP_STORAGE_CURRENT_USER_KEY) || ''
-}
-
-/**
  * Reads the authenticated GitHub user saved by the OAuth callback.
  * @returns {object|null} Stored GitHub user profile, if valid.
  */
@@ -764,10 +754,6 @@ function syncStandupEditingState () {
 
 function getMeetingViewerMember () {
   return getMemberById(appState.meetingViewerUserId)
-}
-
-function canEditMeetingAvailability () {
-  return Boolean(appState.currentUserId) && appState.meetingViewerUserId === appState.currentUserId
 }
 
 /**
