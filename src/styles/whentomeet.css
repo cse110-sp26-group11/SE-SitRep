@@ -114,6 +114,15 @@
   transform: translateY(-1px);
 }
 
+.meeting-cell:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+
+.meeting-cell:disabled:hover {
+  transform: none;
+}
+
 .meeting-cell[data-overlap="1"] { background: var(--color-overlap-1); }
 .meeting-cell[data-overlap="2"] { background: var(--color-overlap-2); }
 .meeting-cell[data-overlap="3"] { background: var(--color-overlap-3); }
@@ -242,6 +251,14 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+}
+
+.meeting-roster-item--viewer {
+  border-color: var(--color-active-text);
+}
+
+.meeting-roster-item--editor {
+  background: color-mix(in srgb, var(--color-active-bg) 48%, var(--color-surface));
 }
 
 .meeting-roster-avatar {

@@ -1,5 +1,5 @@
 import { DEFAULT_TEAM_ID } from '../lib/config.js'
-import { getQueryParam, readJson } from '../lib/request.js'
+import { getAuthenticatedSession, getQueryParam, readJson } from '../lib/request.js'
 import { errorResponse, jsonResponse, validationError } from '../lib/responses.js'
 import {
   getAvailabilityWeight,
@@ -96,6 +96,15 @@ export async function handleUpdateMyAvailability (request, env) {
     payload = normalizeUpdateAvailabilityPayload(await readJson(request))
   } catch (error) {
     return validationError(error.message)
+  }
+
+  const session = getAuthenticatedSession(request)
+  if (!session?.userId) {
+    return errorResponse('Authentication required', 401)
+  }
+
+  if (payload.userId !== session.userId) {
+    return errorResponse('You can only update your own availability', 403)
   }
 
   const isMember = await ensureActiveTeamMember(env, payload.teamId, payload.userId)

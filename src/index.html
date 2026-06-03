@@ -121,12 +121,37 @@
       </button>
 
       <!-- User profile picture and name -->
-      <button class="topbar_pfp" aria-label="User menu for R" aria-haspopup="true">
+      <button
+        class="topbar_pfp"
+        type="button"
+        aria-label="Signed-in user"
+      >
         <span aria-hidden="true">R</span>
       </button>
 
+      <section class="profile-menu" id="profile-menu" aria-label="Profile menu" hidden>
+        <div class="profile-menu_identity">
+          <p class="profile-menu_name" id="profile-menu-name">Signed-in user</p>
+          <p class="profile-menu_meta" id="profile-menu-meta">GitHub account</p>
+        </div>
+
+        <div class="profile-menu_section" aria-label="Account actions">
+          <p class="profile-menu_heading">Settings</p>
+          <p class="profile-menu_meta">Use the top-right theme button to switch between light and dark mode.</p>
+        </div>
+
+        <button class="profile-menu_action" id="profile-logout-btn" type="button">Log out</button>
+      </section>
+
       <!-- Options menu 3 Vertical Dots -->
-      <button class="topbar_icon-btn" aria-label="More options" aria-haspopup="true">
+      <button
+        class="topbar_icon-btn"
+        id="profile-menu-button"
+        aria-label="Open settings menu"
+        aria-haspopup="menu"
+        aria-controls="profile-menu"
+        aria-expanded="false"
+      >
         <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round">
@@ -455,7 +480,7 @@
 
             <form class="standup-form" id="standup-form">
               <label class="standup-field">
-                <span class="standup-label">Who's updating?</span>
+                <span class="standup-label">Signed in as</span>
                 <select name="currentUser" id="current-user-select"></select>
               </label>
 
@@ -559,14 +584,10 @@
           <section class="meeting-card meeting-card--planner" aria-labelledby="meeting-planner-heading">
             <div class="meeting-card_header">
               <h2 class="meeting-card_title" id="meeting-planner-heading">Shared availability grid</h2>
-              <p class="meeting-card_meta">Click a time slot to cycle your status from busy to free to maybe.</p>
+              <p class="meeting-card_meta">Click a time slot to cycle your own status from busy to free to maybe. Hover a slot to see the team's availability breakdown.</p>
             </div>
 
             <div class="meeting-controls">
-              <label class="standup-field standup-field--compact">
-                <span class="standup-label">Viewing availability for</span>
-                <select id="meeting-user-select"></select>
-              </label>
               <div class="standup-field standup-field--compact">
                 <span class="standup-label">Days</span>
                 <div class="meeting-day-options" id="meeting-days-input"></div>
@@ -586,7 +607,7 @@
               <div class="meeting-grid" id="meeting-grid" role="grid" aria-label="Team availability schedule"></div>
             </div>
 
-            <p class="standup-status" id="meeting-status" aria-live="polite">Availability will sync with the backend once a team member is selected.</p>
+            <p class="standup-status" id="meeting-status" aria-live="polite">Availability will sync with the backend for your signed-in account.</p>
           </section>
 
           <aside class="meeting-sidebar" aria-label="Meeting planning details">

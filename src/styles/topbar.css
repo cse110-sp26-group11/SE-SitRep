@@ -65,6 +65,7 @@
   display: flex;
   align-items: center;
   gap: clamp(4px, 0.5vw, 8px);
+  position: relative;
 }
 
 .topbar_icon-btn {
@@ -95,4 +96,65 @@
   align-items: center;
   justify-content: center;
   transition: background .2s;
+}
+
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(280px, calc(100vw - 24px));
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 20px 40px rgba(12, 18, 28, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 220;
+}
+
+.profile-menu[hidden] {
+  display: none;
+}
+
+.profile-menu_identity,
+.profile-menu_section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-menu_name,
+.profile-menu_heading {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.profile-menu_meta {
+  color: var(--color-text-muted);
+  font-size: clamp(11px, 0.86vw, 13px);
+}
+
+.profile-menu_heading {
+  font-size: clamp(11px, 0.86vw, 13px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-menu_action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-bg));
+  color: var(--color-text);
+  transition: border-color .12s, background .12s, color .12s;
+}
+
+.profile-menu_action:hover {
+  border-color: color-mix(in srgb, var(--color-text-muted) 24%, var(--color-border));
 }
