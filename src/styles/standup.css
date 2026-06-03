@@ -103,14 +103,6 @@
   min-height: 48px;
 }
 
-.standup-field select:disabled,
-.standup-field input:disabled,
-.standup-field textarea:disabled,
-.btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.72;
-}
-
 .standup-field select {
   resize: none;
   appearance: none;
@@ -204,6 +196,14 @@
 
 .standup-check input {
   accent-color: var(--color-active-text);
+}
+
+.standup-field select:disabled,
+.standup-field input:disabled,
+.standup-field textarea:disabled,
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 .standup-actions {
