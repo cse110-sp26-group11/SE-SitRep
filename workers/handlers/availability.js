@@ -114,8 +114,10 @@ export async function handleUpdateMyAvailability (request, env) {
 
   const statements = payload.slots.map(slot => {
     const userKey = payload.userId.replace(/^user-/, '')
+    const teamKey = payload.teamId.replace(/^team-/, '')
     const id = [
       'avail',
+      teamKey,
       userKey,
       payload.weekStart,
       slot.dayIndex,
