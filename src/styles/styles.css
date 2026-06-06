@@ -360,6 +360,16 @@ body {
   color: #f8f8ff;
 }
 
+[data-theme="dark"] .btn:not(.btn--primary) {
+  background: var(--color-active-bg);
+  border-color: var(--color-active-text);
+  color: var(--color-active-text);
+}
+
+[data-theme="dark"] .btn:not(.btn--primary):hover {
+  background: color-mix(in srgb, var(--color-active-bg) 78%, var(--color-surface));
+}
+
 /* Avatars — color classes set by JS using CSS vars */
 .feed-item_avatar {
   width:  clamp(28px, 2.8vw, 40px);
