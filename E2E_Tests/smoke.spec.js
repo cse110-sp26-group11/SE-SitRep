@@ -13,94 +13,78 @@
  *   npm run test:smoke
  */
 
-import { test, expect } from '@playwright/test';
 import {
-  expectPageLoaded,
-  expectNavigationVisible,
+  test,
+  expect,
+  apiCall,
+  DEFAULT_TEAM_ID,
   expectBackendReady,
-  expectApiStatus,
+  gotoApp,
+  navigateToView,
+  waitForFeedLoaded,
+  waitForMeetingGrid,
 } from './fixtures.js';
 
-test.describe('Smoke Tests — Application Health', () => {
-  /**
-   * Verify backend is responsive before running other tests.
-   * If this fails, the rest of the suite will likely fail too.
-   */
-  test('backend API is healthy', async () => {
+test.describe('Smoke Tests', () => {
+  test.beforeAll(async () => {
     await expectBackendReady();
   });
 
-  /**
-   * Verify the homepage loads successfully.
-   * HTTP 200 means no server errors.
-   */
-  test('homepage loads successfully', async ({ page }) => {
+  test('homepage boots into the seeded team feed', async ({ page }) => {
     const response = await page.goto('/');
     expect(response?.status()).toBe(200);
-  });
 
-  /**
-   * Verify the page has a meaningful title (not blank).
-   * This indicates HTML was rendered correctly.
-   */
-  test('page has a title', async ({ page }) => {
-    await page.goto('/');
+    await waitForFeedLoaded(page);
+    const selectedDate = await page.locator('#team-feed-meta time').getAttribute('datetime');
+    const standupPayload = await apiCall('GET', `/api/standups?teamId=${DEFAULT_TEAM_ID}&date=${selectedDate}`);
+
     await expect(page).toHaveTitle(/tatOS/i);
+    await expect(page.locator('[data-view-panel="team-feed"]')).toHaveClass(/app-view--active/);
+    await expect(page.locator('#feed-list article')).toHaveCount(standupPayload.standups.length);
+    await expect(page.locator('#team-feed-meta time')).toHaveAttribute('datetime', selectedDate || '');
   });
 
-  /**
-   * Verify the page rendered content (not an error page).
-   */
-  test('page has visible content', async ({ page }) => {
-    await page.goto('/');
-    await expectPageLoaded(page);
+  test('top-level application chrome renders', async ({ page }) => {
+    await gotoApp(page);
+    await waitForFeedLoaded(page);
+
+    await expect(page.locator('#sidebar')).toBeVisible();
+    await expect(page.locator('#theme-toggle')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Notifications' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /User menu for/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'More options' })).toBeVisible();
+    await expect(page.locator('.skip-link')).toHaveCount(1);
+    await expect(page.locator('#main-content')).toHaveCount(1);
   });
 
-  /**
-   * Verify main navigation elements are present and visible.
-   * Both sidebar and topbar should be on the page.
-   */
-  test('navigation elements are visible', async ({ page }) => {
-    await page.goto('/');
-    await expectNavigationVisible(page);
+  test('sidebar navigation reaches every main view', async ({ page }) => {
+    await gotoApp(page);
+    await waitForFeedLoaded(page);
+
+    await navigateToView(page, 'my-standup');
+    await expect(page.getByRole('heading', { name: 'My standup' })).toBeVisible();
+
+    await navigateToView(page, 'when-to-meet');
+    await expect(page.getByRole('heading', { name: 'When to meet' })).toBeVisible();
+
+    await navigateToView(page, 'ai-summary');
+    await expect(page.getByRole('heading', { name: 'AI summary' })).toBeVisible();
+
+    await navigateToView(page, 'sprint-health');
+    await expect(page.getByRole('heading', { name: 'Sprint health' })).toBeVisible();
+
+    await navigateToView(page, 'team-feed');
+    await expect(page.getByRole('heading', { name: 'Team feed' })).toBeVisible();
   });
 
-  /**
-   * Verify theme toggle button is present and functional.
-   * Theme persistence is a core feature.
-   */
-  test('theme toggle is present', async ({ page }) => {
-    await page.goto('/');
-    const themeBtn = page.locator('#theme-toggle');
-    await expect(themeBtn).toBeVisible();
-  });
+  test('when-to-meet loads an interactive seeded schedule', async ({ page }) => {
+    await gotoApp(page);
+    await waitForFeedLoaded(page);
+    await navigateToView(page, 'when-to-meet');
+    await waitForMeetingGrid(page);
 
-  /**
-   * Verify the sidebar is present and can be toggled on mobile.
-   * Important for responsive design.
-   */
-  test('sidebar navigation exists', async ({ page }) => {
-    await page.goto('/');
-    const sidebar = page.locator('#sidebar');
-    const toggleBtn = page.locator('#sidebar-toggle');
-
-    // The sidebar and the toggle button should exist in the DOM.
-    await expect(sidebar).toHaveCount(1);
-    await expect(toggleBtn).toHaveCount(1);
-
-    // If the button is visible in this viewport, it should be functional.
-    if (await toggleBtn.isVisible()) {
-      await toggleBtn.click();
-      await expect(sidebar).toBeVisible();
-    }
-  });
-
-  /**
-   * Verify skip-to-content link is present for accessibility.
-   */
-  test('skip link is present for accessibility', async ({ page }) => {
-    await page.goto('/');
-    const skipLink = page.locator('.skip-link');
-    await expect(skipLink).toBeVisible();
+    await expect(page.locator('#meeting-grid .meeting-cell')).toHaveCount(85);
+    await expect(page.locator('#meeting-overlap-list .meeting-overlap-item').first()).toBeVisible();
+    await expect(page.locator('#meeting-roster .meeting-roster-item')).toHaveCount(5);
   });
 });

@@ -19,7 +19,12 @@
  *   });
  */
 
-import { test as base } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
+
+export const FIXED_APP_DATE = '2026-05-10T12:00:00Z';
+export const FIXED_STANDUP_DATE = '2026-05-10';
+export const FIXED_WEEK_START = '2026-05-04';
+export const DEFAULT_TEAM_ID = 'team-demo';
 
 /* ────────────────────────────────────────────────────────────
    TEST DATA GENERATORS
@@ -43,7 +48,7 @@ export function createMockStandup(overrides = {}) {
     yesterday: 'Worked on database schema',
     today: 'Implementing authentication',
     blocker: null,
-    availability: 'full-time',
+    availability: 'available',
     includeGithub: true,
     notifyLead: false,
     ...overrides,
@@ -132,6 +137,138 @@ export async function expectPageLoaded(page) {
   if (!content || content.trim().length === 0) {
     throw new Error('Page loaded but has no content');
   }
+}
+
+/**
+ * Freezes the browser clock so the app uses seeded standup and availability dates.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} isoDate
+ * @returns {Promise<void>}
+ */
+export async function freezeAppClock(page, isoDate = FIXED_APP_DATE) {
+  await page.addInitScript((fixedIsoDate) => {
+    const RealDate = Date;
+    const fixedTime = new RealDate(fixedIsoDate).getTime();
+
+    class MockDate extends RealDate {
+      constructor(...args) {
+        if (args.length === 0) {
+          super(fixedTime);
+        } else {
+          super(...args);
+        }
+      }
+
+      static now() {
+        return fixedTime;
+      }
+    }
+
+    MockDate.parse = RealDate.parse;
+    MockDate.UTC = RealDate.UTC;
+
+    // @ts-ignore
+    window.Date = MockDate;
+  }, isoDate);
+}
+
+/**
+ * Visits the app with a deterministic clock.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} [path]
+ * @returns {Promise<void>}
+ */
+export async function gotoApp(page, path = '/') {
+  await freezeAppClock(page);
+  await page.goto(path);
+  await expectPageLoaded(page);
+}
+
+/**
+ * Waits for the feed request/render cycle to finish.
+ * @param {import('@playwright/test').Page} page
+ * @returns {Promise<void>}
+ */
+export async function waitForFeedLoaded(page) {
+  const feedList = page.locator('#feed-list');
+  await expect(feedList).toBeVisible();
+  await expect(feedList).not.toContainText('Loading standup entries…');
+}
+
+/**
+ * Waits for the meeting planner grid to render interactive cells.
+ * @param {import('@playwright/test').Page} page
+ * @returns {Promise<void>}
+ */
+export async function waitForMeetingGrid(page) {
+  await expect(page.locator('#meeting-grid .meeting-cell').first()).toBeVisible();
+}
+
+/**
+ * Navigates using current sidebar view ids.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} viewName
+ * @returns {Promise<void>}
+ */
+export async function navigateToView(page, viewName) {
+  const sidebarLink = page.locator(`.sidebar_link[data-view="${viewName}"]`);
+  if (await sidebarLink.count()) {
+    await sidebarLink.first().click();
+  } else {
+    const openViewButton = page.locator(`[data-open-view="${viewName}"]`);
+    await openViewButton.first().click();
+  }
+
+  const panel = page.locator(`[data-view-panel="${viewName}"]`);
+  await expect(panel).toHaveClass(/app-view--active/);
+  await expect(panel).toBeVisible();
+}
+
+/**
+ * Selects a seeded demo user in the standup form.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+export async function selectCurrentUser(page, userId) {
+  const select = page.locator('#current-user-select');
+  await select.selectOption(userId);
+}
+
+function hashText(value) {
+  return [...value].reduce((total, character) => total + character.charCodeAt(0), 0);
+}
+
+function formatUtcDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Creates a unique standup date per test without colliding across projects.
+ * @param {import('@playwright/test').TestInfo} testInfo
+ * @returns {string}
+ */
+export function uniqueDateFor(testInfo) {
+  const base = new Date(Date.UTC(2026, 5, 1));
+  const offsetDays = hashText(`${testInfo.project.name}:${testInfo.title}`) % 40;
+  base.setUTCDate(base.getUTCDate() + offsetDays + testInfo.retry);
+  return formatUtcDate(base);
+}
+
+/**
+ * Creates a unique Monday week-start per test for availability mutations.
+ * @param {import('@playwright/test').TestInfo} testInfo
+ * @returns {string}
+ */
+export function uniqueWeekStartFor(testInfo) {
+  const base = new Date(Date.UTC(2026, 5, 1));
+  const offsetWeeks = (hashText(`${testInfo.project.name}:${testInfo.title}:week`) % 12) + testInfo.retry;
+  base.setUTCDate(base.getUTCDate() + (offsetWeeks * 7));
+
+  const day = base.getUTCDay();
+  const distanceToMonday = day === 0 ? -6 : 1 - day;
+  base.setUTCDate(base.getUTCDate() + distanceToMonday);
+  return formatUtcDate(base);
 }
 
 /**
@@ -293,14 +430,6 @@ export async function openSidebar(page) {
  * EXAMPLE:
  *   await navigateToView(page, 'standups');
  */
-export async function navigateToView(page, viewName) {
-  const viewButton = page.locator(`[data-open-view="${viewName}"]`);
-  if (await viewButton.isVisible()) {
-    await viewButton.click();
-    await page.waitForTimeout(300); // Wait for transition
-  }
-}
-
 /* ────────────────────────────────────────────────────────────
    CUSTOM TEST FIXTURE (optional)
    Extend base Playwright test with pre-built fixtures.
@@ -322,4 +451,4 @@ export const test = base.extend({
   // Example: apiHelper: () => (method, endpoint, body) => apiCall(method, endpoint, body),
 });
 
-export { expect } from '@playwright/test';
+export { expect };

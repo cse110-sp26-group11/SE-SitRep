@@ -13,177 +13,147 @@
  *   npm run test:api
  */
 
-import { test, expect } from '@playwright/test';
-import { apiCall, expectBackendReady, createMockStandup } from './fixtures.js';
+import {
+  test,
+  expect,
+  apiCall,
+  createMockStandup,
+  DEFAULT_TEAM_ID,
+  expectBackendReady,
+  FIXED_STANDUP_DATE,
+  FIXED_WEEK_START,
+  uniqueDateFor,
+  uniqueWeekStartFor,
+} from './fixtures.js';
 
-test.describe('API Tests — Backend Endpoints', () => {
-  /**
-   * Ensure backend is ready before running API tests.
-   */
+test.describe('API Tests', () => {
   test.beforeAll(async () => {
     await expectBackendReady();
   });
 
-  test.describe('Health Check Endpoint', () => {
-    /**
-     * Verify the health endpoint returns expected structure.
-     * This endpoint is used for monitoring and uptime checks.
-     */
-    test('GET /api/health returns ok status', async () => {
-      const data = await apiCall('GET', '/api/health');
+  test('GET /api/health reports a reachable backend', async () => {
+    const data = await apiCall('GET', '/api/health');
 
-      expect(data).toHaveProperty('status');
-      expect(data.status).toBe('ok');
-      expect(data).toHaveProperty('service');
-      expect(data).toHaveProperty('database');
-    });
-
-    /**
-     * Verify database is reachable (it queries the DB).
-     */
-    test('health endpoint confirms database is reachable', async () => {
-      const data = await apiCall('GET', '/api/health');
-      expect(data.database).toBe('reachable');
-    });
+    expect(data.status).toBe('ok');
+    expect(data.service).toBeTruthy();
+    expect(data.database).toBe('reachable');
   });
 
-  test.describe('Team Endpoint', () => {
-    /**
-     * Verify team endpoint returns team and member data.
-     * Uses default team ID if not specified.
-     */
-    test('GET /api/team returns team data', async () => {
-      const data = await apiCall('GET', '/api/team');
+  test('GET /api/team returns the seeded demo team and members', async () => {
+    const data = await apiCall('GET', `/api/team?teamId=${DEFAULT_TEAM_ID}`);
 
-      // Should have team info
-      expect(data).toHaveProperty('team');
-      expect(data.team).toHaveProperty('id');
-      expect(data.team).toHaveProperty('name');
-      expect(data.team).toHaveProperty('repoOwner');
-      expect(data.team).toHaveProperty('repoName');
-
-      // Should have members array
-      expect(data).toHaveProperty('members');
-      expect(Array.isArray(data.members)).toBe(true);
-    });
-
-    /**
-     * Verify team members have required fields.
-     * Important for displaying member info in the UI.
-     */
-    test('team members have required fields', async () => {
-      const data = await apiCall('GET', '/api/team');
-
-      if (data.members.length > 0) {
-        const member = data.members[0];
-
-        expect(member).toHaveProperty('id');
-        expect(member).toHaveProperty('displayName');
-        expect(member).toHaveProperty('initials');
-        expect(member).toHaveProperty('role');
-        expect(member).toHaveProperty('isLead');
-        expect(member).toHaveProperty('active');
-      }
-    });
-
-    /**
-     * Verify API handles non-existent team gracefully.
-     * Should return 404, not crash.
-     */
-    test('GET /api/team with invalid ID returns error', async ({ page }) => {
-      let statusCode = null;
-
-      try {
-        await apiCall('GET', '/api/team?teamId=nonexistent-id');
-      } catch (error) {
-        expect(error.message).toContain('404');
-        statusCode = 404;
-      }
-
-      expect(statusCode).toBe(404);
-    });
+    expect(data.team.id).toBe(DEFAULT_TEAM_ID);
+    expect(data.members).toHaveLength(5);
+    expect(data.members.map(member => member.displayName)).toEqual(expect.arrayContaining([
+      'Maya Rodriguez',
+      'Arav Kumar',
+      'Jamie Lee',
+      'Ray Yang',
+      'Sam He',
+    ]));
   });
 
-  test.describe('Standups Endpoint', () => {
-    /**
-     * Verify we can fetch standups for a date.
-     * Should return array of standup objects.
-     */
-    test('GET /api/standups returns standup list', async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const data = await apiCall('GET', `/api/standups?date=${today}`);
+  test('GET /api/standups returns the current object payload shape for the seeded day', async () => {
+    const data = await apiCall('GET', `/api/standups?teamId=${DEFAULT_TEAM_ID}&date=${FIXED_STANDUP_DATE}`);
 
-      expect(Array.isArray(data)).toBe(true);
-      // Even if empty, should be an array
-    });
-
-    /**
-     * Verify standup objects have required fields.
-     */
-    test('standup objects have required fields', async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const data = await apiCall('GET', `/api/standups?date=${today}`);
-
-      if (data.length > 0) {
-        const standup = data[0];
-
-        expect(standup).toHaveProperty('id');
-        expect(standup).toHaveProperty('userId');
-        expect(standup).toHaveProperty('teamId');
-        expect(standup).toHaveProperty('yesterday');
-        expect(standup).toHaveProperty('today');
-        expect(standup).toHaveProperty('standupDate');
-      }
-    });
-
-    /**
-     * Verify we can create a new standup via API.
-     * This is useful for test setup without using the UI.
-     */
-    test('POST /api/standups creates a new standup', async () => {
-      const mockStandup = createMockStandup({
-        yesterday: 'Test work',
-        today: 'Test work today',
-      });
-
-      // NOTE: This test assumes you have auth/default user setup.
-      // If it fails, you may need to set up test user context first.
-      try {
-        const result = await apiCall('POST', '/api/standups', mockStandup);
-        expect(result).toHaveProperty('id');
-      } catch (error) {
-        // If auth is required, this is expected
-        console.warn('Standup creation requires auth context (expected in auth-protected build)');
-      }
-    });
+    expect(data.teamId).toBe(DEFAULT_TEAM_ID);
+    expect(data.date).toBe(FIXED_STANDUP_DATE);
+    expect(data.standups).toHaveLength(5);
+    expect(data.standups[0]).toEqual(expect.objectContaining({
+      id: expect.any(String),
+      teamId: DEFAULT_TEAM_ID,
+      userId: expect.any(String),
+      standupDate: FIXED_STANDUP_DATE,
+      today: expect.any(String),
+    }));
   });
 
-  test.describe('Dashboard Endpoint', () => {
-    /**
-     * Verify dashboard endpoint aggregates data correctly.
-     */
-    test('GET /api/dashboard returns dashboard data', async () => {
-      const data = await apiCall('GET', '/api/dashboard');
+  test('GET /api/dashboard returns repo pulse, issues, workflows, summary, and sprint health', async () => {
+    const data = await apiCall('GET', `/api/dashboard?teamId=${DEFAULT_TEAM_ID}&date=${FIXED_STANDUP_DATE}`);
 
-      // Should have expected properties
-      expect(data).toBeDefined();
-      // Dashboard might return different structures, just verify no errors
-      expect(data).not.toBeNull();
-    });
+    expect(data.repoPulse).toBeTruthy();
+    expect(data.issues.length).toBeGreaterThan(0);
+    expect(data.workflows.length).toBeGreaterThan(0);
+    expect(data.summary).toBeTruthy();
+    expect(data.sprintHealth).toBeTruthy();
   });
 
-  test.describe('Availability Endpoint', () => {
-    /**
-     * Verify we can fetch availability data.
-     */
-    test('GET /api/availability returns availability data', async () => {
-      try {
-        const data = await apiCall('GET', '/api/availability');
-        expect(data).toBeDefined();
-      } catch (error) {
-        // May not have data yet
-        console.warn('Availability endpoint not fully set up (expected)');
-      }
+  test('standup create and update round-trip through the backend', async ({}, testInfo) => {
+    const standupDate = uniqueDateFor(testInfo);
+    const payload = createMockStandup({
+      teamId: DEFAULT_TEAM_ID,
+      userId: 'user-maya',
+      standupDate,
+      yesterday: 'Closed out the seeded API assertions.',
+      today: 'Exercising the create standup path in Playwright.',
+      blocker: '',
     });
+
+    const created = await apiCall('POST', '/api/standups', payload);
+    expect(created.standup).toEqual(expect.objectContaining({
+      userId: 'user-maya',
+      standupDate,
+      today: 'Exercising the create standup path in Playwright.',
+    }));
+
+    const updated = await apiCall('PUT', `/api/standups/${created.standup.id}`, {
+      today: 'Updated standup content from the API suite.',
+      blocker: 'Waiting on a deterministic test fixture.',
+      availability: 'partial',
+      includeGithub: true,
+      notifyLead: true,
+    });
+
+    expect(updated.standup.today).toBe('Updated standup content from the API suite.');
+    expect(updated.standup.blocker).toBe('Waiting on a deterministic test fixture.');
+
+    const list = await apiCall('GET', `/api/standups?teamId=${DEFAULT_TEAM_ID}&date=${standupDate}`);
+    expect(list.standups.map(standup => standup.id)).toContain(created.standup.id);
+  });
+
+  test('seeded availability and overlap endpoints return structured weekly data', async () => {
+    const availability = await apiCall('GET', `/api/availability?teamId=${DEFAULT_TEAM_ID}&weekStart=${FIXED_WEEK_START}`);
+    const overlap = await apiCall('GET', `/api/availability/overlap?teamId=${DEFAULT_TEAM_ID}&weekStart=${FIXED_WEEK_START}`);
+
+    expect(availability.teamId).toBe(DEFAULT_TEAM_ID);
+    expect(availability.weekStart).toBe(FIXED_WEEK_START);
+    expect(availability.slots.length).toBeGreaterThan(0);
+    expect(availability.slots[0]).toEqual(expect.objectContaining({
+      userId: expect.any(String),
+      dayIndex: expect.any(Number),
+      slotIndex: expect.any(Number),
+      status: expect.any(String),
+    }));
+
+    expect(overlap.overlap.length).toBeGreaterThan(0);
+    expect(overlap.overlap[0]).toEqual(expect.objectContaining({
+      dayIndex: expect.any(Number),
+      slotIndex: expect.any(Number),
+      score: expect.any(Number),
+      totalMembers: 5,
+    }));
+  });
+
+  test('availability updates persist for a unique test week', async ({}, testInfo) => {
+    const weekStart = uniqueWeekStartFor(testInfo);
+    const result = await apiCall('PUT', '/api/availability/me', {
+      teamId: DEFAULT_TEAM_ID,
+      userId: 'user-ray',
+      weekStart,
+      slots: [
+        { dayIndex: 0, slotIndex: 0, slotLabel: '6 AM', status: 'available' },
+        { dayIndex: 0, slotIndex: 1, slotLabel: '7 AM', status: 'maybe' },
+      ],
+    });
+
+    expect(result.userId).toBe('user-ray');
+    expect(result.slots).toHaveLength(2);
+
+    const availability = await apiCall('GET', `/api/availability?teamId=${DEFAULT_TEAM_ID}&weekStart=${weekStart}`);
+    const raySlots = availability.slots.filter(slot => slot.userId === 'user-ray');
+    expect(raySlots).toHaveLength(2);
+
+    const overlap = await apiCall('GET', `/api/availability/overlap?teamId=${DEFAULT_TEAM_ID}&weekStart=${weekStart}`);
+    expect(overlap.overlap[0].weekStart).toBe(weekStart);
   });
 });
