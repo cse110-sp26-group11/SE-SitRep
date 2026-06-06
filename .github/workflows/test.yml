@@ -10,10 +10,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run backend unit tests
+      - name: Run backend unit and integration tests
         run: npm run test:backend
