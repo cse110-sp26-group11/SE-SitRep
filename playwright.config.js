@@ -74,9 +74,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run db:migrate:local && npm run db:seed:local && npx wrangler dev --local --port 8787',
+    command: 'npm run db:reset:local && npx wrangler dev --local --port 8787',
     url: 'http://localhost:8787',
-     reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 });
 
