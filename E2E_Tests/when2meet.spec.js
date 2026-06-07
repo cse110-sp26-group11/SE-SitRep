@@ -49,18 +49,26 @@ test.describe('When To Meet UI', () => {
     await navigateToView(page, 'when-to-meet');
     await waitForMeetingGrid(page);
 
-    const firstCell = page.locator('#meeting-grid .meeting-cell').first();
-    await expect(firstCell).toHaveAttribute('data-self-status', 'busy');
-    await firstCell.click();
+    const busyCell = page.locator('#meeting-grid .meeting-cell[data-self-status="busy"]').first();
+    await expect(busyCell).toBeVisible();
 
-    await expect(firstCell).toHaveAttribute('data-self-status', 'available');
+    const dayIndex = await busyCell.getAttribute('data-day-index');
+    const slotIndex = await busyCell.getAttribute('data-slot-index');
+    const targetCell = page.locator(
+      `#meeting-grid .meeting-cell[data-day-index="${dayIndex}"][data-slot-index="${slotIndex}"]`
+    );
+
+    await targetCell.click();
+    await expect(targetCell).toHaveAttribute('data-self-status', 'available');
     await expect(page.locator('#meeting-status')).toContainText('Availability synced for the week of');
 
     await page.reload();
     await waitForFeedLoaded(page);
     await navigateToView(page, 'when-to-meet');
     await waitForMeetingGrid(page);
-    await expect(page.locator('#meeting-grid .meeting-cell').first()).toHaveAttribute('data-self-status', 'available');
+    await expect(page.locator(
+      `#meeting-grid .meeting-cell[data-day-index="${dayIndex}"][data-slot-index="${slotIndex}"]`
+    )).toHaveAttribute('data-self-status', 'available');
   });
 
   test('saved availability cells cycle through available, busy, and maybe', async ({ page }) => {
