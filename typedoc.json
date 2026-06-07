@@ -1,0 +1,8 @@
+{
+  "entryPoints": ["src", "workers"],
+  "entryPointStrategy": "expand",
+  "out": "docs-site",
+  "exclude": ["**/wrangler*.js", "**/*.config.js", "**/node_modules/**"],
+  "includeVersion": true,
+  "skipErrorChecking": true
+}
