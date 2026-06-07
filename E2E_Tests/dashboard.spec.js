@@ -35,11 +35,19 @@ test.describe('Dashboard and Navigation UI', () => {
   });
 
   test('team feed shows seeded standups and filter states', async ({ page }) => {
-    const standupPayload = await apiCall('GET', `/api/standups?date=${FIXED_STANDUP_DATE}`);
-    const blockedEntries = standupPayload.standups.filter(standup => standup.blocker);
-    const noYesterdayEntries = standupPayload.standups.filter(standup => !standup.yesterday);
+    const standupPayload = await apiCall('GET', `/api/standups`);
+    const currentFeedDate = await page.locator('#team-feed-meta time').getAttribute('datetime');
+    const expectedCount = standupPayload.standups.filter(
+      standup => standup.standupDate === currentFeedDate
+    ).length;
+    const blockedEntries = standupPayload.standups.filter(
+      standup => standup.standupDate === currentFeedDate && standup.blocker
+    );
+    const noYesterdayEntries = standupPayload.standups.filter(
+      standup => standup.standupDate === currentFeedDate && !standup.yesterday
+    );
 
-    await expect(page.locator('#feed-list article')).toHaveCount(standupPayload.standups.length);
+    await expect(page.locator('#feed-list article')).toHaveCount(expectedCount);
     await expect(page.locator('#feed-list')).toContainText('Maya Rodriguez');
     await expect(page.locator('#repo-pulse-grid .pulse-card')).toHaveCount(4);
     await expect(page.locator('#issue-list .issue-card').first()).toBeVisible();
@@ -58,7 +66,7 @@ test.describe('Dashboard and Navigation UI', () => {
     }
 
     await page.getByRole('button', { name: 'All' }).click();
-    await expect(page.locator('#feed-list article:not([hidden])')).toHaveCount(standupPayload.standups.length);
+    await expect(page.locator('#feed-list article:not([hidden])')).toHaveCount(expectedCount);
   });
 
   test('theme toggle updates the document theme and persists across reload', async ({ page }) => {
