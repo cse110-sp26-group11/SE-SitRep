@@ -47,7 +47,7 @@ test.describe('Dashboard and Navigation UI', () => {
       standup => standup.standupDate === currentFeedDate && !standup.yesterday
     );
 
-    await expect(page.locator('#feed-list article')).toHaveCount(expectedCount);
+    await expect(page.locator('#feed-list article:not([hidden])')).toHaveCount(expectedCount);
     await expect(page.locator('#feed-list')).toContainText('Maya Rodriguez');
     await expect(page.locator('#repo-pulse-grid .pulse-card')).toHaveCount(4);
     await expect(page.locator('#issue-list .issue-card').first()).toBeVisible();
