@@ -77,16 +77,23 @@ test.describe('When To Meet UI', () => {
     await navigateToView(page, 'when-to-meet');
     await waitForMeetingGrid(page);
 
-    const seededCell = page.locator('#meeting-grid .meeting-cell[data-self-status="available"]').first();
-    const dayIndex = await seededCell.getAttribute('data-day-index');
-    const slotIndex = await seededCell.getAttribute('data-slot-index');
-    const targetCell = page.locator(`#meeting-grid .meeting-cell[data-day-index="${dayIndex}"][data-slot-index="${slotIndex}"]`);
+    const targetCell = page.locator('#meeting-grid .meeting-cell').first();
+    await expect(targetCell).toBeVisible();
 
-    await targetCell.click();
-    await expect(targetCell).toHaveAttribute('data-self-status', 'busy');
+    const statusCycle = {
+      available: 'busy',
+      busy: 'maybe',
+      maybe: 'available',
+    };
 
+    const initialStatus = await targetCell.getAttribute('data-self-status');
     await targetCell.click();
-    await expect(targetCell).toHaveAttribute('data-self-status', 'maybe');
+    await expect(targetCell).toHaveAttribute('data-self-status', statusCycle[initialStatus]);
+    await targetCell.click();
+    await expect(targetCell).toHaveAttribute(
+      'data-self-status',
+      statusCycle[statusCycle[initialStatus]]
+    );
   });
 
   test('switching the selected teammate updates the roster owner context', async ({ page }) => {
