@@ -1,8 +1,8 @@
 // @ts-check
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
-const TEST_PORT = process.env.TEST_PORT || '8787';
-const TEST_BASE_URL = `http://localhost:${TEST_PORT}`;
+const TEST_PORT = process.env.TEST_PORT || '8787'
+const TEST_BASE_URL = `http://localhost:${TEST_PORT}`
 
 /**
  * Read environment variables from file.
@@ -28,31 +28,31 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  
+
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: TEST_BASE_URL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: 'on-first-retry'
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { ...devices['Desktop Firefox'] }
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+      use: { ...devices['Desktop Safari'] }
+    }
 
     /* Test against mobile viewports. */
     // {
@@ -81,9 +81,8 @@ export default defineConfig({
     url: TEST_BASE_URL,
     env: {
       ...process.env,
-      WRANGLER_LOG_PATH: '.wrangler/logs',
+      WRANGLER_LOG_PATH: '.wrangler/logs'
     },
-    reuseExistingServer: false,
-  },
-});
-
+    reuseExistingServer: false
+  }
+})
