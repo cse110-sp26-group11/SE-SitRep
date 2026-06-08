@@ -89,6 +89,7 @@ test.describe('When To Meet UI', () => {
     const initialStatus = await targetCell.getAttribute('data-self-status');
     await targetCell.click();
     await expect(targetCell).toHaveAttribute('data-self-status', statusCycle[initialStatus]);
+
     await targetCell.click();
     await expect(targetCell).toHaveAttribute(
       'data-self-status',
