@@ -14,12 +14,13 @@
 import {
   test,
   expect,
+  AUTH_USERS,
   apiCall,
+  authenticatePage,
   expectBackendReady,
   freezeAppClock,
   gotoApp,
   navigateToView,
-  selectCurrentUser,
   uniqueDateFor,
   waitForFeedLoaded,
 } from './fixtures.js';
@@ -33,11 +34,12 @@ test.describe('Standups UI', () => {
     const standupPayload = await apiCall('GET', '/api/standups?date=2026-05-10');
     const jamie = standupPayload.standups.find(standup => standup.userId === 'user-jamie');
 
+    await authenticatePage(page, AUTH_USERS.jamie);
     await gotoApp(page);
     await waitForFeedLoaded(page);
     await navigateToView(page, 'my-standup');
-    await selectCurrentUser(page, 'user-jamie');
 
+    await expect(page.locator('#current-user-select')).toHaveValue('user-jamie');
     await expect(page.locator('textarea[name="yesterday"]')).toHaveValue(jamie.yesterday || '');
     await expect(page.locator('textarea[name="today"]')).toHaveValue(jamie.today);
     await expect(page.locator('textarea[name="blocker"]')).toHaveValue(jamie.blocker || '');

@@ -1,13 +1,14 @@
 import {
   test,
   expect,
+  AUTH_USERS,
   DEFAULT_TEAM_ID,
   apiCall,
+  authenticatePage,
   expectBackendReady,
   freezeAppClock,
   gotoApp,
   navigateToView,
-  selectCurrentUser,
   uniqueWeekStartFor,
   waitForFeedLoaded,
   waitForMeetingGrid,
@@ -37,7 +38,7 @@ test.describe('When To Meet UI', () => {
     await waitForMeetingGrid(page);
 
     const cell = page.locator('#meeting-grid .meeting-cell').nth(4);
-    await expect(cell).toHaveAttribute('aria-label', /Your status:/);
+    await expect(cell).toHaveAttribute('aria-label', /Maya Rodriguez's status:/);
     await expect(cell).toHaveAttribute('aria-label', /Team score:/);
     await expect(cell).toHaveAttribute('aria-label', /teammates available/);
   });
@@ -60,9 +61,14 @@ test.describe('When To Meet UI', () => {
       `#meeting-grid .meeting-cell[data-day-index="${dayIndex}"][data-slot-index="${slotIndex}"]`
     );
 
+    const syncResponse = page.waitForResponse(response =>
+      response.url().includes('/api/availability/me') &&
+      response.request().method() === 'PUT' &&
+      response.ok()
+    );
     await targetCell.click();
+    await syncResponse;
     await expect(targetCell).toHaveAttribute('data-self-status', 'available');
-    await expect(page.locator('#meeting-status')).toContainText('Availability synced for the week of');
 
     await page.reload();
     await waitForFeedLoaded(page);
@@ -77,6 +83,7 @@ test.describe('When To Meet UI', () => {
     const weekStart = uniqueWeekStartFor(testInfo);
     const savedSlot = { dayIndex: 0, slotIndex: 1, slotLabel: '7 AM', status: 'available' };
 
+    await authenticatePage(page, AUTH_USERS.arav);
     await apiCall('PUT', '/api/availability/me', {
       teamId: DEFAULT_TEAM_ID,
       userId: 'user-arav',
@@ -96,9 +103,9 @@ test.describe('When To Meet UI', () => {
     await expect(targetCell).toBeVisible();
 
     const statusCycle = {
-      available: 'busy',
-      busy: 'maybe',
-      maybe: 'available',
+      available: 'maybe',
+      maybe: 'busy',
+      busy: 'available',
     };
 
     const initialStatus = await targetCell.getAttribute('data-self-status');
@@ -112,15 +119,17 @@ test.describe('When To Meet UI', () => {
     );
   });
 
-  test('switching the selected teammate updates the roster owner context', async ({ page }) => {
+  test('authenticated teammate updates the roster owner context', async ({ page }) => {
+    await authenticatePage(page, AUTH_USERS.ray);
     await gotoApp(page);
     await waitForFeedLoaded(page);
     await navigateToView(page, 'my-standup');
-    await selectCurrentUser(page, 'user-ray');
+
+    await expect(page.locator('#current-user-select')).toHaveValue('user-ray');
+
     await navigateToView(page, 'when-to-meet');
     await waitForMeetingGrid(page);
 
-    await expect(page.locator('#meeting-user-select')).toHaveValue('user-ray');
     await expect(page.locator('#meeting-roster')).toContainText('Ray Yang (You)');
   });
 });

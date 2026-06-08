@@ -14,12 +14,13 @@
 import {
   test,
   expect,
+  AUTH_USERS,
   apiCall,
+  authenticatePage,
   expectBackendReady,
   FIXED_STANDUP_DATE,
   gotoApp,
   navigateToView,
-  selectCurrentUser,
   toggleTheme,
   waitForFeedLoaded,
 } from './fixtures.js';
@@ -97,12 +98,16 @@ test.describe('Dashboard and Navigation UI', () => {
     await expect(page.locator('#issue-distribution > *').first()).toBeVisible();
   });
 
-  test('changing the current teammate updates the standup and profile chrome', async ({ page }) => {
+  test('authenticated teammate updates the standup and profile chrome', async ({ page }) => {
+    await authenticatePage(page, AUTH_USERS.sam);
+    await gotoApp(page);
+    await waitForFeedLoaded(page);
     await navigateToView(page, 'my-standup');
-    await selectCurrentUser(page, 'user-sam');
 
     await expect(page.locator('#current-user-select')).toHaveValue('user-sam');
     await expect(page.locator('.topbar_pfp span')).toHaveText('SH');
-    await expect(page.locator('#meeting-user-select')).toHaveValue('user-sam');
+
+    await navigateToView(page, 'when-to-meet');
+    await expect(page.locator('#meeting-roster')).toContainText('Sam He (You)');
   });
 });

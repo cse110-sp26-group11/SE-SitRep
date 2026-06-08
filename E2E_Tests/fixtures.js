@@ -26,6 +26,69 @@ export const FIXED_STANDUP_DATE = '2026-05-10';
 export const FIXED_WEEK_START = '2026-05-04';
 export const DEFAULT_TEAM_ID = 'team-demo';
 
+export const AUTH_USERS = {
+  maya: {
+    id: 'user-maya',
+    displayName: 'Maya Rodriguez',
+    name: 'Maya Rodriguez',
+    username: 'maya-rodriguez',
+    githubUsername: 'maya-rodriguez',
+    initials: 'MR',
+  },
+  arav: {
+    id: 'user-arav',
+    displayName: 'Arav Kumar',
+    name: 'Arav Kumar',
+    username: 'arav-kumar',
+    githubUsername: 'arav-kumar',
+    initials: 'AK',
+  },
+  jamie: {
+    id: 'user-jamie',
+    displayName: 'Jamie Lee',
+    name: 'Jamie Lee',
+    username: 'jamie-lee',
+    githubUsername: 'jamie-lee',
+    initials: 'JL',
+  },
+  ray: {
+    id: 'user-ray',
+    displayName: 'Ray Yang',
+    name: 'Ray Yang',
+    username: 'ray-yang',
+    githubUsername: 'ray-yang',
+    initials: 'RY',
+  },
+  sam: {
+    id: 'user-sam',
+    displayName: 'Sam He',
+    name: 'Sam He',
+    username: 'sam-he',
+    githubUsername: 'sam-he',
+    initials: 'SH',
+  },
+};
+
+export const DEFAULT_AUTH_USER = AUTH_USERS.maya;
+
+export function createSessionToken(userId = DEFAULT_AUTH_USER.id) {
+  return Buffer.from(JSON.stringify({ userId })).toString('base64');
+}
+
+export async function authenticatePage(page, user = DEFAULT_AUTH_USER) {
+  const token = createSessionToken(user.id);
+
+  await page.addInitScript(({ authUser, sessionToken, teamId }) => {
+    localStorage.setItem('github_token', sessionToken);
+    localStorage.setItem('github_user', JSON.stringify(authUser));
+    localStorage.setItem('tatosCurrentTeamId', teamId);
+  }, {
+    authUser: user,
+    sessionToken: token,
+    teamId: DEFAULT_TEAM_ID,
+  });
+}
+
 /* ────────────────────────────────────────────────────────────
    TEST DATA GENERATORS
    These create realistic sample data for testing.
@@ -335,20 +398,22 @@ export async function expectApiStatus(page, endpoint, expectedStatus) {
  *   const team = await apiCall('GET', '/api/team?teamId=team-1');
  *   const standup = await apiCall('POST', '/api/standups', createMockStandup());
  */
-export async function apiCall(method, endpoint, body = null, baseUrl = 'http://localhost:8787') {
+export async function apiCall(method, endpoint, body = null, baseUrl = 'http://localhost:8787', requestOptions = {}) {
   const url = `${baseUrl}${endpoint}`;
-  const options = {
+  const authUserId = requestOptions.userId || body?.userId || DEFAULT_AUTH_USER.id;
+  const fetchOptions = {
     method,
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${createSessionToken(authUserId)}`,
     },
   };
 
   if (body) {
-    options.body = JSON.stringify(body);
+    fetchOptions.body = JSON.stringify(body);
   }
 
-  const response = await fetch(url, options);
+  const response = await fetch(url, fetchOptions);
 
   if (!response.ok) {
     throw new Error(`API call failed: ${method} ${endpoint} returned ${response.status}`);
@@ -447,8 +512,10 @@ export async function openSidebar(page) {
  *   });
  */
 export const test = base.extend({
-  // Add custom fixtures here if needed
-  // Example: apiHelper: () => (method, endpoint, body) => apiCall(method, endpoint, body),
+  page: async ({ page }, use) => {
+    await authenticatePage(page);
+    await use(page);
+  },
 });
 
 export { expect };

@@ -50,9 +50,8 @@ test.describe('Smoke Tests', () => {
 
     await expect(page.locator('#sidebar')).toBeVisible();
     await expect(page.locator('#theme-toggle')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Notifications' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /User menu for/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'More options' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Signed-in user' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Open settings menu for/i })).toBeVisible();
     await expect(page.locator('.skip-link')).toHaveCount(1);
     await expect(page.locator('#main-content')).toHaveCount(1);
   });
