@@ -1,6 +1,8 @@
 import {
   test,
   expect,
+  DEFAULT_TEAM_ID,
+  apiCall,
   expectBackendReady,
   freezeAppClock,
   gotoApp,
@@ -71,13 +73,26 @@ test.describe('When To Meet UI', () => {
     )).toHaveAttribute('data-self-status', 'available');
   });
 
-  test('saved availability cells cycle through available, busy, and maybe', async ({ page }) => {
-    await gotoApp(page);
+  test('saved availability cells cycle through available, busy, and maybe', async ({ page }, testInfo) => {
+    const weekStart = uniqueWeekStartFor(testInfo);
+    const savedSlot = { dayIndex: 0, slotIndex: 1, slotLabel: '7 AM', status: 'available' };
+
+    await apiCall('PUT', '/api/availability/me', {
+      teamId: DEFAULT_TEAM_ID,
+      userId: 'user-arav',
+      weekStart,
+      slots: [savedSlot],
+    });
+
+    await freezeAppClock(page, `${weekStart}T12:00:00Z`);
+    await page.goto('/');
     await waitForFeedLoaded(page);
     await navigateToView(page, 'when-to-meet');
     await waitForMeetingGrid(page);
 
-    const targetCell = page.locator('#meeting-grid .meeting-cell').first();
+    const targetCell = page.locator(
+      `#meeting-grid .meeting-cell[data-day-index="${savedSlot.dayIndex}"][data-slot-index="${savedSlot.slotIndex}"]`
+    );
     await expect(targetCell).toBeVisible();
 
     const statusCycle = {

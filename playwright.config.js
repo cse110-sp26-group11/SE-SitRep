@@ -1,6 +1,9 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
 
+const TEST_PORT = process.env.TEST_PORT || '8787';
+const TEST_BASE_URL = `http://localhost:${TEST_PORT}`;
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -28,7 +31,7 @@ export default defineConfig({
   
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:8787',
+    baseURL: TEST_BASE_URL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -74,8 +77,12 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run db:reset:local && npx wrangler dev --local --port 8787',
-    url: 'http://localhost:8787',
+    command: `npm run db:reset:local && npx wrangler dev --local --port ${TEST_PORT}`,
+    url: TEST_BASE_URL,
+    env: {
+      ...process.env,
+      WRANGLER_LOG_PATH: '.wrangler/logs',
+    },
     reuseExistingServer: false,
   },
 });

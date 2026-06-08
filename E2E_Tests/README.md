@@ -6,31 +6,32 @@ E2E testing framework + how to write tests
 
 ### Run All Tests
 ```bash
-npm test
+npx playwright install
+npm run test:e2e
 ```
 
 ### Run Specific Test Suite
 ```bash
 # Health checks (homepage loads, API responds, etc.)
-npm run test:smoke
+npm run test:e2e:smoke
 
 # API endpoint validation
-npm run test:api
+npm run test:e2e:api
 
 # Dashboard UI tests
-npm run test:dashboard
+npm run test:e2e:dashboard
 
 # Standup feature tests
-npm run test:standups
+npm run test:e2e:standups
 ```
 
 ### Debug Tests Interactively
 ```bash
 # Open Playwright UI for visual debugging
-npm run test:ui
+npm run test:e2e:ui
 
 # Step through tests with debugger
-npm run test:debug
+npm run test:e2e:debug
 ```
 
 ---
